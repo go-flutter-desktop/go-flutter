@@ -19,7 +19,6 @@ extern "C" {
 
 #define FLUTTER_ENGINE_VERSION 1
 
-
 typedef enum {
   kSuccess = 0,
   kInvalidLibraryVersion,

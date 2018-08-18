@@ -1,29 +1,5 @@
 package main
 
-/*
-#cgo CFLAGS: -I${SRCDIR}/flutter/library/
-#cgo LDFLAGS: -L${SRCDIR}/flutter/library/linux -lflutter_engine -Wl,-rpath,$ORIGIN/flutter/library/linux
-#include "flutter_embedder.h"
-
-#include <stdbool.h>
-#include <stdint.h>
-
-
-
-bool proxy_OnPlatformMessage(FlutterPlatformMessage *message,
-                             void *window);
-
-static char* converter(uint8_t *str, size_t size){
-	str[size] = '\0'; // Prevent overFlow
-	return (char *)str;
-}
-
-
-
-
-*/
-import "C"
-
 import (
 	"encoding/json"
 	"flutter_desktop_go_embedding/flutter"
@@ -38,20 +14,66 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
+// TextInput model
+var state struct {
+	clientID float64
+	word     string
+}
+
+func init() {
+	runtime.LockOSThread()
+}
+
+func main() {
+	err := glfw.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer glfw.Terminate()
+
+	window, err := glfw.CreateWindow(800, 600, "Loading..", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	defer window.Destroy()
+
+	// set icon
+	if err := setIcon(window); err != nil {
+		log.Printf("unable to set window icon: %v\n", err)
+	}
+
+	assetsPath := "/opt/flutter/examples/stocks/build/flutter_assets"
+	icuDataPath := "/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"
+
+	engine := runFlutter(window, assetsPath, icuDataPath)
+
+	defer engine.Shutdown()
+
+	for !window.ShouldClose() {
+		// glfw.WaitEvents()
+		glfw.PollEvents()
+		flutter.EngineFlushPendingTasksNow()
+	}
+
+}
+
+// GLFW callbacks to the Flutter Engine
+
 func glfwCursorPositionCallbackAtPhase(
-	window *glfw.Window, phase flutter.FlutterPointerPhase,
+	window *glfw.Window, phase flutter.PointerPhase,
 	x float64, y float64,
 ) {
 
-	event := flutter.FlutterPointerEvent{
+	event := flutter.PointerEvent{
 		Phase:     phase,
 		X:         x,
 		Y:         y,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	flutter.FlutterEngineSendPointerEvent(window.GetUserPointer(), event)
-
+	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL.EngineSendPointerEvent(event)
 }
 
 func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
@@ -70,46 +92,6 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 		window.SetCursorPosCallback(nil)
 	}
 
-}
-
-func updateEditingState(w *glfw.Window) {
-
-	// state.word = "Лайкаа"
-
-	editingState := editingState{
-		Text:                   state.word,
-		SelectionAffinity:      "TextAffinity.downstream",
-		SelectionBase:          len(state.word),
-		SelectionExtent:        len(state.word),
-		SelectionIsDirectional: false,
-	}
-
-	editingStateMarchalled, _ := json.Marshal([]interface{}{
-		state.clientID,
-		editingState,
-	})
-
-	message := flutterMessage{
-		Args:   editingStateMarchalled,
-		Method: "TextInputClient.updateEditingState",
-	}
-
-	marshalled, _ := json.Marshal(message)
-	str := string(marshalled)
-
-	var mess = flutter.FlutterPlatformMessage{
-		Channel: textChannel,
-		Message: str,
-	}
-
-	flutter.FlutterEngineSendPlatformMessage(w.GetUserPointer(), mess)
-}
-
-func glfwCharCallback(w *glfw.Window, char rune) {
-	if state.clientID != 0 {
-		state.word += string(char)
-		updateEditingState(w)
-	}
 }
 
 func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -134,20 +116,57 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 	}
 }
 
-func glfwWindowSizeCallback(w *glfw.Window, width int, height int) {
+func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
 
-	event := flutter.FlutterWindowMetricsEvent{
-		Width:       width,
-		Height:      height,
-		Pixel_ratio: 1.2,
+	event := flutter.WindowMetricsEvent{
+		Width:      width,
+		Height:     height,
+		PixelRatio: 1.2,
 	}
 
-	flutter.FlutterEngineSendWindowMetricsEvent(w.GetUserPointer(), event)
+	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL.EngineSendWindowMetricsEvent(event)
 }
 
-func runFlutter(window *glfw.Window) *flutter.FlutterOpenGL {
+func glfwCharCallback(w *glfw.Window, char rune) {
+	if state.clientID != 0 {
+		state.word += string(char)
+		updateEditingState(w)
+	}
+}
 
-	flutterOGL := flutter.FlutterOpenGL{}
+// Flutter Engine
+
+func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flutter.EngineOpenGL {
+
+	flutterOGL := flutter.EngineOpenGL{
+		// Engine arguments
+		AssetsPath:  assetsPath,
+		IcuDataPath: icuDataPath,
+		// Render callbacks
+		FMakeCurrent: func(v unsafe.Pointer) bool {
+			w := glfw.GoWindow(v)
+			w.MakeContextCurrent()
+			return true
+		},
+		FClearCurrent: func(v unsafe.Pointer) bool {
+			glfw.DetachCurrentContext()
+			return true
+		},
+		FPresent: func(v unsafe.Pointer) bool {
+			w := glfw.GoWindow(v)
+			w.SwapBuffers()
+			return true
+		},
+		FFboCallback: func(v unsafe.Pointer) int32 {
+			return 0
+		},
+		FMakeResourceCurrent: func(v unsafe.Pointer) bool {
+			return false
+		},
+		// Messaging (TextInput)
+		FPlatfromMessage: onPlatformMessage,
+	}
 
 	result := flutterOGL.Run(window.GLFWWindow())
 
@@ -156,7 +175,7 @@ func runFlutter(window *glfw.Window) *flutter.FlutterOpenGL {
 		panic("Couldn't launch the FlutterEngine")
 	}
 
-	window.SetUserPointer(unsafe.Pointer(flutterOGL.Engine))
+	window.SetUserPointer(unsafe.Pointer(&flutterOGL))
 
 	width, height := window.GetSize()
 	glfwWindowSizeCallback(window, width, height)
@@ -168,91 +187,76 @@ func runFlutter(window *glfw.Window) *flutter.FlutterOpenGL {
 	return &flutterOGL
 }
 
-var state struct {
-	clientID float64
-	word     string
-}
+// Message from the Flutter Engine
 
-//export proxy_OnPlatformMessage
-func proxy_OnPlatformMessage(message *C.FlutterPlatformMessage, window unsafe.Pointer) C.bool {
-	if message.message != nil {
-		// fmt.Println(C.GoString(message.channel))
-		str := C.GoString(C.converter(message.message, message.message_size))
-		// fmt.Println(str)
-		// fmt.Println()
+func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
 
-		windows := glfw.GoWindow(window)
+	windows := glfw.GoWindow(window)
+	message := platMessage.Message
 
-		res := flutterMessage{}
-		json.Unmarshal([]byte(str), &res)
+	if message.Method == flutter.SetDescriptionMethod {
+		msgBody := flutter.ArgsAppSwitcherDescription{}
+		json.Unmarshal(message.Args, &msgBody)
+		windows.SetTitle(msgBody.Label)
+	}
 
-		if res.Method == setDescriptionMethod {
-			msgBody := appSwitcherDescription{}
-			json.Unmarshal(res.Args, &msgBody)
-			windows.SetTitle(msgBody.Label)
+	if platMessage.Channel == flutter.TextInputChannel {
+
+		if message.Method == flutter.ClearClientMethod {
+			state.clientID = 0
 		}
 
-		if C.GoString(message.channel) == textChannel {
+		if message.Method == flutter.SetClientMethod {
+			var body []interface{}
+			json.Unmarshal(message.Args, &body)
+			state.clientID = body[0].(float64)
+		}
 
-			if res.Method == clearClientMethod {
-				state.clientID = 0
-			}
-
-			if res.Method == setClientMethod {
-				var body []interface{}
-				json.Unmarshal(res.Args, &body)
-				state.clientID = body[0].(float64)
-			}
-
-			if res.Method == setEditingStateMethod {
-				if state.clientID != 0 {
-					editingState := editingState{}
-					json.Unmarshal(res.Args, &editingState)
-					state.word = editingState.Text
-				}
-
+		if message.Method == flutter.SetEditingStateMethod {
+			if state.clientID != 0 {
+				editingState := flutter.ArgsEditingState{}
+				json.Unmarshal(message.Args, &editingState)
+				state.word = editingState.Text
 			}
 
 		}
 
 	}
-	return C.bool(true)
+
+	return true
 }
 
-func init() {
-	runtime.LockOSThread()
-}
+// Update the TextInput with the current state
 
-func main() {
+func updateEditingState(window *glfw.Window) {
 
-	err := glfw.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer glfw.Terminate()
+	// state.word = "Лайкаа"
 
-	window, err := glfw.CreateWindow(800, 600, "Loading..", nil, nil)
-	if err != nil {
-		panic(err)
+	editingState := flutter.ArgsEditingState{
+		Text:                   state.word,
+		SelectionAffinity:      "TextAffinity.downstream",
+		SelectionBase:          len(state.word),
+		SelectionExtent:        len(state.word),
+		SelectionIsDirectional: false,
 	}
 
-	defer window.Destroy()
+	editingStateMarchalled, _ := json.Marshal([]interface{}{
+		state.clientID,
+		editingState,
+	})
 
-	// set icon
-	if err := setIcon(window); err != nil {
-		log.Printf("unable to set window icon: %v\n", err)
+	message := flutter.Message{
+		Args:   editingStateMarchalled,
+		Method: flutter.TextUpdateStateMethod,
 	}
 
-	engine := runFlutter(window)
-
-	defer engine.Shutdown()
-
-	for !window.ShouldClose() {
-		// glfw.WaitEvents()
-		glfw.PollEvents()
-		C.__FlutterEngineFlushPendingTasksNow()
+	var mess = flutter.PlatformMessage{
+		Channel: flutter.TextInputChannel,
+		Message: message,
 	}
 
+	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL.EngineSendPlatformMessage(mess)
 }
 
 func setIcon(window *glfw.Window) error {
