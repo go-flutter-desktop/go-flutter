@@ -15,10 +15,7 @@ import (
 )
 
 // TextInput model
-var state struct {
-	clientID float64
-	word     string
-}
+var state = textModel{}
 
 func init() {
 	runtime.LockOSThread()
@@ -43,8 +40,8 @@ func main() {
 		log.Printf("unable to set window icon: %v\n", err)
 	}
 
-	assetsPath := "/opt/flutter/examples/stocks/build/flutter_assets"
-	icuDataPath := "/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"
+	assetsPath := "./flutter_project/stocks/build/flutter_assets"
+	icuDataPath := "./flutter/library/icudtl.dat"
 
 	engine := runFlutter(window, assetsPath, icuDataPath)
 
@@ -95,25 +92,37 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 }
 
 func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+
 	if key == glfw.KeyEscape && action == glfw.Press {
 		w.SetShouldClose(true)
 	}
 
 	if action == glfw.Repeat || action == glfw.Press {
 		if state.clientID != 0 {
-			if key == glfw.KeyBackspace {
-				if state.word != "" {
-					if mods == glfw.ModControl {
-						state.word = string(deleteLeadingWord([]rune(state.word)))
-						updateEditingState(w)
-					} else {
-						state.word = state.word[:len(state.word)-1]
-						updateEditingState(w)
-					}
-				}
+
+			switch key {
+			case glfw.KeyHome:
+				state.MoveCursorHome(int(mods))
+
+			case glfw.KeyEnd:
+				state.MoveCursorEnd(int(mods))
+
+			case glfw.KeyLeft:
+				state.MoveCursorLeft(int(mods))
+
+			case glfw.KeyRight:
+				state.MoveCursorRight(int(mods))
+
+			case glfw.KeyDelete:
+				state.Delete(int(mods))
+
+			case glfw.KeyBackspace:
+				state.Backspace(int(mods))
 			}
+
 		}
 	}
+
 }
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
@@ -130,8 +139,7 @@ func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
 
 func glfwCharCallback(w *glfw.Window, char rune) {
 	if state.clientID != 0 {
-		state.word += string(char)
-		updateEditingState(w)
+		state.addChar(char)
 	}
 }
 
@@ -168,6 +176,10 @@ func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flu
 		FPlatfromMessage: onPlatformMessage,
 	}
 
+	state.notifyState = func() {
+		updateEditingState(window)
+	}
+
 	result := flutterOGL.Run(window.GLFWWindow())
 
 	if result != flutter.KSuccess {
@@ -193,6 +205,8 @@ func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointe
 
 	windows := glfw.GoWindow(window)
 	message := platMessage.Message
+
+	// fmt.Println(string(platMessage.Message.Args))
 
 	if message.Method == flutter.SetDescriptionMethod {
 		msgBody := flutter.ArgsAppSwitcherDescription{}
@@ -227,7 +241,6 @@ func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointe
 }
 
 // Update the TextInput with the current state
-
 func updateEditingState(window *glfw.Window) {
 
 	// state.word = "Лайкаа"
@@ -235,8 +248,8 @@ func updateEditingState(window *glfw.Window) {
 	editingState := flutter.ArgsEditingState{
 		Text:                   state.word,
 		SelectionAffinity:      "TextAffinity.downstream",
-		SelectionBase:          len(state.word),
-		SelectionExtent:        len(state.word),
+		SelectionBase:          state.selectionBase,
+		SelectionExtent:        state.selectionExtent,
 		SelectionIsDirectional: false,
 	}
 
