@@ -21,10 +21,8 @@ has the same tooling on every platform.
 Plus golang is a great language because it keeps everything simple and readable,
 which, I hope, will encourage people to contribute :grin:.
 
-
 ## How to setup
 
-Read first: [go-gl/glfw](https://github.com/go-gl/glfw/)  
 
 <details>
 <summary> :package: :penguin: Linux</summary>
@@ -32,6 +30,8 @@ Read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
 
 <h4>From source</h4>
+
+Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)  
 
 ```bash
 # Clone
@@ -62,7 +62,24 @@ cd ../..
 ```
 </details>
 
-## Flutter Project
+## Flutter Demo Project
 
 The example project is available [here](./flutter_project/stocks/) _(from the official flutter repo)_
 
+## Support
+
+- [x] Linux :penguin:
+- [ ] Windows :checkered_flag:
+- [ ] MacOS :apple:
+- [x] Text input
+- [ ] Plugins
+- [x] Clipboard (through shortcuts)
+- [ ] Clipboard (through the click)
+- [x] Keyboard shortcuts
+   - [x] <kbd>ctrl-c</kbd>  <kbd>ctrl-v</kbd>  <kbd>ctrl-x</kbd>  <kbd>ctrl-a</kbd>
+   - [x] <kbd>Home</kbd>  <kbd>End</kbd>  <kbd>shift-Home</kbd>  <kbd>shift-End</kbd>
+   - [x] <kbd>Left</kbd>  <kbd>ctrl-Left</kbd>  <kbd>ctrl-shift-Left</kbd>
+   - [x] <kbd>Right</kbd>  <kbd>ctrl-Right</kbd>  <kbd>ctrl-shift-Right</kbd>
+   - [x] <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
+   - [ ] <kbd>ctrl-Delete</kbd>
+- [ ] Key events
