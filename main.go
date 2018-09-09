@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"flutter_desktop_go_embedding/flutter"
+	"go-flutter-desktop-embedder/flutter"
 	"image"
 	_ "image/png"
 	"log"

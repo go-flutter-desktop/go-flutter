@@ -23,7 +23,6 @@ which, I hope, will encourage people to contribute :grin:.
 
 ## How to install
 
-
 <details>
 <summary> :package: :penguin: Linux</summary>
 <h4>From binaries</h4>
@@ -35,12 +34,12 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 ```bash
 # Clone
-git clone https://github.com/Drakirus/Go-Flutter-desktop-embedder.git
-cd Go-Flutter-desktop-embedder
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+cd go-flutter-desktop-embedder
 
 # Download the share library
 wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/linux-x64/linux-x64-embedder \
-  -O temp.zip; unzip temp.zip; 
+  -O temp.zip && unzip temp.zip
 
 # Move the share library
 mv libflutter_engine.so ./flutter/library/linux/
@@ -58,7 +57,46 @@ flutter build bundle
 cd ../..
 
 # Play
-./Go-Flutter-desktop-embedder
+./go-flutter-desktop-embedder
+```
+</details>
+
+
+<details>
+<summary> :package: :checkered_flag: Windows</summary>
+
+<h4>From source</h4>
+
+Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
+
+```bash
+# Clone
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+cd go-flutter-desktop-embedder
+
+# Download the DLL
+wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/windows-x64/windows-x64-embedder.zip -O temp.zip && unzip temp.zip 
+
+# Move the share library
+mv flutter_engine.dll ./flutter/library/windows/
+
+# Clean-up
+rm flutter_embedder.h && rm temp.zip && rm flutter_engine.dll.*
+
+# build the Embedder
+go get -u github.com/go-gl/glfw/v3.2/glfw
+go build
+
+# build the flutter project
+cd flutter_project/stocks/
+flutter build bundle
+cd ../..
+
+# Register the DLL 
+# OR copy the DLL in the project root directory, where the .exe will be created
+
+# Play
+./go-flutter-desktop-embedder
 ```
 </details>
 

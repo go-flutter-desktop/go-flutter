@@ -56,7 +56,7 @@ func (flu *EngineOpenGL) Run(window uintptr) Result {
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	res := C.runFlutter(C.ulong(window), &flu.Engine, &args)
+	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args)
 	if flu.Engine == nil {
 		return KInvalidArguments
 	}
@@ -148,7 +148,7 @@ func (flu *EngineOpenGL) EngineSendPlatformMessage(Message PlatformMessage) Resu
 	cPlatformMessage := C.FlutterPlatformMessage{
 		channel:      C.CString(Message.Channel),
 		message:      (*C.uint8_t)(unsafe.Pointer(C.CString(strMessage))),
-		message_size: C.ulong(len(strMessage)),
+		message_size: C.uintptr_t(len(strMessage)),
 	}
 
 	cPlatformMessage.struct_size = C.size_t(unsafe.Sizeof(cPlatformMessage))
