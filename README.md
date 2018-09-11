@@ -1,6 +1,6 @@
-<img src="./assets/mascot.png" width="170" align="right">
+<img src="./mascot.png" width="170" align="right">
 
-# Go Flutter desktop embedder
+# Go Flutter desktop embedder 
 
 A Go (golang) [Custom Flutter Engine
 Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
@@ -8,8 +8,8 @@ for desktop
 
 # Purpose
 This project doesn't compete with
-[this](https://github.com/google/flutter-desktop-embedding) awesome one.  
-The purpose of this project is to support the  
+[this](https://github.com/google/flutter-desktop-embedding) awesome one.
+The purpose of this project is to support the 
 [Flutter](https://github.com/flutter/flutter) framework on Windows, macOS, and
 Linux using a **SINGLE** code base.  
 
@@ -19,9 +19,20 @@ provides the right abstractions over the OpenGL's Buffer/mouse/keyboard for each
 The choice of [Golang](https://github.com/golang/go) comes from the fact that it
 has the same tooling on every platform.  
 Plus golang is a great language because it keeps everything simple and readable,
-which, I hope, will encourage people to contribute :grin:.  
+which, I hope, will encourage people to contribute :grin:.
 
 ## How to install
+
+For this Flutter version:
+```
+$ flutter --version
+Flutter 0.7.3 • channel beta • https://github.com/flutter/flutter.git
+Framework • revision 3b309bda07 (2 weeks ago) • 2018-08-28 12:39:24 -0700
+Engine • revision af42b6dc95
+Tools • Dart 2.1.0-dev.1.0.flutter-ccb16f7282
+
+```
+
 <details>
 <summary> :package: :penguin: Linux</summary>
 <h4>From binaries</h4>
@@ -33,30 +44,37 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 
 ```bash
-
 # Clone
-git clone https://github.com/Drakirus/Go-Flutter-desktop-embedder.git
-cd Go-Flutter-desktop-embedder
-
-# build the flutter project
-cd example/stocks/
-
-# Download the share library
-wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/linux-x64/linux-x64-embedder \ -O .build/temp.zip
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git "$GOPATH/src/go-flutter-desktop-embedder"
+cd "$GOPATH/src/go-flutter-desktop-embedder"
 
 
+# Build the flutter project
+cd example/demo/
+cd flutter_project/demo/
+flutter build bundle
+cd ../..
+
+# Download the share library (CORRESPONDING to the Flutter's version shown above)
+wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/linux-x64/linux-x64-embedder -O .build/temp.zip
+
+# Move the share library
 unzip .build/temp.zip -x flutter_embedder.h && mv libflutter_engine.so flutter/library/linux/
 
-# build the Embedder
+# build Go glfw
 go get -u github.com/go-gl/glfw/v3.2/glfw
-cd flutter_project/stocks; flutter build bundle; cd ../..
+
+# Make sure the path in "main.go" to the `icudtl.dat` is correct.
+# Build or Run the example project
 CGO_LDFLAGS="-L${PWD}/flutter/library/linux" go run main.go
 ```
+
 </details>
 
-## Flutter Demo Project
 
-The example project is available [here](./flutter_project/stocks/) _(from the official flutter repo)_
+## Flutter Demos Projects
+
+The examples are available [here](./example/)
 
 ## Support
 
@@ -65,6 +83,7 @@ The example project is available [here](./flutter_project/stocks/) _(from the of
 - [ ] MacOS :apple:
 - [x] Text input
 - [ ] Plugins
+- [x] Importable go library
 - [x] Clipboard (through shortcuts)
 - [ ] Clipboard (through the click)
 - [x] Keyboard shortcuts

@@ -5,15 +5,11 @@ import (
 	_ "image/png"
 	"log"
 	"os"
-	"os/signal"
 
 	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
-
-// #cgo linux LDFLAGS: -L${SRCDIR}/flutter/library/linux
-import "C"
 
 func main() {
 	var (
@@ -22,7 +18,7 @@ func main() {
 
 	options := []gutter.Option{
 		gutter.OptionAssetPath("flutter_project/stocks/build/flutter_assets"),
-		gutter.OptionICUDataPath("../../flutter/library/icudtl.dat"),
+		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 	}
 
@@ -30,11 +26,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Kill, os.Interrupt)
-	select {
-	case <-signals:
-	}
 }
 
 func setIcon(window *glfw.Window) error {
