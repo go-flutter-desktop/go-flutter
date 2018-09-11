@@ -1,49 +1,77 @@
-package main
+package gutter
 
 import (
 	"encoding/json"
-	"flutter_desktop_go_embedding/flutter"
-	"image"
-	_ "image/png"
 	"log"
-	"os"
-	"runtime"
 	"time"
 	"unsafe"
 
+	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-// TextInput model
-var state = textModel{}
+// Option for gutter
+type Option func(*config)
 
-func init() {
-	runtime.LockOSThread()
+// OptionAssetPath specify the flutter asset directory.
+func OptionAssetPath(p string) Option {
+	return func(c *config) {
+		c.AssetPath = p
+	}
 }
 
-func main() {
-	err := glfw.Init()
-	if err != nil {
-		panic(err)
+// OptionICUDataPath specify the path to the ICUData.
+func OptionICUDataPath(p string) Option {
+	return func(c *config) {
+		c.ICUDataPath = p
+	}
+}
+
+// OptionWindowInitializer allow initializing the window.
+func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
+	return func(c *config) {
+		c.WindowInitializer = ini
+	}
+}
+
+type config struct {
+	AssetPath         string
+	ICUDataPath       string
+	WindowInitializer func(*glfw.Window) error
+}
+
+func (t config) merge(options ...Option) config {
+	for _, opt := range options {
+		opt(&t)
+	}
+
+	return t
+}
+
+// Run executes a flutter application with the provided options.
+// given limitations this method must be called by the main function directly.
+func Run(options ...Option) (err error) {
+	var (
+		window *glfw.Window
+		c      config
+	)
+	c = c.merge(options...)
+
+	if err = glfw.Init(); err != nil {
+		return err
 	}
 	defer glfw.Terminate()
 
-	window, err := glfw.CreateWindow(800, 600, "Loading..", nil, nil)
-	if err != nil {
-		panic(err)
+	if window, err = glfw.CreateWindow(800, 600, "Loading..", nil, nil); err != nil {
+		return err
 	}
-
 	defer window.Destroy()
 
-	// set icon
-	if err := setIcon(window); err != nil {
-		log.Printf("unable to set window icon: %v\n", err)
+	if err = c.WindowInitializer(window); err != nil {
+		return err
 	}
 
-	assetsPath := "./flutter_project/stocks/build/flutter_assets"
-	icuDataPath := "./flutter/library/icudtl.dat"
-
-	engine := runFlutter(window, assetsPath, icuDataPath)
+	engine := runFlutter(window, c.AssetPath, c.ICUDataPath)
 
 	defer engine.Shutdown()
 
@@ -53,10 +81,10 @@ func main() {
 		flutter.EngineFlushPendingTasksNow()
 	}
 
+	return nil
 }
 
 // GLFW callbacks to the Flutter Engine
-
 func glfwCursorPositionCallbackAtPhase(
 	window *glfw.Window, phase flutter.PointerPhase,
 	x float64, y float64,
@@ -90,6 +118,8 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 	}
 
 }
+
+var state = textModel{}
 
 func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
@@ -146,16 +176,13 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 						state.addChar([]rune(clpString))
 					}
 				}
-
 			}
-
 		}
 	}
 
 }
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
-
 	event := flutter.WindowMetricsEvent{
 		Width:      width,
 		Height:     height,
@@ -173,7 +200,6 @@ func glfwCharCallback(w *glfw.Window, char rune) {
 }
 
 // Flutter Engine
-
 func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flutter.EngineOpenGL {
 
 	flutterOGL := flutter.EngineOpenGL{
@@ -300,17 +326,4 @@ func updateEditingState(window *glfw.Window) {
 
 	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
 	flutterOGL.EngineSendPlatformMessage(mess)
-}
-
-func setIcon(window *glfw.Window) error {
-	imgFile, err := os.Open("assets/icon.png")
-	if err != nil {
-		return err
-	}
-	img, _, err := image.Decode(imgFile)
-	if err != nil {
-		return err
-	}
-	window.SetIcon([]image.Image{img})
-	return nil
 }
