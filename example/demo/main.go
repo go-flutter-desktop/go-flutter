@@ -17,7 +17,7 @@ func main() {
 	)
 
 	options := []gutter.Option{
-		gutter.OptionAssetPath("flutter_project/stocks/build/flutter_assets"),
+		gutter.OptionAssetPath("flutter_project/demo/build/flutter_assets"),
 		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 	}
