@@ -2,6 +2,8 @@
 
 # Go Flutter desktop embedder 
 
+[![Join the chat at https://gitter.im/go-flutter-desktop-embedder/Lobby](https://badges.gitter.im/go-flutter-desktop-embedder/Lobby.svg)](https://gitter.im/go-flutter-desktop-embedder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Go (golang) [Custom Flutter Engine
 Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
 for desktop
