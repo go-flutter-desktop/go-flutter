@@ -1,6 +1,6 @@
 <img src="./assets/mascot.png" width="170" align="right">
 
-# Go Flutter desktop embedder 
+# Go Flutter desktop embedder
 
 A Go (golang) [Custom Flutter Engine
 Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
@@ -8,8 +8,8 @@ for desktop
 
 # Purpose
 This project doesn't compete with
-[this](https://github.com/google/flutter-desktop-embedding) awesome one.
-The purpose of this project is to support the 
+[this](https://github.com/google/flutter-desktop-embedding) awesome one.  
+The purpose of this project is to support the  
 [Flutter](https://github.com/flutter/flutter) framework on Windows, macOS, and
 Linux using a **SINGLE** code base.  
 
@@ -19,10 +19,9 @@ provides the right abstractions over the OpenGL's Buffer/mouse/keyboard for each
 The choice of [Golang](https://github.com/golang/go) comes from the fact that it
 has the same tooling on every platform.  
 Plus golang is a great language because it keeps everything simple and readable,
-which, I hope, will encourage people to contribute :grin:.
+which, I hope, will encourage people to contribute :grin:.  
 
 ## How to install
-
 <details>
 <summary> :package: :penguin: Linux</summary>
 <h4>From binaries</h4>
@@ -32,71 +31,26 @@ Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/r
 
 Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)  
 
+
 ```bash
+
 # Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
-cd go-flutter-desktop-embedder
+git clone https://github.com/Drakirus/Go-Flutter-desktop-embedder.git
+cd Go-Flutter-desktop-embedder
+
+# build the flutter project
+cd example/stocks/
 
 # Download the share library
-wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/linux-x64/linux-x64-embedder \
-  -O temp.zip && unzip temp.zip
+wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/linux-x64/linux-x64-embedder \ -O .build/temp.zip
 
-# Move the share library
-mv libflutter_engine.so ./flutter/library/linux/
 
-# Clean-up
-rm flutter_embedder.h; rm temp.zip
+unzip .build/temp.zip -x flutter_embedder.h && mv libflutter_engine.so flutter/library/linux/
 
 # build the Embedder
 go get -u github.com/go-gl/glfw/v3.2/glfw
-go build
-
-# build the flutter project
-cd flutter_project/stocks/
-flutter build bundle
-cd ../..
-
-# Play
-./go-flutter-desktop-embedder
-```
-</details>
-
-
-<details>
-<summary> :package: :checkered_flag: Windows</summary>
-
-<h4>From source</h4>
-
-Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
-
-```bash
-# Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
-cd go-flutter-desktop-embedder
-
-# Download the DLL
-wget https://storage.googleapis.com/flutter_infra/flutter/1ed25ca7b7e3e3e8047df050bba4174074c9b336/windows-x64/windows-x64-embedder.zip -O temp.zip && unzip temp.zip 
-
-# Move the share library
-mv flutter_engine.dll ./flutter/library/windows/
-
-# Clean-up
-rm flutter_embedder.h && rm temp.zip && rm flutter_engine.dll.*
-
-# build the Embedder
-go get -u github.com/go-gl/glfw/v3.2/glfw
-go build
-
-# build the flutter project
-cd flutter_project/stocks/
-flutter build bundle
-cd ../..
-
-# Register the DLL 
-# OR copy the DLL in the project root directory, where the .exe will be created
-
-# Play
-./go-flutter-desktop-embedder
+cd flutter_project/stocks; flutter build bundle; cd ../..
+CGO_LDFLAGS="-L${PWD}/flutter/library/linux" go run main.go
 ```
 </details>
 
