@@ -2,6 +2,8 @@
 
 # Go Flutter desktop embedder 
 
+[![Join the chat at https://gitter.im/go-flutter-desktop-embedder/Lobby](https://badges.gitter.im/go-flutter-desktop-embedder/Lobby.svg)](https://gitter.im/go-flutter-desktop-embedder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Go (golang) [Custom Flutter Engine
 Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
 for desktop
@@ -45,9 +47,8 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 ```bash
 # Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git "$GOPATH/src/go-flutter-desktop-embedder"
-cd "$GOPATH/src/go-flutter-desktop-embedder"
-
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+cd go-flutter-desktop-embedder
 
 # Build the flutter project
 cd example/demo/
@@ -61,12 +62,17 @@ wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4
 # Move the share library
 unzip .build/temp.zip -x flutter_embedder.h && mv libflutter_engine.so flutter/library/linux/
 
-# build Go glfw
-go get -u github.com/go-gl/glfw/v3.2/glfw
+# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+export CGO_LDFLAGS="-L${PWD}/flutter/library/linux"
+
+# If you `go build`, the share library must stay in the same path, relative to the go binary
+
+# Get the libraries
+go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build or Run the example project
-CGO_LDFLAGS="-L${PWD}/flutter/library/linux" go run main.go
+go run main.go
 ```
 
 </details>
