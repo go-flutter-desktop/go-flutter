@@ -32,7 +32,6 @@ Flutter 0.7.3 • channel beta • https://github.com/flutter/flutter.git
 Framework • revision 3b309bda07 (2 weeks ago) • 2018-08-28 12:39:24 -0700
 Engine • revision af42b6dc95
 Tools • Dart 2.1.0-dev.1.0.flutter-ccb16f7282
-
 ```
 
 <details>
@@ -50,9 +49,9 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
 cd go-flutter-desktop-embedder
 
-# Build the flutter project
-cd example/demo/
-cd flutter_project/demo/
+# Build the flutter simpleDemo project
+cd example/simpleDemo/
+cd flutter_project/simpleDemo/
 flutter build bundle
 cd ../..
 
@@ -80,7 +79,7 @@ go run main.go
 
 ## Flutter Demos Projects
 
-The examples are available [here](./example/)
+The examples are available [here](./example/)  
 
 ## Support
 
