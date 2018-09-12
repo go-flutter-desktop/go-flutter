@@ -9,7 +9,7 @@ package flutter
 // Windows Build Tags
 // ----------------
 #cgo windows CFLAGS: -I${SRCDIR}/library
-#cgo windows LDFLAGS: -L${SRCDIR}/library/windows -lflutter_engine
+#cgo windows LDFLAGS: -lflutter_engine
 
 */
 import "C"
