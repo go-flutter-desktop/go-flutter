@@ -51,7 +51,7 @@ cd go-flutter-desktop-embedder
 
 # Build the flutter simpleDemo project
 cd example/simpleDemo/
-cd flutter_project/simpleDemo/
+cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
@@ -70,11 +70,54 @@ export CGO_LDFLAGS="-L${PWD}/flutter/library/linux"
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
+# Build the example project
+go build
+```
+
+</details>
+
+<details>
+<summary> :package: :checkered_flag: Windows</summary>
+<h4>From binaries</h4>
+Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
+
+<h4>From source</h4>
+
+Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)  
+
+
+```bash
+# Clone
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+cd go-flutter-desktop-embedder
+
+# Build the flutter simpleDemo project
+cd example/simpleDemo/
+cd flutter_project/demo/
+flutter build bundle
+cd ../..
+
+# Download the share library (CORRESPONDING to the Flutter's version shown above)
+# => https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/windows-x64/windows-x64-embedder.zip
+
+# Move the share library
+# => "flutter_engine.dll" must be in the flutter example project (where the main.go is)
+
+# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+set CGO_LDFLAGS=-L%cd%
+
+# If you `go build`, the share library must stay in the same path, relative to the go binary
+
+# Get the libraries
+go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
+
+# Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build or Run the example project
 go run main.go
 ```
 
 </details>
+
 
 
 ## Flutter Demos Projects
@@ -84,7 +127,7 @@ The examples are available [here](./example/)
 ## Support
 
 - [x] Linux :penguin:
-- [ ] Windows :checkered_flag:
+- [x] Windows :checkered_flag:
 - [ ] MacOS :apple:
 - [x] Text input
 - [ ] Plugins
