@@ -271,26 +271,24 @@ func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointe
 	}
 
 	if platMessage.Channel == flutter.TextInputChannel {
-
-		if message.Method == flutter.ClearClientMethod {
+		switch message.Method {
+		case flutter.TextInputClientClear:
 			state.clientID = 0
-		}
-
-		if message.Method == flutter.SetClientMethod {
+		case flutter.TextInputClientSet:
 			var body []interface{}
 			json.Unmarshal(message.Args, &body)
 			state.clientID = body[0].(float64)
-		}
-
-		if message.Method == flutter.SetEditingStateMethod {
+		case flutter.TextInputSetEditState:
 			if state.clientID != 0 {
 				editingState := flutter.ArgsEditingState{}
 				json.Unmarshal(message.Args, &editingState)
 				state.word = editingState.Text
+				state.selectionBase = editingState.SelectionBase
+				state.selectionExtent = editingState.SelectionExtent
 			}
-
+		default:
+			// log.Printf("unhandled text input method: %#v\n", platMessage.Message)
 		}
-
 	}
 
 	return true

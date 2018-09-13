@@ -15,9 +15,9 @@ const (
 	TextUpdateStateMethod = "TextInputClient.updateEditingState"
 
 	// text
-	SetClientMethod       = "TextInput.setClient"
-	ClearClientMethod     = "TextInput.clearClient"
-	SetEditingStateMethod = "TextInput.setEditingState"
+	TextInputClientSet    = "TextInput.setClient"
+	TextInputClientClear  = "TextInput.clearClient"
+	TextInputSetEditState = "TextInput.setEditingState"
 )
 
 // Message is the json content of a PlatformMessage
