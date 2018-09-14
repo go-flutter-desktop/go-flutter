@@ -22,6 +22,9 @@ const (
 	KInvalidArguments      Result = C.kInvalidArguments
 )
 
+// CharExportedType wrap the C char type
+type CharExportedType C.char
+
 // EngineOpenGL corresponds to the C.FlutterEngine with his associated callback's method.
 type EngineOpenGL struct {
 	// Flutter Engine.
@@ -38,8 +41,8 @@ type EngineOpenGL struct {
 	FPlatfromMessage func(message PlatformMessage, window unsafe.Pointer) bool
 
 	// Engine arguments
-	AssetsPath  string
-	IcuDataPath string
+	AssetsPath  *CharExportedType
+	IcuDataPath *CharExportedType
 }
 
 // Run launches the Flutter Engine in a background thread.
@@ -48,10 +51,10 @@ func (flu *EngineOpenGL) Run(window uintptr) Result {
 	globalFlutterOpenGL = *flu
 
 	args := C.FlutterProjectArgs{
-		assets_path:   C.CString(flu.AssetsPath),
+		assets_path:   (*C.char)(flu.AssetsPath),
 		main_path:     C.CString(""),
 		packages_path: C.CString(""),
-		icu_data_path: C.CString(flu.IcuDataPath),
+		icu_data_path: (*C.char)(flu.IcuDataPath),
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))

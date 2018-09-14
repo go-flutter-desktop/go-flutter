@@ -5,6 +5,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"path/filepath"
 
 	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
 
@@ -16,8 +17,13 @@ func main() {
 		err error
 	)
 
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	options := []gutter.Option{
-		gutter.OptionAssetPath("flutter_project/demo/build/flutter_assets"),
+		gutter.OptionAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
 		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 	}
@@ -29,7 +35,11 @@ func main() {
 }
 
 func setIcon(window *glfw.Window) error {
-	imgFile, err := os.Open("assets/icon.png")
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return err
+	}
+	imgFile, err := os.Open(dir + "/assets/icon.png")
 	if err != nil {
 		return err
 	}
