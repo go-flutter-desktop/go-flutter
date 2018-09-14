@@ -6,6 +6,8 @@ import (
 	"time"
 	"unsafe"
 
+	"C"
+
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -204,8 +206,8 @@ func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flu
 
 	flutterOGL := flutter.EngineOpenGL{
 		// Engine arguments
-		AssetsPath:  assetsPath,
-		IcuDataPath: icuDataPath,
+		AssetsPath:  (*flutter.CharExportedType)(C.CString(assetsPath)),
+		IcuDataPath: (*flutter.CharExportedType)(C.CString(icuDataPath)),
 		// Render callbacks
 		FMakeCurrent: func(v unsafe.Pointer) bool {
 			w := glfw.GoWindow(v)
