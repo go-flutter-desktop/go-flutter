@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 
+import 'package:flutter/services.dart';
+import 'dart:async';
+
 void main() {
   // Desktop platforms aren't a valid platform.
   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
@@ -30,8 +33,18 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
+  static const MethodChannel _channel = const MethodChannel('plugin_demo');
+  static Future GetVersion() async {
+    var res = await _channel.invokeMethod('getPlatformVersion');
+    print(res);
+
+  }
+
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _MyHomePageState createState() {
+    GetVersion();
+    return new _MyHomePageState();
+  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {

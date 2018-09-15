@@ -22,6 +22,10 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 	if message.message != nil {
 		str := C.GoString(C.converter(message.message, message.message_size))
 
+		fmt.Println("Channel:" + C.GoString(message.channel))
+		fmt.Println(str)
+		fmt.Println()
+
 		FlutterPlatformMessage := PlatformMessage{}
 
 		messageContent := Message{}
@@ -32,6 +36,11 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 		if message.response_handle == nil {
 			fmt.Println("==================== NIL")
 		}
+
+		C.FlutterEngineSendPlatformMessageResponse(
+			globalFlutterOpenGL.Engine,
+			message.response_handle,
+			(*C.uint8_t)(unsafe.Pointer(C.CString("[{ \"args\" : \"test\", \"method\" : \"plugin_demo.getPlatformVersion\"}]"))), 65)
 
 		return C.bool(globalFlutterOpenGL.FPlatfromMessage(FlutterPlatformMessage, userPointer))
 	}
