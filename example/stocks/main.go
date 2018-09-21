@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"image"
 	_ "image/png"
 	"log"
@@ -13,11 +14,15 @@ import (
 
 func main() {
 	var (
-		err error
+		err         error
+		flutter_prj string
 	)
 
+	flag.StringVar(&flutter_prj, "fp", "stocks", "flutter project's filename")
+	flag.Parse()
+
 	options := []gutter.Option{
-		gutter.OptionAssetPath("flutter_project/stocks/build/flutter_assets"),
+		gutter.OptionAssetPath("flutter_project/" + flutter_prj + "/build/flutter_assets"),
 		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 	}
