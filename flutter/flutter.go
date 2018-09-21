@@ -1,7 +1,10 @@
 package flutter
 
 // #include "flutter_embedder.h"
-// FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args);
+// FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
+//						 const char *const * vmArgs, int nVmAgrs);
+// char** makeCharArray(int size);
+// void setArrayString(char **a, char *s, int n);
 import "C"
 import (
 	"encoding/json"
@@ -41,12 +44,13 @@ type EngineOpenGL struct {
 	FPlatfromMessage func(message PlatformMessage, window unsafe.Pointer) bool
 
 	// Engine arguments
+	PixelRatio  float64
 	AssetsPath  *CharExportedType
 	IcuDataPath *CharExportedType
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *EngineOpenGL) Run(window uintptr) Result {
+func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
 	globalFlutterOpenGL = *flu
 
@@ -59,7 +63,12 @@ func (flu *EngineOpenGL) Run(window uintptr) Result {
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args)
+	cVmArgs := C.makeCharArray(C.int(len(vmArgs)))
+	for i, s := range vmArgs {
+		C.setArrayString(cVmArgs, C.CString(s), C.int(i))
+	}
+
+	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVmArgs, C.int(len(vmArgs)))
 	if flu.Engine == nil {
 		return KInvalidArguments
 	}

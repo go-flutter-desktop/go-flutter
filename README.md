@@ -12,7 +12,7 @@ for desktop
 This project doesn't compete with
 [this](https://github.com/google/flutter-desktop-embedding) awesome one.
 The purpose of this project is to support the 
-[Flutter](https://github.com/flutter/flutter) framework on Windows, macOS, and
+[Flutter](https://github.com/flutter/flutter) framework on Windows, MacOS, and
 Linux using a **SINGLE** code base.  
 
 [**GLFW**](https://github.com/go-gl/glfw) fits the job because it
@@ -58,11 +58,11 @@ cd ../..
 # Download the share library (CORRESPONDING to the Flutter's version shown above)
 wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/linux-x64/linux-x64-embedder -O .build/temp.zip
 
-# Move the share library
-unzip .build/temp.zip -x flutter_embedder.h && mv libflutter_engine.so flutter/library/linux/
+# Extract the share library
+unzip .build/temp.zip -x flutter_embedder.h
 
 # REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
-export CGO_LDFLAGS="-L${PWD}/flutter/library/linux"
+export CGO_LDFLAGS="-L${PWD}"
 
 # If you `go build`, the share library must stay in the same path, relative to the go binary
 
@@ -118,6 +118,48 @@ go run main.go
 
 </details>
 
+<details>
+<summary> :package: :apple: MacOS</summary>
+<h4>From binaries</h4>
+Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
+
+<h4>From source</h4>
+
+Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)  
+
+
+```bash
+# Clone
+git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+cd go-flutter-desktop-embedder
+
+# Build the flutter simpleDemo project
+cd example/simpleDemo/
+cd flutter_project/demo/
+flutter build bundle
+cd ../..
+
+# Download the share library (CORRESPONDING to the Flutter's version shown above)
+wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/darwin-x64/FlutterEmbedder.framework.zip -O .build/temp.zip
+
+# Move the share library
+unzip .build/temp.zip -d .build && unzip .build/FlutterEmbedder.framework.zip -d .build/FlutterEmbedder.framework
+mv .build/FlutterEmbedder.framework .
+
+# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
+
+# If you `go build`, the share library must stay in the same path, relative to the go binary
+
+# Get the libraries
+go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
+
+# Make sure the path in "main.go" to the `icudtl.dat` is correct.
+# Build the example project
+go build
+```
+
+</details>
 
 
 ## Flutter Demos Projects
@@ -128,7 +170,7 @@ The examples are available [here](./example/)
 
 - [x] Linux :penguin:
 - [x] Windows :checkered_flag:
-- [ ] MacOS :apple:
+- [x] MacOS :apple:
 - [x] Text input
 - [ ] Plugins
 - [x] Importable go library
