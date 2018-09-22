@@ -60,7 +60,10 @@ func OptionPixelRatio(ratio float64) Option {
 }
 
 type config struct {
-	WindowDimension   struct {x int; y int}
+	WindowDimension struct {
+		x int
+		y int
+	}
 	AssetPath         string
 	ICUDataPath       string
 	WindowInitializer func(*glfw.Window) error
@@ -234,8 +237,8 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	flutterOGL := flutter.EngineOpenGL{
 		// Engine arguments
-		AssetsPath:  (*flutter.CharExportedType)(C.CString(c.AssetPath)),
-		IcuDataPath: (*flutter.CharExportedType)(C.CString(c.ICUDataPath)),
+		AssetsPath:  (*flutter.CharExportedType)(C.CString(assetsPath)),
+		IcuDataPath: (*flutter.CharExportedType)(C.CString(icuDataPath)),
 		// Render callbacks
 		FMakeCurrent: func(v unsafe.Pointer) bool {
 			w := glfw.GoWindow(v)
@@ -259,7 +262,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		},
 		// Messaging (TextInput)
 		FPlatfromMessage: onPlatformMessage,
-		PixelRatio: c.PixelRatio,
+		PixelRatio:       c.PixelRatio,
 	}
 
 	state.notifyState = func() {
