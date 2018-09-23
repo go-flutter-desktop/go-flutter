@@ -27,8 +27,8 @@ func main() {
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionWindowDimension(800, 600),
 		gutter.OptionWindowInitializer(setIcon),
-		gutter.OptionPixelRatio(1.9),
-		gutter.OptionVmArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
+		gutter.OptionPixelRatio(1.2),
+		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
 	}
 
 	if err = gutter.Run(options...); err != nil {

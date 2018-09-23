@@ -25,9 +25,6 @@ const (
 	KInvalidArguments      Result = C.kInvalidArguments
 )
 
-// CharExportedType wrap the C char type
-type CharExportedType C.char
-
 // EngineOpenGL corresponds to the C.FlutterEngine with his associated callback's method.
 type EngineOpenGL struct {
 	// Flutter Engine.
@@ -45,8 +42,8 @@ type EngineOpenGL struct {
 
 	// Engine arguments
 	PixelRatio  float64
-	AssetsPath  *CharExportedType
-	IcuDataPath *CharExportedType
+	AssetsPath  unsafe.Pointer
+	IcuDataPath unsafe.Pointer
 }
 
 // Run launches the Flutter Engine in a background thread.
@@ -63,12 +60,12 @@ func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	cVmArgs := C.makeCharArray(C.int(len(vmArgs)))
+	cVMArgs := C.makeCharArray(C.int(len(vmArgs)))
 	for i, s := range vmArgs {
-		C.setArrayString(cVmArgs, C.CString(s), C.int(i))
+		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
 	}
 
-	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVmArgs, C.int(len(vmArgs)))
+	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
 	if flu.Engine == nil {
 		return KInvalidArguments
 	}

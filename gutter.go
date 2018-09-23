@@ -29,11 +29,11 @@ func OptionICUDataPath(p string) Option {
 	}
 }
 
-// OptionVmArguments specify the arguments to the Dart VM.
-func OptionVmArguments(a []string) Option {
+// OptionVMArguments specify the arguments to the Dart VM.
+func OptionVMArguments(a []string) Option {
 	return func(c *config) {
 		// First should be argument is argv[0]
-		c.VmArguments = append([]string{""}, a...)
+		c.VMArguments = append([]string{""}, a...)
 	}
 }
 
@@ -60,12 +60,15 @@ func OptionPixelRatio(ratio float64) Option {
 }
 
 type config struct {
-	WindowDimension   struct {x int; y int}
+	WindowDimension struct {
+		x int
+		y int
+	}
 	AssetPath         string
 	ICUDataPath       string
 	WindowInitializer func(*glfw.Window) error
 	PixelRatio        float64
-	VmArguments       []string
+	VMArguments       []string
 }
 
 func (t config) merge(options ...Option) config {
@@ -234,8 +237,8 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	flutterOGL := flutter.EngineOpenGL{
 		// Engine arguments
-		AssetsPath:  (*flutter.CharExportedType)(C.CString(c.AssetPath)),
-		IcuDataPath: (*flutter.CharExportedType)(C.CString(c.ICUDataPath)),
+		AssetsPath:  unsafe.Pointer(C.CString(c.AssetPath)),
+		IcuDataPath: unsafe.Pointer(C.CString(c.ICUDataPath)),
 		// Render callbacks
 		FMakeCurrent: func(v unsafe.Pointer) bool {
 			w := glfw.GoWindow(v)
@@ -259,7 +262,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		},
 		// Messaging (TextInput)
 		FPlatfromMessage: onPlatformMessage,
-		PixelRatio: c.PixelRatio,
+		PixelRatio:       c.PixelRatio,
 	}
 
 	state.notifyState = func() {
@@ -267,7 +270,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		updateEditingState(window)
 	}
 
-	result := flutterOGL.Run(window.GLFWWindow(), c.VmArguments)
+	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
 
 	if result != flutter.KSuccess {
 		window.Destroy()
