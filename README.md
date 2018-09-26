@@ -164,7 +164,9 @@ go build
 
 ## Flutter Demos Projects
 
-The examples are available [here](./example/)  
+The examples are available [here](./example/).
+
+<img src="./stocks.jpg" width="900" align="center" alt="Screenshot of the Stocks demo app on macOS">
 
 ## Support
 
