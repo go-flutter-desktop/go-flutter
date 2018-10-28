@@ -316,7 +316,7 @@ func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointe
 			if state.clientID != 0 {
 				editingState := flutter.ArgsEditingState{}
 				json.Unmarshal(message.Args, &editingState)
-				state.word = editingState.Text
+				state.word = []rune(editingState.Text)
 				state.selectionBase = editingState.SelectionBase
 				state.selectionExtent = editingState.SelectionExtent
 			}
@@ -334,7 +334,7 @@ func updateEditingState(window *glfw.Window) {
 	// state.word = "Лайкаа"
 
 	editingState := flutter.ArgsEditingState{
-		Text:                   state.word,
+		Text:                   string(state.word),
 		SelectionAffinity:      "TextAffinity.downstream",
 		SelectionBase:          state.selectionBase,
 		SelectionExtent:        state.selectionExtent,
