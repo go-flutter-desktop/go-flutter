@@ -7,7 +7,7 @@ import (
 
 type textModel struct {
 	clientID        float64
-	word            string
+	word            []rune
 	selectionBase   int
 	selectionExtent int
 	notifyState     func()
@@ -29,7 +29,13 @@ func (state *textModel) isSelected() bool {
 
 func (state *textModel) addChar(char []rune) {
 	state.RemoveSelectedText()
-	state.word = state.word[:state.selectionBase] + string(char) + state.word[state.selectionBase:]
+	newWord := make([]rune, 0, len(char)+len(state.word))
+	newWord = append(newWord, state.word[:state.selectionBase]...)
+	newWord = append(newWord, char...)
+	newWord = append(newWord, state.word[state.selectionBase:]...)
+
+	state.word = newWord
+
 	state.selectionBase += len(char)
 	state.selectionExtent = state.selectionBase
 	state.notifyState()
@@ -102,7 +108,7 @@ func (state *textModel) Delete(mods int) {
 	}
 
 	if state.selectionBase < len(state.word) {
-		state.word = state.word[:state.selectionBase] + state.word[state.selectionBase+1:]
+		state.word = append(state.word[:state.selectionBase], state.word[state.selectionBase+1:]...)
 		state.notifyState()
 	}
 }
@@ -113,15 +119,15 @@ func (state *textModel) Backspace(mods int) {
 		return
 	}
 
-	if state.word != "" {
+	if len(state.word) > 0 {
 		if mods == ModControl {
 			deleteUpTo := indexStartLeadingWord([]rune(state.word), state.selectionBase)
-			state.word = state.word[:deleteUpTo] + state.word[state.selectionBase:]
+			state.word = append(state.word[:deleteUpTo], state.word[state.selectionBase:]...)
 			state.selectionBase = deleteUpTo
 			state.selectionExtent = deleteUpTo
 			state.notifyState()
 		} else {
-			state.word = state.word[:state.selectionBase-1] + state.word[state.selectionBase:]
+			state.word = append(state.word[:state.selectionBase-1], state.word[state.selectionBase:]...)
 			if state.selectionBase > 0 {
 				state.selectionBase--
 			}
@@ -137,7 +143,7 @@ func (state *textModel) Backspace(mods int) {
 func (state *textModel) RemoveSelectedText() bool {
 	if state.isSelected() {
 		selectionIndexStart, selectionIndexEnd, _ := state.GetSelectedText()
-		state.word = state.word[:selectionIndexStart] + state.word[selectionIndexEnd:]
+		state.word = append(state.word[:selectionIndexStart], state.word[selectionIndexEnd:]...)
 		state.selectionBase = selectionIndexStart
 		state.selectionExtent = selectionIndexStart
 		state.selectionExtent = state.selectionBase
@@ -156,7 +162,7 @@ func (state *textModel) GetSelectedText() (int, int, string) {
 	sort.Ints(selectionIndex)
 	return selectionIndex[0],
 		selectionIndex[1],
-		state.word[selectionIndex[0]:selectionIndex[1]]
+		string(state.word[selectionIndex[0]:selectionIndex[1]])
 }
 
 // Helpers
