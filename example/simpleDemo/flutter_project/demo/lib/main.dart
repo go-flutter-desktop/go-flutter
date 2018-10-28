@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
-  static const MethodChannel _channel = const MethodChannel('plugin_demo');
+  static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
   static Future GetVersion() async {
     var res = await _channel.invokeMethod('getPlatformVersion');
     print(res);

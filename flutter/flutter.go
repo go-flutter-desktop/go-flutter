@@ -1,7 +1,10 @@
 package flutter
 
 // #include "flutter_embedder.h"
-// FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args);
+// FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
+//						 const char *const * vmArgs, int nVmAgrs, int engineID);
+// char** makeCharArray(int size);
+// void setArrayString(char **a, char *s, int n);
 import "C"
 import (
 	"encoding/json"
@@ -9,7 +12,7 @@ import (
 )
 
 // the current FlutterEngine running (associated with his callback)
-var globalFlutterOpenGL EngineOpenGL
+var flutterEngines []EngineOpenGL
 
 // Result corresponds to the C.enum retuned by the shared flutter library
 // whenever we call it.
@@ -21,9 +24,6 @@ const (
 	KInvalidLibraryVersion Result = C.kInvalidLibraryVersion
 	KInvalidArguments      Result = C.kInvalidArguments
 )
-
-// CharExportedType wrap the C char type
-type CharExportedType C.char
 
 // EngineOpenGL corresponds to the C.FlutterEngine with his associated callback's method.
 type EngineOpenGL struct {
@@ -41,14 +41,15 @@ type EngineOpenGL struct {
 	FPlatfromMessage func(message PlatformMessage, window unsafe.Pointer) bool
 
 	// Engine arguments
-	AssetsPath  *CharExportedType
-	IcuDataPath *CharExportedType
+	PixelRatio  float64
+	AssetsPath  unsafe.Pointer
+	IcuDataPath unsafe.Pointer
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *EngineOpenGL) Run(window uintptr) Result {
+func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
-	globalFlutterOpenGL = *flu
+	flutterEngines = append(flutterEngines, *flu)
 
 	args := C.FlutterProjectArgs{
 		assets_path:   (*C.char)(flu.AssetsPath),
@@ -59,7 +60,12 @@ func (flu *EngineOpenGL) Run(window uintptr) Result {
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args)
+	cVMArgs := C.makeCharArray(C.int(len(vmArgs)))
+	for i, s := range vmArgs {
+		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
+	}
+
+	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)), C.int(len(flutterEngines))-1)
 	if flu.Engine == nil {
 		return KInvalidArguments
 	}

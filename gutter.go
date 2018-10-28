@@ -29,6 +29,22 @@ func OptionICUDataPath(p string) Option {
 	}
 }
 
+// OptionVMArguments specify the arguments to the Dart VM.
+func OptionVMArguments(a []string) Option {
+	return func(c *config) {
+		// First should be argument is argv[0]
+		c.VMArguments = append([]string{""}, a...)
+	}
+}
+
+// OptionWindowDimension specify the startup's dimention of the window.
+func OptionWindowDimension(x int, y int) Option {
+	return func(c *config) {
+		c.WindowDimension.x = x
+		c.WindowDimension.y = y
+	}
+}
+
 // OptionWindowInitializer allow initializing the window.
 func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
 	return func(c *config) {
@@ -36,10 +52,24 @@ func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
 	}
 }
 
+// OptionPixelRatio specify the scale factor for the physical screen.
+func OptionPixelRatio(ratio float64) Option {
+	return func(c *config) {
+		c.PixelRatio = ratio
+	}
+}
+
 type config struct {
-	AssetPath         string
-	ICUDataPath       string
-	WindowInitializer func(*glfw.Window) error
+	WindowDimension struct {
+		x int
+		y int
+	}
+	AssetPath                string
+	ICUDataPath              string
+	WindowInitializer        func(*glfw.Window) error
+	PixelRatio               float64
+	VMArguments              []string
+	PlatformMessageReceivers []func(message flutter.PlatformMessage) bool
 }
 
 func (t config) merge(options ...Option) config {
@@ -59,12 +89,18 @@ func Run(options ...Option) (err error) {
 	)
 	c = c.merge(options...)
 
+	c.PlatformMessageReceivers = append(c.PlatformMessageReceivers, func(message flutter.PlatformMessage) bool {
+		print("==============", message.Channel)
+		return true
+	})
+
 	if err = glfw.Init(); err != nil {
 		return err
 	}
 	defer glfw.Terminate()
 
-	if window, err = glfw.CreateWindow(800, 600, "Loading..", nil, nil); err != nil {
+	window, err = glfw.CreateWindow(c.WindowDimension.x, c.WindowDimension.y, "Loading..", nil, nil)
+	if err != nil {
 		return err
 	}
 	defer window.Destroy()
@@ -73,7 +109,7 @@ func Run(options ...Option) (err error) {
 		return err
 	}
 
-	engine := runFlutter(window, c.AssetPath, c.ICUDataPath)
+	engine := runFlutter(window, c)
 
 	defer engine.Shutdown()
 
@@ -91,11 +127,13 @@ func glfwCursorPositionCallbackAtPhase(
 	window *glfw.Window, phase flutter.PointerPhase,
 	x float64, y float64,
 ) {
-
+	winWidth, _ := window.GetSize()
+	frameBuffWidth, _ := window.GetFramebufferSize()
+	contentScale := float64(frameBuffWidth / winWidth)
 	event := flutter.PointerEvent{
 		Phase:     phase,
-		X:         x,
-		Y:         y,
+		X:         x * contentScale,
+		Y:         y * contentScale,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
@@ -185,13 +223,12 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 }
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
+	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
 	event := flutter.WindowMetricsEvent{
 		Width:      width,
 		Height:     height,
-		PixelRatio: 1.2,
+		PixelRatio: flutterOGL.PixelRatio,
 	}
-
-	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
 	flutterOGL.EngineSendWindowMetricsEvent(event)
 }
 
@@ -202,12 +239,12 @@ func glfwCharCallback(w *glfw.Window, char rune) {
 }
 
 // Flutter Engine
-func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flutter.EngineOpenGL {
+func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	flutterOGL := flutter.EngineOpenGL{
 		// Engine arguments
-		AssetsPath:  (*flutter.CharExportedType)(C.CString(assetsPath)),
-		IcuDataPath: (*flutter.CharExportedType)(C.CString(icuDataPath)),
+		AssetsPath:  unsafe.Pointer(C.CString(c.AssetPath)),
+		IcuDataPath: unsafe.Pointer(C.CString(c.ICUDataPath)),
 		// Render callbacks
 		FMakeCurrent: func(v unsafe.Pointer) bool {
 			w := glfw.GoWindow(v)
@@ -230,7 +267,14 @@ func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flu
 			return false
 		},
 		// Messaging (TextInput)
-		FPlatfromMessage: onPlatformMessage,
+		FPlatfromMessage: func(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
+			// for _, receivers := range c.PlatformMessageReceivers {
+			// receivers(platMessage)
+			// }
+
+			return onPlatformMessage(platMessage, window)
+		},
+		PixelRatio: c.PixelRatio,
 	}
 
 	state.notifyState = func() {
@@ -238,7 +282,7 @@ func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flu
 		updateEditingState(window)
 	}
 
-	result := flutterOGL.Run(window.GLFWWindow())
+	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
 
 	if result != flutter.KSuccess {
 		window.Destroy()
@@ -247,18 +291,18 @@ func runFlutter(window *glfw.Window, assetsPath string, icuDataPath string) *flu
 
 	window.SetUserPointer(unsafe.Pointer(&flutterOGL))
 
-	width, height := window.GetSize()
+	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
 
 	window.SetKeyCallback(glfwKeyCallback)
-	window.SetSizeCallback(glfwWindowSizeCallback)
+	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
 	window.SetMouseButtonCallback(glfwMouseButtonCallback)
 	window.SetCharCallback(glfwCharCallback)
 	return &flutterOGL
 }
 
-// Message from the Flutter Engine
-
+// Dispatch the message from the Flutter Engine,
+// to all of his Receivers
 func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
 
 	windows := glfw.GoWindow(window)
