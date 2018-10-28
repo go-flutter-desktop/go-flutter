@@ -137,7 +137,9 @@ func glfwCursorPositionCallbackAtPhase(
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL := *flutter.SelectEngine(0)
+
 	flutterOGL.EngineSendPointerEvent(event)
 }
 
@@ -223,7 +225,10 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 }
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
-	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+
+	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL := *flutter.SelectEngine(0)
+
 	event := flutter.WindowMetricsEvent{
 		Width:      width,
 		Height:     height,
@@ -282,14 +287,15 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		updateEditingState(window)
 	}
 
-	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
+	// result, engineIndex := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
+	result, _ := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
 
 	if result != flutter.KSuccess {
 		window.Destroy()
 		panic("Couldn't launch the FlutterEngine")
 	}
 
-	window.SetUserPointer(unsafe.Pointer(&flutterOGL))
+	// window.SetUserPointer(unsafe.Pointer(&engineIndex))
 
 	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
@@ -368,6 +374,7 @@ func updateEditingState(window *glfw.Window) {
 		Message: message,
 	}
 
-	flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
+	flutterOGL := *flutter.SelectEngine(0)
 	flutterOGL.EngineSendPlatformMessage(mess)
 }

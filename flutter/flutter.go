@@ -12,7 +12,12 @@ import (
 )
 
 // the current FlutterEngine running (associated with his callback)
-var flutterEngines []EngineOpenGL
+var flutterEngines []*EngineOpenGL
+
+// SelectEngine return a EngineOpenGL from an index
+func SelectEngine(index int) *EngineOpenGL {
+	return flutterEngines[index]
+}
 
 // Result corresponds to the C.enum retuned by the shared flutter library
 // whenever we call it.
@@ -47,9 +52,10 @@ type EngineOpenGL struct {
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
+// return a flutter Result and the index of the EngineOpenGL in the global List
+func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) (Result, C.int) {
 
-	flutterEngines = append(flutterEngines, *flu)
+	flutterEngines = append(flutterEngines, flu)
 
 	args := C.FlutterProjectArgs{
 		assets_path:   (*C.char)(flu.AssetsPath),
@@ -67,10 +73,10 @@ func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
 	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)), C.int(len(flutterEngines))-1)
 	if flu.Engine == nil {
-		return KInvalidArguments
+		return KInvalidArguments, 0
 	}
 
-	return (Result)(res)
+	return (Result)(res), C.int(len(flutterEngines) - 1)
 }
 
 // Shutdown stops the Flutter engine.
