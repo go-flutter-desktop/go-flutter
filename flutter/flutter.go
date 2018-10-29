@@ -2,7 +2,7 @@ package flutter
 
 // #include "flutter_embedder.h"
 // FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
-//						 const char *const * vmArgs, int nVmAgrs, int engineID);
+//						 const char *const * vmArgs, int nVmAgrs);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
 import "C"
@@ -17,6 +17,11 @@ var flutterEngines []*EngineOpenGL
 // SelectEngine return a EngineOpenGL from an index
 func SelectEngine(index int) *EngineOpenGL {
 	return flutterEngines[index]
+}
+
+// NumberOfEngines return the number of engine registered into this embedder
+func NumberOfEngines() C.int {
+	return C.int(len(flutterEngines))
 }
 
 // Result corresponds to the C.enum retuned by the shared flutter library
@@ -47,21 +52,20 @@ type EngineOpenGL struct {
 
 	// Engine arguments
 	PixelRatio  float64
-	AssetsPath  unsafe.Pointer
-	IcuDataPath unsafe.Pointer
+	AssetsPath  string
+	IcuDataPath string
 }
 
 // Run launches the Flutter Engine in a background thread.
-// return a flutter Result and the index of the EngineOpenGL in the global List
-func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) (Result, C.int) {
+func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
 	flutterEngines = append(flutterEngines, flu)
 
 	args := C.FlutterProjectArgs{
-		assets_path:   (*C.char)(flu.AssetsPath),
+		assets_path:   C.CString(flu.AssetsPath),
 		main_path:     C.CString(""),
 		packages_path: C.CString(""),
-		icu_data_path: (*C.char)(flu.IcuDataPath),
+		icu_data_path: C.CString(flu.IcuDataPath),
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
@@ -71,12 +75,12 @@ func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) (Result, C.int) {
 		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
 	}
 
-	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)), C.int(len(flutterEngines))-1)
+	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
 	if flu.Engine == nil {
-		return KInvalidArguments, 0
+		return KInvalidArguments
 	}
 
-	return (Result)(res), C.int(len(flutterEngines) - 1)
+	return (Result)(res)
 }
 
 // Shutdown stops the Flutter engine.
@@ -142,17 +146,15 @@ func (flu *EngineOpenGL) EngineSendWindowMetricsEvent(Metric WindowMetricsEvent)
 	return (Result)(res)
 }
 
-type platformMessageResponseHandle C.FlutterPlatformMessageResponseHandle
-
 // PlatformMessage represents a message from or to the Flutter Engine (and thus the dart code)
 type PlatformMessage struct {
 	Channel        string
 	Message        Message
-	ResponseHandle *platformMessageResponseHandle
+	ResponseHandle *C.FlutterPlatformMessageResponseHandle
 }
 
-// EngineSendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
-func (flu *EngineOpenGL) EngineSendPlatformMessage(Message PlatformMessage) Result {
+// SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
+func (flu *EngineOpenGL) SendPlatformMessage(Message PlatformMessage) Result {
 
 	marshalled, err := json.Marshal(Message.Message)
 	if err != nil {
@@ -174,6 +176,20 @@ func (flu *EngineOpenGL) EngineSendPlatformMessage(Message PlatformMessage) Resu
 	)
 
 	return (Result)(res)
+}
+
+// SendPlatformMessageResponse is used to send a message to the Flutter side using the correct ResponseHandle!
+func (flu *EngineOpenGL) SendPlatformMessageResponse(
+	data string,
+	message PlatformMessage) Result {
+
+	res := C.FlutterEngineSendPlatformMessageResponse(
+		flu.Engine,
+		(*C.FlutterPlatformMessageResponseHandle)(message.ResponseHandle),
+		(*C.uint8_t)(unsafe.Pointer(C.CString(data))), (C.ulong)(len(data)))
+
+	return (Result)(res)
+
 }
 
 // EngineFlushPendingTasksNow flush tasks on a  message loop not controlled by the Flutter engine.

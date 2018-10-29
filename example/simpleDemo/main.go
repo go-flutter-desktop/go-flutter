@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"image"
 	_ "image/png"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 
 	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
+	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -29,6 +31,7 @@ func main() {
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
+		gutter.OptionAddPluginReceiver(ownPlugin),
 	}
 
 	if err = gutter.Run(options...); err != nil {
@@ -50,4 +53,23 @@ func setIcon(window *glfw.Window) error {
 	}
 	window.SetIcon([]image.Image{img})
 	return nil
+}
+
+// Plugin that read the stdin and send the number to the dart side
+func ownPlugin(
+	platMessage flutter.PlatformMessage,
+	flutterEngine *flutter.EngineOpenGL,
+	window *glfw.Window,
+) bool {
+	if platMessage.Channel == "plugin_demo" {
+
+		go func() {
+			reader := bufio.NewReader(os.Stdin)
+			print("Reading (A number): ")
+			s, _ := reader.ReadString('\n')
+			flutterEngine.SendPlatformMessageResponse("[ "+s+" ]", platMessage)
+		}()
+
+	}
+	return true
 }

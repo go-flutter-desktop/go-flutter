@@ -12,74 +12,6 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-// Option for gutter
-type Option func(*config)
-
-// OptionAssetPath specify the flutter asset directory.
-func OptionAssetPath(p string) Option {
-	return func(c *config) {
-		c.AssetPath = p
-	}
-}
-
-// OptionICUDataPath specify the path to the ICUData.
-func OptionICUDataPath(p string) Option {
-	return func(c *config) {
-		c.ICUDataPath = p
-	}
-}
-
-// OptionVMArguments specify the arguments to the Dart VM.
-func OptionVMArguments(a []string) Option {
-	return func(c *config) {
-		// First should be argument is argv[0]
-		c.VMArguments = append([]string{""}, a...)
-	}
-}
-
-// OptionWindowDimension specify the startup's dimention of the window.
-func OptionWindowDimension(x int, y int) Option {
-	return func(c *config) {
-		c.WindowDimension.x = x
-		c.WindowDimension.y = y
-	}
-}
-
-// OptionWindowInitializer allow initializing the window.
-func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
-	return func(c *config) {
-		c.WindowInitializer = ini
-	}
-}
-
-// OptionPixelRatio specify the scale factor for the physical screen.
-func OptionPixelRatio(ratio float64) Option {
-	return func(c *config) {
-		c.PixelRatio = ratio
-	}
-}
-
-type config struct {
-	WindowDimension struct {
-		x int
-		y int
-	}
-	AssetPath                string
-	ICUDataPath              string
-	WindowInitializer        func(*glfw.Window) error
-	PixelRatio               float64
-	VMArguments              []string
-	PlatformMessageReceivers []func(message flutter.PlatformMessage) bool
-}
-
-func (t config) merge(options ...Option) config {
-	for _, opt := range options {
-		opt(&t)
-	}
-
-	return t
-}
-
 // Run executes a flutter application with the provided options.
 // given limitations this method must be called by the main function directly.
 func Run(options ...Option) (err error) {
@@ -87,12 +19,14 @@ func Run(options ...Option) (err error) {
 		window *glfw.Window
 		c      config
 	)
+
+	// The Windows Title Handler and the TextInput handler come by default
+	options = append(options, addHandlerWindowTitle())
+	options = append(options, addHandlerTextInput())
+
 	c = c.merge(options...)
 
-	c.PlatformMessageReceivers = append(c.PlatformMessageReceivers, func(message flutter.PlatformMessage) bool {
-		print("==============", message.Channel)
-		return true
-	})
+	// c.addHandlerWindowTitle()
 
 	if err = glfw.Init(); err != nil {
 		return err
@@ -137,8 +71,7 @@ func glfwCursorPositionCallbackAtPhase(
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
-	flutterOGL := *flutter.SelectEngine(0)
+	flutterOGL := flutter.SelectEngine(0)
 
 	flutterOGL.EngineSendPointerEvent(event)
 }
@@ -226,8 +159,7 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
 
-	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
-	flutterOGL := *flutter.SelectEngine(0)
+	flutterOGL := flutter.SelectEngine(0)
 
 	event := flutter.WindowMetricsEvent{
 		Width:      width,
@@ -248,8 +180,8 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	flutterOGL := flutter.EngineOpenGL{
 		// Engine arguments
-		AssetsPath:  unsafe.Pointer(C.CString(c.AssetPath)),
-		IcuDataPath: unsafe.Pointer(C.CString(c.ICUDataPath)),
+		AssetsPath:  c.AssetPath,
+		IcuDataPath: c.ICUDataPath,
 		// Render callbacks
 		FMakeCurrent: func(v unsafe.Pointer) bool {
 			w := glfw.GoWindow(v)
@@ -271,15 +203,22 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		FMakeResourceCurrent: func(v unsafe.Pointer) bool {
 			return false
 		},
-		// Messaging (TextInput)
-		FPlatfromMessage: func(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
-			// for _, receivers := range c.PlatformMessageReceivers {
-			// receivers(platMessage)
-			// }
-
-			return onPlatformMessage(platMessage, window)
-		},
 		PixelRatio: c.PixelRatio,
+	}
+
+	// PlatformMessage
+	flutterOGL.FPlatfromMessage = func(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
+		windows := glfw.GoWindow(window)
+
+		hasDispatched := false
+
+		// Dispatch the message from the Flutter Engine,
+		// to all of his Receivers
+		for _, receivers := range c.PlatformMessageReceivers {
+			hasDispatched = receivers(platMessage, &flutterOGL, windows) || hasDispatched
+		}
+
+		return hasDispatched
 	}
 
 	state.notifyState = func() {
@@ -287,15 +226,14 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		updateEditingState(window)
 	}
 
-	// result, engineIndex := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
-	result, _ := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
+	NbEngine := flutter.NumberOfEngines()
+	window.SetUserPointer(unsafe.Pointer(&NbEngine))
+	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
 
 	if result != flutter.KSuccess {
 		window.Destroy()
 		panic("Couldn't launch the FlutterEngine")
 	}
-
-	// window.SetUserPointer(unsafe.Pointer(&engineIndex))
 
 	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
@@ -307,51 +245,10 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	return &flutterOGL
 }
 
-// Dispatch the message from the Flutter Engine,
-// to all of his Receivers
-func onPlatformMessage(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
-
-	windows := glfw.GoWindow(window)
-	message := platMessage.Message
-
-	// fmt.Println(string(platMessage.Message.Args))
-
-	if message.Method == flutter.SetDescriptionMethod {
-		msgBody := flutter.ArgsAppSwitcherDescription{}
-		json.Unmarshal(message.Args, &msgBody)
-		windows.SetTitle(msgBody.Label)
-	}
-
-	if platMessage.Channel == flutter.TextInputChannel {
-		switch message.Method {
-		case flutter.TextInputClientClear:
-			state.clientID = 0
-		case flutter.TextInputClientSet:
-			var body []interface{}
-			json.Unmarshal(message.Args, &body)
-			state.clientID = body[0].(float64)
-		case flutter.TextInputSetEditState:
-			if state.clientID != 0 {
-				editingState := flutter.ArgsEditingState{}
-				json.Unmarshal(message.Args, &editingState)
-				state.word = editingState.Text
-				state.selectionBase = editingState.SelectionBase
-				state.selectionExtent = editingState.SelectionExtent
-			}
-		default:
-			// log.Printf("unhandled text input method: %#v\n", platMessage.Message)
-		}
-	}
-
-	return true
-}
-
 // Update the TextInput with the current state
 func updateEditingState(window *glfw.Window) {
 
-	// state.word = "Лайкаа"
-
-	editingState := flutter.ArgsEditingState{
+	editingState := ArgsEditingState{
 		Text:                   state.word,
 		SelectionAffinity:      "TextAffinity.downstream",
 		SelectionBase:          state.selectionBase,
@@ -366,15 +263,14 @@ func updateEditingState(window *glfw.Window) {
 
 	message := flutter.Message{
 		Args:   editingStateMarchalled,
-		Method: flutter.TextUpdateStateMethod,
+		Method: TextUpdateStateMethod,
 	}
 
 	var mess = flutter.PlatformMessage{
-		Channel: flutter.TextInputChannel,
+		Channel: TextInputChannel,
 		Message: message,
 	}
 
-	// flutterOGL := *(*flutter.EngineOpenGL)(window.GetUserPointer())
-	flutterOGL := *flutter.SelectEngine(0)
-	flutterOGL.EngineSendPlatformMessage(mess)
+	flutterOGL := flutter.SelectEngine(0)
+	flutterOGL.SendPlatformMessage(mess)
 }

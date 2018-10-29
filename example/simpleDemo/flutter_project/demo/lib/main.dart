@@ -33,22 +33,27 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
-  static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
-  static Future GetVersion() async {
-    var res = await _channel.invokeMethod('getPlatformVersion');
-    print(res);
-
-  }
-
   @override
   _MyHomePageState createState() {
-    GetVersion();
     return new _MyHomePageState();
   }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+
+  static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
+  Future GetVersion() async {
+    var res = await _channel.invokeMethod('getPlatformVersion');
+    print(res);
+    setState(() {
+      _counter = res;
+    });
+  }
+
+
   int _counter = 0;
+  bool _ok = false;
 
   void _incrementCounter() {
     setState(() {
@@ -58,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_ok) {
+      GetVersion();
+      _ok = true;
+    }
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(widget.title),

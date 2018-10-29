@@ -10,8 +10,6 @@
 // } closure;
 
 // C proxies def
-bool proxy_make_current_test(int engineID, void *v);
-BoolCallback proxy_make_current_func(int engineID);
 bool proxy_make_current(void *v);
 bool proxy_clear_current(void *v);
 bool proxy_present(void *v);
@@ -23,21 +21,14 @@ bool proxy_on_platform_message(FlutterPlatformMessage *message,
 
 // C helper
 FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
-												const char *const * vmArgs, int nVmAgrs, int engineID) {
+												const char *const * vmArgs, int nVmAgrs) {
 
 	FlutterRendererConfig config = {};
 	config.type = kOpenGL;
 
 	config.open_gl.struct_size = sizeof(FlutterOpenGLRendererConfig);
 
-  // bool closure_make_current(void *v) {
-    // printf("%i ---\n", engineID);
-    // return proxy_make_current_test(engineID, v);
-  // }
-
-  config.open_gl.make_current = proxy_make_current_func(engineID);
-  // config.open_gl.make_current = closure_make_current;
-  // config.open_gl.make_current = proxy_make_current;
+  config.open_gl.make_current = proxy_make_current;
   config.open_gl.clear_current = proxy_clear_current;
   config.open_gl.present = proxy_present;
   config.open_gl.fbo_callback = proxy_fbo_callback;
