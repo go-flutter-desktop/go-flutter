@@ -6,8 +6,6 @@ import (
 	"time"
 	"unsafe"
 
-	"C"
-
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
