@@ -3,6 +3,9 @@
 # Go Flutter desktop embedder 
 
 [![Join the chat at https://gitter.im/go-flutter-desktop-embedder/Lobby](https://badges.gitter.im/go-flutter-desktop-embedder/Lobby.svg)](https://gitter.im/go-flutter-desktop-embedder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+<a href="https://stackoverflow.com/questions/tagged/flutter?sort=votes">
+   <img alt="Awesome Flutter" src="https://img.shields.io/badge/Awesome-Flutter-blue.svg?longCache=true&style=flat-square" />
+</a>
 
 A Go (golang) [Custom Flutter Engine
 Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
