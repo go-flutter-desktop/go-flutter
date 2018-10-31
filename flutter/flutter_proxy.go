@@ -3,8 +3,7 @@ package flutter
 /*
 #include "flutter_embedder.h"
 
-static char* converter(uint8_t *str, size_t size){
-	str[size] = '\0'; // Prevent overFlow
+static char *c_str(uint8_t *str){
 	return (char *)str;
 }
 */
@@ -20,7 +19,7 @@ import (
 //export proxy_on_platform_message
 func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer unsafe.Pointer) C.bool {
 	if message.message != nil {
-		str := C.GoString(C.converter(message.message, message.message_size))
+		str := C.GoStringN(C.c_str(message.message), C.int(message.message_size))
 
 		FlutterPlatformMessage := PlatformMessage{}
 
