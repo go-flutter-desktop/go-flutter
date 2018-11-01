@@ -64,10 +64,9 @@ wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4
 # Extract the share library
 unzip .build/temp.zip -x flutter_embedder.h
 
-# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+# REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-L${PWD}"
-
-# If you `go build`, the share library must stay in the same path, relative to the go binary
+# The share library must stay next to the generated binary.
 
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
@@ -75,6 +74,8 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
 go build
+
+# `go run main.go` is not working ATM.
 ```
 
 </details>
@@ -106,17 +107,18 @@ cd ../..
 # Move the share library
 # => "flutter_engine.dll" must be in the flutter example project (where the main.go is)
 
-# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+# REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
-
-# If you `go build`, the share library must stay in the same path, relative to the go binary
+# The share library must stay next to the generated binary.
 
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
-# Build or Run the example project
-go run main.go
+# Build the example project
+go build
+
+# `go run main.go` is not working ATM.
 ```
 
 </details>
@@ -149,10 +151,9 @@ wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4
 unzip .build/temp.zip -d .build && unzip .build/FlutterEmbedder.framework.zip -d .build/FlutterEmbedder.framework
 mv .build/FlutterEmbedder.framework .
 
-# REQUIRED: When using `go build` or `go run main.go`, the go library need to know where to look for the share library
+# REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
-
-# If you `go build`, the share library must stay in the same path, relative to the go binary
+# The share library must stay next to the generated binary.
 
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
@@ -160,6 +161,8 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
 go build
+
+# `go run main.go` is not working ATM.
 ```
 
 </details>
