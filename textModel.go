@@ -59,7 +59,7 @@ func (state *textModel) MoveCursorEnd(mods int) {
 
 func (state *textModel) MoveCursorLeft(mods int) {
 	if mods == ModShiftControl || mods == ModControl {
-		state.selectionBase = indexStartLeadingWord([]rune(state.word), state.selectionBase)
+		state.selectionBase = indexStartLeadingWord(state.word, state.selectionBase)
 	} else if state.selectionBase > 0 {
 
 		if mods != ModShift && state.isSelected() {
@@ -78,7 +78,7 @@ func (state *textModel) MoveCursorLeft(mods int) {
 
 func (state *textModel) MoveCursorRight(mods int) {
 	if mods == ModShiftControl || mods == ModControl {
-		state.selectionBase = indexEndForwardWord([]rune(state.word), state.selectionBase)
+		state.selectionBase = indexEndForwardWord(state.word, state.selectionBase)
 	} else if state.selectionBase < len(state.word) {
 
 		if mods != ModShift && state.isSelected() {
@@ -119,9 +119,9 @@ func (state *textModel) Backspace(mods int) {
 		return
 	}
 
-	if len(state.word) > 0 {
+	if len(state.word) > 0 && state.selectionBase > 0 {
 		if mods == ModControl {
-			deleteUpTo := indexStartLeadingWord([]rune(state.word), state.selectionBase)
+			deleteUpTo := indexStartLeadingWord(state.word, state.selectionBase)
 			state.word = append(state.word[:deleteUpTo], state.word[state.selectionBase:]...)
 			state.selectionBase = deleteUpTo
 			state.selectionExtent = deleteUpTo
