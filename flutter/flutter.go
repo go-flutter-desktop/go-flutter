@@ -12,7 +12,17 @@ import (
 )
 
 // the current FlutterEngine running (associated with his callback)
-var globalFlutterOpenGL EngineOpenGL
+var flutterEngines []*EngineOpenGL
+
+// SelectEngine return a EngineOpenGL from an index
+func SelectEngine(index int) *EngineOpenGL {
+	return flutterEngines[index]
+}
+
+// NumberOfEngines return the number of engine registered into this embedder
+func NumberOfEngines() C.int {
+	return C.int(len(flutterEngines))
+}
 
 // Result corresponds to the C.enum retuned by the shared flutter library
 // whenever we call it.
@@ -42,20 +52,20 @@ type EngineOpenGL struct {
 
 	// Engine arguments
 	PixelRatio  float64
-	AssetsPath  unsafe.Pointer
-	IcuDataPath unsafe.Pointer
+	AssetsPath  string
+	IcuDataPath string
 }
 
 // Run launches the Flutter Engine in a background thread.
 func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 
-	globalFlutterOpenGL = *flu
+	flutterEngines = append(flutterEngines, flu)
 
 	args := C.FlutterProjectArgs{
-		assets_path:   (*C.char)(flu.AssetsPath),
+		assets_path:   C.CString(flu.AssetsPath),
 		main_path:     C.CString(""),
 		packages_path: C.CString(""),
-		icu_data_path: (*C.char)(flu.IcuDataPath),
+		icu_data_path: C.CString(flu.IcuDataPath),
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
@@ -136,17 +146,24 @@ func (flu *EngineOpenGL) EngineSendWindowMetricsEvent(Metric WindowMetricsEvent)
 	return (Result)(res)
 }
 
-type platformMessageResponseHandle C.FlutterPlatformMessageResponseHandle
-
-// PlatformMessage represents a message from or to the Flutter Engine (and thus the dart code)
+// PlatformMessage represents a `MethodChannel` serialized with the `JSONMethodCodec`
+// TODO Support for `StandardMethodCodec`
 type PlatformMessage struct {
 	Channel        string
 	Message        Message
-	ResponseHandle *platformMessageResponseHandle
+	ResponseHandle *C.FlutterPlatformMessageResponseHandle
 }
 
-// EngineSendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
-func (flu *EngineOpenGL) EngineSendPlatformMessage(Message PlatformMessage) Result {
+// Message is the json content of a PlatformMessage
+type Message struct {
+	// Describe the method
+	Method string `json:"method"`
+	// Actual datas
+	Args json.RawMessage `json:"args"`
+}
+
+// SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
+func (flu *EngineOpenGL) SendPlatformMessage(Message PlatformMessage) Result {
 
 	marshalled, err := json.Marshal(Message.Message)
 	if err != nil {
@@ -168,6 +185,22 @@ func (flu *EngineOpenGL) EngineSendPlatformMessage(Message PlatformMessage) Resu
 	)
 
 	return (Result)(res)
+}
+
+// SendPlatformMessageResponse is used to send a message to the Flutter side using the correct ResponseHandle!
+func (flu *EngineOpenGL) SendPlatformMessageResponse(
+	responseTo PlatformMessage,
+	data []byte,
+) Result {
+
+	res := C.FlutterEngineSendPlatformMessageResponse(
+		flu.Engine,
+		(*C.FlutterPlatformMessageResponseHandle)(responseTo.ResponseHandle),
+		(*C.uint8_t)(unsafe.Pointer(C.CBytes(data))),
+		(C.ulong)(len(data)))
+
+	return (Result)(res)
+
 }
 
 // EngineFlushPendingTasksNow flush tasks on a  message loop not controlled by the Flutter engine.

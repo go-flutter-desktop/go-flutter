@@ -22,7 +22,7 @@ func main() {
 		// gutter.OptionICUDataPath("./FlutterEmbedder.framework/Resources/icudtl.dat"),             // OSX
 		gutter.OptionWindowDimension(800, 600),
 		gutter.OptionWindowInitializer(setIcon),
-		gutter.OptionPixelRatio(1.9),
+		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
 	}
 

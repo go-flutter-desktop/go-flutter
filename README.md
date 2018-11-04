@@ -168,6 +168,7 @@ go build
 </details>
 
 
+
 ## Flutter Demos Projects
 
 The examples are available [here](./example/).
@@ -179,16 +180,20 @@ The examples are available [here](./example/).
 - [x] Linux :penguin:
 - [x] Windows :checkered_flag:
 - [x] MacOS :apple:
-- [x] Text input
-- [ ] Plugins
 - [x] Importable go library
-- [x] Clipboard (through shortcuts)
-- [ ] Clipboard (through the click)
-- [x] Keyboard shortcuts
-   - [x] <kbd>ctrl-c</kbd>  <kbd>ctrl-v</kbd>  <kbd>ctrl-x</kbd>  <kbd>ctrl-a</kbd>
-   - [x] <kbd>Home</kbd>  <kbd>End</kbd>  <kbd>shift-Home</kbd>  <kbd>shift-End</kbd>
-   - [x] <kbd>Left</kbd>  <kbd>ctrl-Left</kbd>  <kbd>ctrl-shift-Left</kbd>
-   - [x] <kbd>Right</kbd>  <kbd>ctrl-Right</kbd>  <kbd>ctrl-shift-Right</kbd>
-   - [x] <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
-   - [ ] <kbd>ctrl-Delete</kbd>
-- [ ] Key events
+- [ ] Plugins [Medium article on how the the Flutter's messaging works](https://medium.com/flutter-io/flutter-platform-channels-ce7f540a104e)
+   - [x] JSON MethodChannel
+   - [ ] StandardMethodCodec, ...
+- [ ] System plugins [Platform channels used by the Flutter system](https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/system_channels.dart)
+  - [x] Window Title
+  - [x] Text input
+  - [x] Clipboard (through shortcuts)
+  - [ ] Clipboard (through the click)
+  - [x] Keyboard shortcuts
+    - [x] <kbd>ctrl-c</kbd>  <kbd>ctrl-v</kbd>  <kbd>ctrl-x</kbd>  <kbd>ctrl-a</kbd>
+    - [x] <kbd>Home</kbd>  <kbd>End</kbd>  <kbd>shift-Home</kbd>  <kbd>shift-End</kbd>
+    - [x] <kbd>Left</kbd>  <kbd>ctrl-Left</kbd>  <kbd>ctrl-shift-Left</kbd>
+    - [x] <kbd>Right</kbd>  <kbd>ctrl-Right</kbd>  <kbd>ctrl-shift-Right</kbd>
+    - [x] <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
+    - [ ] <kbd>ctrl-Delete</kbd>
+  - [ ] Key events

@@ -15,18 +15,18 @@ bool proxy_on_platform_message(FlutterPlatformMessage *message,
 
 // C helper
 FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
-						 const char *const * vmArgs, int nVmAgrs) {
+												const char *const * vmArgs, int nVmAgrs) {
 
 	FlutterRendererConfig config = {};
 	config.type = kOpenGL;
 
 	config.open_gl.struct_size = sizeof(FlutterOpenGLRendererConfig);
 
-	config.open_gl.make_current = proxy_make_current;
-	config.open_gl.clear_current = proxy_clear_current;
-	config.open_gl.present = proxy_present;
-	config.open_gl.fbo_callback = proxy_fbo_callback;
-	config.open_gl.make_resource_current = proxy_make_resource_current;
+  config.open_gl.make_current = proxy_make_current;
+  config.open_gl.clear_current = proxy_clear_current;
+  config.open_gl.present = proxy_present;
+  config.open_gl.fbo_callback = proxy_fbo_callback;
+  config.open_gl.make_resource_current = proxy_make_resource_current;
 
 	Args->command_line_argc = nVmAgrs;
 	Args->command_line_argv = vmArgs;

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 
+import 'package:flutter/services.dart';
+import 'dart:async';
+
 void main() {
   // Desktop platforms aren't a valid platform.
   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
@@ -31,11 +34,26 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
+  _MyHomePageState createState() {
+    return new _MyHomePageState();
+  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+
+  static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
+  Future GetVersion() async {
+    var res = await _channel.invokeMethod('getNumber');
+    print(res);
+    setState(() {
+      _counter = res;
+    });
+  }
+
+
   int _counter = 0;
+  bool _ok = false;
 
   void _incrementCounter() {
     setState(() {
@@ -45,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_ok) {
+      GetVersion();
+      _ok = true;
+    }
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(widget.title),

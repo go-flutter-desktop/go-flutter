@@ -10,8 +10,9 @@ static char *c_str(uint8_t *str){
 import "C"
 import (
 	"encoding/json"
-	"fmt"
 	"unsafe"
+
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 // C proxies
@@ -28,11 +29,9 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 
 		FlutterPlatformMessage.Message = messageContent
 		FlutterPlatformMessage.Channel = C.GoString(message.channel)
-		if message.response_handle == nil {
-			fmt.Println("==================== NIL")
-		}
+		FlutterPlatformMessage.ResponseHandle = message.response_handle
 
-		return C.bool(globalFlutterOpenGL.FPlatfromMessage(FlutterPlatformMessage, userPointer))
+		return C.bool(flutterEngines[0].FPlatfromMessage(FlutterPlatformMessage, userPointer))
 	}
 	return C.bool(false)
 
@@ -40,25 +39,35 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 
 //export proxy_make_current
 func proxy_make_current(v unsafe.Pointer) C.bool {
-	return C.bool(globalFlutterOpenGL.FMakeCurrent(v))
+	w := glfw.GoWindow(v)
+	index := *(*C.int)(w.GetUserPointer())
+	return C.bool(flutterEngines[index].FMakeCurrent(v))
 }
 
 //export proxy_clear_current
 func proxy_clear_current(v unsafe.Pointer) C.bool {
-	return C.bool(globalFlutterOpenGL.FClearCurrent(v))
+	w := glfw.GoWindow(v)
+	index := *(*C.int)(w.GetUserPointer())
+	return C.bool(flutterEngines[index].FClearCurrent(v))
 }
 
 //export proxy_present
 func proxy_present(v unsafe.Pointer) C.bool {
-	return C.bool(globalFlutterOpenGL.FPresent(v))
+	w := glfw.GoWindow(v)
+	index := *(*C.int)(w.GetUserPointer())
+	return C.bool(flutterEngines[index].FPresent(v))
 }
 
 //export proxy_fbo_callback
 func proxy_fbo_callback(v unsafe.Pointer) C.uint32_t {
-	return C.uint32_t(globalFlutterOpenGL.FFboCallback(v))
+	w := glfw.GoWindow(v)
+	index := *(*C.int)(w.GetUserPointer())
+	return C.uint32_t(flutterEngines[index].FFboCallback(v))
 }
 
 //export proxy_make_resource_current
 func proxy_make_resource_current(v unsafe.Pointer) C.bool {
-	return C.bool(globalFlutterOpenGL.FMakeResourceCurrent(v))
+	w := glfw.GoWindow(v)
+	index := *(*C.int)(w.GetUserPointer())
+	return C.bool(flutterEngines[index].FMakeResourceCurrent(v))
 }
