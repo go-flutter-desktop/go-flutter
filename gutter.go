@@ -204,7 +204,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	}
 
 	// PlatformMessage
-	flutterOGL.FPlatfromMessage = func(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
+	flutterOGL.FPlatfromMessage = func(platMessage *flutter.PlatformMessage, window unsafe.Pointer) bool {
 		windows := glfw.GoWindow(window)
 
 		hasDispatched := false
@@ -263,7 +263,7 @@ func updateEditingState(window *glfw.Window) {
 		Method: textUpdateStateMethod,
 	}
 
-	var mess = flutter.PlatformMessage{
+	var mess = &flutter.PlatformMessage{
 		Channel: textInputChannel,
 		Message: message,
 	}

@@ -22,15 +22,14 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 	if message.message != nil {
 		str := C.GoStringN(C.c_str(message.message), C.int(message.message_size))
 
-		FlutterPlatformMessage := PlatformMessage{}
-
 		messageContent := Message{}
 		json.Unmarshal([]byte(str), &messageContent)
 
-		FlutterPlatformMessage.Message = messageContent
-		FlutterPlatformMessage.Channel = C.GoString(message.channel)
-		FlutterPlatformMessage.ResponseHandle = message.response_handle
-
+		FlutterPlatformMessage := &PlatformMessage{
+			Message:        messageContent,
+			Channel:        C.GoString(message.channel),
+			ResponseHandle: message.response_handle,
+		}
 		return C.bool(flutterEngines[0].FPlatfromMessage(FlutterPlatformMessage, userPointer))
 	}
 	return C.bool(false)

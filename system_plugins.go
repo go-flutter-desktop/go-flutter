@@ -34,11 +34,11 @@ type ArgsAppSwitcherDescription struct {
 func addHandlerWindowTitle() Option {
 
 	var handler PluginReceivers = func(
-		platMessage flutter.PlatformMessage,
+		platMessage *flutter.PlatformMessage,
 		flutterEngine *flutter.EngineOpenGL,
 		window *glfw.Window,
 	) bool {
-		message := platMessage.Message
+		message := &platMessage.Message
 
 		if message.Method == setDescriptionMethod {
 			msgBody := ArgsAppSwitcherDescription{}
@@ -54,11 +54,11 @@ func addHandlerWindowTitle() Option {
 }
 
 func addHandlerClipboard() Option {
-	handler := func(platMessage flutter.PlatformMessage,
+	handler := func(platMessage *flutter.PlatformMessage,
 		flutterEngine *flutter.EngineOpenGL,
 		window *glfw.Window) bool {
 
-		message := platMessage.Message
+		message := &platMessage.Message
 		switch message.Method {
 		case clipboardSetData:
 			newClipboard := struct {
@@ -124,12 +124,12 @@ type argsEditingState struct {
 func addHandlerTextInput() Option {
 
 	var handler PluginReceivers = func(
-		platMessage flutter.PlatformMessage,
+		platMessage *flutter.PlatformMessage,
 		flutterEngine *flutter.EngineOpenGL,
 		window *glfw.Window,
 	) bool {
 
-		message := platMessage.Message
+		message := &platMessage.Message
 
 		switch message.Method {
 		case textInputClientClear:

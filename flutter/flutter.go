@@ -48,7 +48,7 @@ type EngineOpenGL struct {
 	FMakeResourceCurrent func(v unsafe.Pointer) bool
 
 	// platform message callback.
-	FPlatfromMessage func(message PlatformMessage, window unsafe.Pointer) bool
+	FPlatfromMessage func(message *PlatformMessage, window unsafe.Pointer) bool
 
 	// Engine arguments
 	PixelRatio  float64
@@ -163,9 +163,9 @@ type Message struct {
 }
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
-func (flu *EngineOpenGL) SendPlatformMessage(Message PlatformMessage) Result {
+func (flu *EngineOpenGL) SendPlatformMessage(Message *PlatformMessage) Result {
 
-	marshalled, err := json.Marshal(Message.Message)
+	marshalled, err := json.Marshal(&Message.Message)
 	if err != nil {
 		panic("Cound not send a message to the flutter engine: Error while creating the JSON")
 	}
@@ -189,7 +189,7 @@ func (flu *EngineOpenGL) SendPlatformMessage(Message PlatformMessage) Result {
 
 // SendPlatformMessageResponse is used to send a message to the Flutter side using the correct ResponseHandle!
 func (flu *EngineOpenGL) SendPlatformMessageResponse(
-	responseTo PlatformMessage,
+	responseTo *PlatformMessage,
 	data []byte,
 ) Result {
 
