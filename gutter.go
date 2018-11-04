@@ -21,6 +21,7 @@ func Run(options ...Option) (err error) {
 	// The Windows Title Handler and the TextInput handler come by default
 	options = append(options, addHandlerWindowTitle())
 	options = append(options, addHandlerTextInput())
+	options = append(options, addHandlerClipboard())
 
 	c = c.merge(options...)
 
@@ -203,7 +204,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	}
 
 	// PlatformMessage
-	flutterOGL.FPlatfromMessage = func(platMessage flutter.PlatformMessage, window unsafe.Pointer) bool {
+	flutterOGL.FPlatfromMessage = func(platMessage *flutter.PlatformMessage, window unsafe.Pointer) bool {
 		windows := glfw.GoWindow(window)
 
 		hasDispatched := false
@@ -262,7 +263,7 @@ func updateEditingState(window *glfw.Window) {
 		Method: textUpdateStateMethod,
 	}
 
-	var mess = flutter.PlatformMessage{
+	var mess = &flutter.PlatformMessage{
 		Channel: textInputChannel,
 		Message: message,
 	}

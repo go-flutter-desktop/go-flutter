@@ -20,6 +20,9 @@ const (
 	platformChannel = "flutter/platform"
 	// Args -> struct ArgsAppSwitcherDescription
 	setDescriptionMethod = "SystemChrome.setApplicationSwitcherDescription"
+
+	clipboardSetData = "Clipboard.setData"
+	clipboardGetData = "Clipboard.getData"
 )
 
 // ArgsAppSwitcherDescription Args content
@@ -31,11 +34,11 @@ type ArgsAppSwitcherDescription struct {
 func addHandlerWindowTitle() Option {
 
 	var handler PluginReceivers = func(
-		platMessage flutter.PlatformMessage,
+		platMessage *flutter.PlatformMessage,
 		flutterEngine *flutter.EngineOpenGL,
 		window *glfw.Window,
 	) bool {
-		message := platMessage.Message
+		message := &platMessage.Message
 
 		if message.Method == setDescriptionMethod {
 			msgBody := ArgsAppSwitcherDescription{}
@@ -48,6 +51,44 @@ func addHandlerWindowTitle() Option {
 
 	return OptionAddPluginReceiver(handler, platformChannel)
 
+}
+
+func addHandlerClipboard() Option {
+	handler := func(platMessage *flutter.PlatformMessage,
+		flutterEngine *flutter.EngineOpenGL,
+		window *glfw.Window) bool {
+
+		message := &platMessage.Message
+		switch message.Method {
+		case clipboardSetData:
+			newClipboard := struct {
+				Text string `json:"text"`
+			}{}
+			json.Unmarshal(message.Args, &newClipboard)
+			window.SetClipboardString(newClipboard.Text)
+		case clipboardGetData:
+			requestedMime := ""
+			json.Unmarshal(message.Args, &requestedMime)
+			if requestedMime == "text/plain" {
+				clipText, _ := window.GetClipboardString()
+
+				retBytes, _ := json.Marshal([]struct {
+					Text string `json:"text"`
+				}{{clipText}})
+
+				flutterEngine.SendPlatformMessageResponse(platMessage, retBytes)
+				return true
+			} else {
+				// log.Printf("Don't know how to acquire type #v from the clipboard", requestedMime)
+			}
+
+		default:
+			// log.Printf("unhandled platform method: %#v\n", platMessage.Message)
+		}
+		return false
+
+	}
+	return OptionAddPluginReceiver(handler, platformChannel)
 }
 
 /////////////////
@@ -83,12 +124,12 @@ type argsEditingState struct {
 func addHandlerTextInput() Option {
 
 	var handler PluginReceivers = func(
-		platMessage flutter.PlatformMessage,
+		platMessage *flutter.PlatformMessage,
 		flutterEngine *flutter.EngineOpenGL,
 		window *glfw.Window,
 	) bool {
 
-		message := platMessage.Message
+		message := &platMessage.Message
 
 		switch message.Method {
 		case textInputClientClear:

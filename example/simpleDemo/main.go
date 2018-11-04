@@ -57,7 +57,7 @@ func setIcon(window *glfw.Window) error {
 
 // Plugin that read the stdin and send the number to the dart side
 func ownPlugin(
-	platMessage flutter.PlatformMessage,
+	platMessage *flutter.PlatformMessage,
 	flutterEngine *flutter.EngineOpenGL,
 	window *glfw.Window,
 ) bool {

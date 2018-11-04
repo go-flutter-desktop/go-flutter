@@ -8,7 +8,7 @@ import (
 // PluginReceivers do stuff when receiving Message from the Engine,
 // send result with `flutterEngine.SendPlatformMessageResponse`
 type PluginReceivers func(
-	message flutter.PlatformMessage,
+	message *flutter.PlatformMessage,
 	flutterEngine *flutter.EngineOpenGL,
 	window *glfw.Window,
 ) bool
