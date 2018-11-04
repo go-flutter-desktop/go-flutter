@@ -21,6 +21,7 @@ func Run(options ...Option) (err error) {
 	// The Windows Title Handler and the TextInput handler come by default
 	options = append(options, addHandlerWindowTitle())
 	options = append(options, addHandlerTextInput())
+	options = append(options, addHandlerClipboard())
 
 	c = c.merge(options...)
 
