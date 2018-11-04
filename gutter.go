@@ -92,6 +92,7 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 
 }
 
+// TODO Link the textModel to one FlutterEngine
 var state = textModel{}
 
 func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -210,9 +211,9 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 		hasDispatched := false
 
-		// Dispatch the message from the Flutter Engine,
-		// to all of his Receivers
-		for _, receivers := range c.PlatformMessageReceivers {
+		// Dispatch the message from the Flutter Engine, to all of the PluginReceivers
+		// having the same flutter.PlatformMessage.Channel name
+		for _, receivers := range c.PlatformMessageReceivers[platMessage.Channel] {
 			hasDispatched = receivers(platMessage, &flutterOGL, windows) || hasDispatched
 		}
 
@@ -246,7 +247,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 // Update the TextInput with the current state
 func updateEditingState(window *glfw.Window) {
 
-	editingState := ArgsEditingState{
+	editingState := argsEditingState{
 		Text:                   state.word,
 		SelectionAffinity:      "TextAffinity.downstream",
 		SelectionBase:          state.selectionBase,
@@ -261,11 +262,11 @@ func updateEditingState(window *glfw.Window) {
 
 	message := flutter.Message{
 		Args:   editingStateMarchalled,
-		Method: TextUpdateStateMethod,
+		Method: textUpdateStateMethod,
 	}
 
 	var mess = flutter.PlatformMessage{
-		Channel: TextInputChannel,
+		Channel: textInputChannel,
 		Message: message,
 	}
 

@@ -146,11 +146,20 @@ func (flu *EngineOpenGL) EngineSendWindowMetricsEvent(Metric WindowMetricsEvent)
 	return (Result)(res)
 }
 
-// PlatformMessage represents a message from or to the Flutter Engine (and thus the dart code)
+// PlatformMessage represents a `MethodChannel` serialized with the `JSONMethodCodec`
+// TODO Support for `StandardMethodCodec`
 type PlatformMessage struct {
 	Channel        string
 	Message        Message
 	ResponseHandle *C.FlutterPlatformMessageResponseHandle
+}
+
+// Message is the json content of a PlatformMessage
+type Message struct {
+	// Describe the method
+	Method string `json:"method"`
+	// Actual datas
+	Args json.RawMessage `json:"args"`
 }
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
@@ -180,13 +189,15 @@ func (flu *EngineOpenGL) SendPlatformMessage(Message PlatformMessage) Result {
 
 // SendPlatformMessageResponse is used to send a message to the Flutter side using the correct ResponseHandle!
 func (flu *EngineOpenGL) SendPlatformMessageResponse(
-	data string,
-	message PlatformMessage) Result {
+	responseTo PlatformMessage,
+	data []byte,
+) Result {
 
 	res := C.FlutterEngineSendPlatformMessageResponse(
 		flu.Engine,
-		(*C.FlutterPlatformMessageResponseHandle)(message.ResponseHandle),
-		(*C.uint8_t)(unsafe.Pointer(C.CString(data))), (C.ulong)(len(data)))
+		(*C.FlutterPlatformMessageResponseHandle)(responseTo.ResponseHandle),
+		(*C.uint8_t)(unsafe.Pointer(C.CBytes(data))),
+		(C.ulong)(len(data)))
 
 	return (Result)(res)
 

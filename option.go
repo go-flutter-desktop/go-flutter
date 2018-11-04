@@ -1,7 +1,6 @@
 package gutter
 
 import (
-	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -54,9 +53,14 @@ func OptionPixelRatio(ratio float64) Option {
 
 // OptionAddPluginReceiver add a new function that will be trigger
 // when the FlutterEngine send a PlatformMessage to the Embedder
-func OptionAddPluginReceiver(handler PluginReceivers) Option {
+func OptionAddPluginReceiver(handler PluginReceivers, channelName string) Option {
 	return func(c *config) {
-		c.PlatformMessageReceivers = append(c.PlatformMessageReceivers, handler)
+		// Check for nil, else initialise the map
+		if c.PlatformMessageReceivers == nil {
+			c.PlatformMessageReceivers = make(map[string][]PluginReceivers)
+		}
+		c.PlatformMessageReceivers[channelName] =
+			append(c.PlatformMessageReceivers[channelName], handler)
 	}
 }
 
@@ -70,16 +74,8 @@ type config struct {
 	WindowInitializer        func(*glfw.Window) error
 	PixelRatio               float64
 	VMArguments              []string
-	PlatformMessageReceivers []PluginReceivers
+	PlatformMessageReceivers map[string][]PluginReceivers // The Key is the Channel name.
 }
-
-// PluginReceivers do stuff when receiving Message from the Engine,
-// send result with `flutterEngine.SendPlatformMessageResponse`
-type PluginReceivers func(
-	message flutter.PlatformMessage,
-	flutterEngine *flutter.EngineOpenGL,
-	window *glfw.Window,
-) bool
 
 func (t config) merge(options ...Option) config {
 	for _, opt := range options {

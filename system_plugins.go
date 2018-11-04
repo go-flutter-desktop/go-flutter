@@ -7,12 +7,17 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
+// Talks to the dart side
+// https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/system_channels.dart
+
 ////////////////////
 //  Window Title  //
 ////////////////////
 
 // const for `addHandlerWindowTitle`
 const (
+	// Channel
+	platformChannel = "flutter/platform"
 	// Args -> struct ArgsAppSwitcherDescription
 	setDescriptionMethod = "SystemChrome.setApplicationSwitcherDescription"
 )
@@ -41,7 +46,7 @@ func addHandlerWindowTitle() Option {
 		return false
 	}
 
-	return OptionAddPluginReceiver(handler)
+	return OptionAddPluginReceiver(handler, platformChannel)
 
 }
 
@@ -52,20 +57,20 @@ func addHandlerWindowTitle() Option {
 // const for `addHandlerTextInput`
 const (
 	// channel
-	PlatformChannel  = "flutter/platform"
-	TextInputChannel = "flutter/textinput"
+	textInputChannel = "flutter/textinput"
 
-	// Args -> struct ArgsEditingState
-	TextUpdateStateMethod = "TextInputClient.updateEditingState"
+	// Args -> struct argsEditingState
+	textUpdateStateMethod = "TextInputClient.updateEditingState"
 
 	// text
-	TextInputClientSet    = "TextInput.setClient"
-	TextInputClientClear  = "TextInput.clearClient"
-	TextInputSetEditState = "TextInput.setEditingState"
+	textInputClientSet    = "TextInput.setClient"
+	textInputClientClear  = "TextInput.clearClient"
+	textInputSetEditState = "TextInput.setEditingState"
 )
 
-// ArgsEditingState Args content
-type ArgsEditingState struct {
+// argsEditingState Args content
+// To update the embedder text use `flutter.SendPlatformMessage` whenever a keys is pressed
+type argsEditingState struct {
 	Text                   string `json:"text"`
 	SelectionBase          int    `json:"selectionBase"`
 	SelectionExtent        int    `json:"selectionExtent"`
@@ -85,30 +90,28 @@ func addHandlerTextInput() Option {
 
 		message := platMessage.Message
 
-		if platMessage.Channel == TextInputChannel {
-			switch message.Method {
-			case TextInputClientClear:
-				state.clientID = 0
-			case TextInputClientSet:
-				var body []interface{}
-				json.Unmarshal(message.Args, &body)
-				state.clientID = body[0].(float64)
-			case TextInputSetEditState:
-				if state.clientID != 0 {
-					editingState := ArgsEditingState{}
-					json.Unmarshal(message.Args, &editingState)
-					state.word = editingState.Text
-					state.selectionBase = editingState.SelectionBase
-					state.selectionExtent = editingState.SelectionExtent
-				}
-			default:
+		switch message.Method {
+		case textInputClientClear:
+			state.clientID = 0
+		case textInputClientSet:
+			var body []interface{}
+			json.Unmarshal(message.Args, &body)
+			state.clientID = body[0].(float64)
+		case textInputSetEditState:
+			if state.clientID != 0 {
+				editingState := argsEditingState{}
+				json.Unmarshal(message.Args, &editingState)
+				state.word = editingState.Text
+				state.selectionBase = editingState.SelectionBase
+				state.selectionExtent = editingState.SelectionExtent
 			}
+		default:
 		}
 
 		return true
 
 	}
 
-	return OptionAddPluginReceiver(handler)
+	return OptionAddPluginReceiver(handler, textInputChannel)
 
 }

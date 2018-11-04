@@ -31,7 +31,7 @@ func main() {
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
-		gutter.OptionAddPluginReceiver(ownPlugin),
+		gutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
 	}
 
 	if err = gutter.Run(options...); err != nil {
@@ -61,15 +61,19 @@ func ownPlugin(
 	flutterEngine *flutter.EngineOpenGL,
 	window *glfw.Window,
 ) bool {
-	if platMessage.Channel == "plugin_demo" {
-
-		go func() {
-			reader := bufio.NewReader(os.Stdin)
-			print("Reading (A number): ")
-			s, _ := reader.ReadString('\n')
-			flutterEngine.SendPlatformMessageResponse("[ "+s+" ]", platMessage)
-		}()
-
+	if platMessage.Message.Method != "getNumber" {
+		log.Printf("Unhandled platform method: %#v from channel %#v\n",
+			platMessage.Message.Method, platMessage.Channel)
+		return false
 	}
+
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		print("Reading (A number): ")
+		s, _ := reader.ReadString('\n')
+		flutterEngine.SendPlatformMessageResponse(platMessage, []byte("[ "+s+" ]"))
+	}()
+
 	return true
+
 }

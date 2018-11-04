@@ -44,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
   Future GetVersion() async {
-    var res = await _channel.invokeMethod('getPlatformVersion');
+    var res = await _channel.invokeMethod('getNumber');
     print(res);
     setState(() {
       _counter = res;
