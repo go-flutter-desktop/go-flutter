@@ -290,7 +290,7 @@ func performAction(window *glfw.Window, action string) {
 		Method:"TextInputClient.performAction",
 	}
 	var mess = &flutter.PlatformMessage{
-		Channel:"flutter/textinput",
+		Channel:textInputChannel,
 		Message: message,
 	}
 	flutterOGL := flutter.SelectEngine(0)
