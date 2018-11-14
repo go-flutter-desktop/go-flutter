@@ -54,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _counter = 0;
   bool _ok = false;
+  String _submittedMsg = "nothing yet";
 
   void _incrementCounter() {
     setState(() {
@@ -82,11 +83,19 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            new Text(
+              'text from the first field: ' + _submittedMsg,
+            ),
             new Padding(
               padding: new EdgeInsets.all(8.0),
               child: new Column(children: <Widget>[
                 TextField(
                   decoration: InputDecoration(hintText: 'TextField 1'),
+                  onSubmitted: (value) {
+                    setState(() {
+                      _submittedMsg = value;
+                    });
+                  },
                 ),
                 TextField(
                   decoration: InputDecoration(hintText: 'TextField 2'),
