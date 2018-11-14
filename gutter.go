@@ -103,6 +103,14 @@ func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Act
 		if state.clientID != 0 {
 
 			switch key {
+			case glfw.KeyEnter:
+				if mods == glfw.ModControl {
+					performAction(w, "done")
+				} else {
+					state.addChar([]rune{'\n'})
+					performAction(w, "newline")
+				}
+
 			case glfw.KeyHome:
 				state.MoveCursorHome(int(mods))
 
@@ -268,6 +276,23 @@ func updateEditingState(window *glfw.Window) {
 		Message: message,
 	}
 
+	flutterOGL := flutter.SelectEngine(0)
+	flutterOGL.SendPlatformMessage(mess)
+}
+
+func performAction(window *glfw.Window, action string) {
+	actionArgs, _ := json.Marshal([]interface{}{
+		state.clientID,
+		"TextInputAction." + action,
+	})
+	message := flutter.Message{
+		Args: actionArgs,
+		Method:"TextInputClient.performAction",
+	}
+	var mess = &flutter.PlatformMessage{
+		Channel:textInputChannel,
+		Message: message,
+	}
 	flutterOGL := flutter.SelectEngine(0)
 	flutterOGL.SendPlatformMessage(mess)
 }
