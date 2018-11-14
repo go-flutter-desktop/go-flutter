@@ -101,6 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 TextField(
                   decoration: InputDecoration(hintText: 'TextField 2'),
+                  maxLines: 2,
                   focusNode: myFocus,
                   onSubmitted: (value) {
                     setState(() {
