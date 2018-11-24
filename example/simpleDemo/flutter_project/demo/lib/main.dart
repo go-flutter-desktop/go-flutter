@@ -54,7 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _counter = 0;
   bool _ok = false;
-
+  String _submittedMsg = "nothing yet";
+  FocusNode myFocus = FocusNode();
+  
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -82,14 +84,30 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            new Text(
+              'Last submit: ' + _submittedMsg,
+            ),
             new Padding(
               padding: new EdgeInsets.all(8.0),
               child: new Column(children: <Widget>[
                 TextField(
                   decoration: InputDecoration(hintText: 'TextField 1'),
+                  onSubmitted: (value) {
+                    setState(() {
+                      _submittedMsg = value;
+                    });
+                  },
+                  onEditingComplete: () => FocusScope.of(context).requestFocus(myFocus),
                 ),
                 TextField(
                   decoration: InputDecoration(hintText: 'TextField 2'),
+                  maxLines: 2,
+                  focusNode: myFocus,
+                  onSubmitted: (value) {
+                    setState(() {
+                      _submittedMsg = value;
+                    });
+                  },
                 ),
               ]),
             ),
