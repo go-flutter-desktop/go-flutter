@@ -18,7 +18,7 @@ import (
 )
 
 // Function to prind download percent completion
-func PrintDownloadPercent(done chan int64, path string, total int64) {
+func printDownloadPercent(done chan int64, path string, total int64) {
 
 	var stop bool = false
 
@@ -59,7 +59,7 @@ func PrintDownloadPercent(done chan int64, path string, total int64) {
 }
 
 // Function to download file with given path and url.
-func DownloadFile(filepath string, url string) error {
+func downloadFile(filepath string, url string) error {
 
     file := path.Base(url)
 
@@ -92,7 +92,7 @@ func DownloadFile(filepath string, url string) error {
 
     done := make(chan int64)
 
-	go PrintDownloadPercent(done, filepath, int64(size))
+	go printDownloadPercent(done, filepath, int64(size))
 
 
     // Write the body to file
@@ -178,7 +178,7 @@ func main() {
         log.Fatal("OS not supported")
     }
 
-    err3 := DownloadFile(".build/temp.zip", downloadUrl)
+    err3 := downloadFile(".build/temp.zip", downloadUrl)
     if err3 != nil {
         log.Fatal(err3)
     } else{
