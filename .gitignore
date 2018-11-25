@@ -20,3 +20,13 @@
 build/
 
 .flutter-plugins
+
+# Examples generated files
+example/simpleDemo/simpleDemo
+example/stocks/stocks
+
+# sometimes when flutter crashes it creates log files
+*.log
+
+# other crashes report:
+core.*
