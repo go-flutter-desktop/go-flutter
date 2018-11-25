@@ -2,12 +2,16 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"image"
 	_ "image/png"
 	"log"
 	"os"
 	"path"
 	"runtime"
+	"strconv"
+	"strings"
+	"time"
 
 	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
@@ -67,11 +71,17 @@ func ownPlugin(
 		return false
 	}
 
+	time.Sleep(1 * time.Second)
 	go func() {
+		fmt.Printf("Reading (A number): ")
 		reader := bufio.NewReader(os.Stdin)
-		print("Reading (A number): ")
 		s, _ := reader.ReadString('\n')
-		flutterEngine.SendPlatformMessageResponse(platMessage, []byte("[ "+s+" ]"))
+		s = strings.Trim(s, " \n")
+		if _, err := strconv.Atoi(s); err == nil {
+			flutterEngine.SendPlatformMessageResponse(platMessage, []byte("[ "+s+" ]"))
+		} else {
+			fmt.Printf(" ,%q don't looks like a number.\n", s)
+		}
 	}()
 
 	return true
