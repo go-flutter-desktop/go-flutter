@@ -58,11 +58,9 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/linux-x64/linux-x64-embedder -O .build/temp.zip
-
-# Extract the share library
-unzip .build/temp.zip -x flutter_embedder.h
+# Run script that will download share library, unzip it and move it.
+# Downloaded version is the one corresponding to your flutter version
+go run embedderDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-L${PWD}"
@@ -101,11 +99,9 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-# => https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/windows-x64/windows-x64-embedder.zip
-
-# Move the share library
-# => "flutter_engine.dll" must be in the flutter example project (where the main.go is)
+# Run script that will download share library, unzip it and move it.
+# Downloaded version is the one corresponding to your flutter version
+go run embedderDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
@@ -144,8 +140,9 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/darwin-x64/FlutterEmbedder.framework.zip -O .build/temp.zip
+# Run script that will download share library, unzip it and move it.
+# Downloaded version is the one corresponding to your flutter version
+go run embedderDownloader.go
 
 # Move the share library
 unzip .build/temp.zip -d .build && unzip .build/FlutterEmbedder.framework.zip -d .build/FlutterEmbedder.framework
