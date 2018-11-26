@@ -251,6 +251,7 @@ func main() {
     case "darwin":
         platform = "darwin-x64"
         downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+
     case "linux":
         platform = "linux-x64"
         downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
@@ -270,22 +271,33 @@ func main() {
         fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
     }
 
-    switch platform{
-        case "darwin-x64":
-            _, err = unzip(".build/temp.zip", dir + "/.build/")
-            if err != nil {
-                log.Fatal(err)
-            }
-            
-            _, err = unzip(".build/FlutterEmbedder.framework.zip", dir)
-            if err != nil {
-                log.Fatal(err)
-            }
-
-            fmt.Println("Unzipped:\n")
-
-        case "linux-x64":
-
-        case "windows-x64":
+    _, err = unzip(".build/temp.zip", dir + "/.build/")
+    if err != nil {
+        log.Fatal(err)
     }
+
+    switch platform{
+    case "darwin-x64":       
+        _, err = unzip(".build/FlutterEmbedder.framework.zip", dir + "/FlutterEmbedder.framework")
+        if err != nil {
+            log.Fatal(err)
+        }
+
+    case "linux-x64":
+        err := os.Rename("libflutter_engine.so", dir + "/libflutter_engine.so")
+        if err != nil {
+            log.Fatal(err)
+        }
+
+    case "windows-x64":
+        err := os.Rename("flutter_engine.dll", dir + "/flutter_engine.dll")
+        if err != nil {
+            log.Fatal(err)
+        }
+
+    }
+    fmt.Printf("Unzipped files and moved them to correct repository.\n")
+
+    fmt.Printf("Done.\n")
+
 }
