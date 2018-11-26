@@ -1,7 +1,6 @@
 package main
 
 import (
-    "io"
     "fmt"
     "log"
     "os/exec"
@@ -9,13 +8,99 @@ import (
     "regexp"
     "net/http"
     "os"
+    "bufio"
+    "io"
     "io/ioutil"
     "encoding/json"
     "time"
-    "path"
-    "bytes"
+    "path/filepath"
     "strconv"
+    "archive/zip"
+    "strings"
 )
+
+// Unzip will decompress a zip archive, moving all files and folders 
+// within the zip file (parameter 1) to an output directory (parameter 2).
+func unzip(src string, dest string) ([]string, error) {
+
+    var filenames []string
+
+    r, err := zip.OpenReader(src)
+    if err != nil {
+        return filenames, err
+    }
+    defer r.Close()
+
+    for _, f := range r.File {
+
+        rc, err := f.Open()
+        if err != nil {
+            return filenames, err
+        }
+        defer rc.Close()
+
+        // Store filename/path for returning and using later on
+        fpath := filepath.Join(dest, f.Name)
+
+        // Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
+        if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+            return filenames, fmt.Errorf("%s: illegal file path", fpath)
+        }
+
+        filenames = append(filenames, fpath)
+
+        if f.FileInfo().IsDir() {
+
+            // Make Folder
+            os.MkdirAll(fpath, os.ModePerm)
+
+        } else {
+
+            // Make File
+            if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+                return filenames, err
+            }
+
+            outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+            if err != nil {
+                return filenames, err
+            }
+
+            _, err = io.Copy(outFile, rc)
+
+            // Close the file without defer to close before next iteration of loop
+            outFile.Close()
+
+            if err != nil {
+                return filenames, err
+            }
+
+        }
+    }
+    return filenames, nil
+}
+
+
+func askForConfirmation() bool {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Printf("Would you like to overwrite the previously downloaded engine [Y/n] : ")
+
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
+	}
+}
 
 // Function to prind download percent completion
 func printDownloadPercent(done chan int64, path string, total int64) {
@@ -61,16 +146,15 @@ func printDownloadPercent(done chan int64, path string, total int64) {
 // Function to download file with given path and url.
 func downloadFile(filepath string, url string) error {
 
-    file := path.Base(url)
-
     // Print download url in case user needs it.
 	fmt.Printf("Downloading file from %s\n", url)
 
-	var path bytes.Buffer
-	path.WriteString(filepath)
-	path.WriteString("/")
-	path.WriteString(file)
-
+    if _, err := os.Stat(filepath); !os.IsNotExist(err) {
+        if !askForConfirmation(){
+            fmt.Printf("Leaving.\n")
+            os.Exit(0)
+        }
+    }
     start := time.Now()
     
     // Create the file
@@ -86,7 +170,6 @@ func downloadFile(filepath string, url string) error {
         return err
     }
     defer resp.Body.Close()
-
 
     size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 
@@ -116,6 +199,11 @@ func main() {
         log.Fatal(err)
     }
 
+    // Get working directory
+    dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
 
     re := regexp.MustCompile(`Engine • revision (\w{10})`)
     shortRevision := re.FindStringSubmatch(string(out))[1]
@@ -143,16 +231,13 @@ func main() {
     }
 
     // We define a struct to build JSON object from the response
-    myStruct := struct {
-		IncompleteResults bool `json:"incomplete_results"`
+    hashResponse := struct {
 		Items             []struct {
 			Sha string `json:"sha"`
-			URL string `json:"url"`
 		} `json:"items"`
-		TotalCount int `json:"total_count"`
 	}{}
 
-	err2 := json.Unmarshal(body, &myStruct)
+	err2 := json.Unmarshal(body, &hashResponse)
     if err2 != nil {
         // handle err
         log.Fatal(err2)
@@ -165,23 +250,42 @@ func main() {
     switch runtime.GOOS {
     case "darwin":
         platform = "darwin-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", myStruct.Items[0].Sha, platform)
+        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
     case "linux":
         platform = "linux-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", myStruct.Items[0].Sha, platform, platform)
+        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
     case "windows":
         platform = "windows-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", myStruct.Items[0].Sha, platform, platform)
+        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
     default:
         log.Fatal("OS not supported")
     }
 
-    err3 := downloadFile(".build/temp.zip", downloadUrl)
+    err3 := downloadFile(dir + "/.build/temp.zip", downloadUrl)
     if err3 != nil {
         log.Fatal(err3)
     } else{
-        fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, myStruct.Items[0].Sha)
+        fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
+    }
+
+    switch platform{
+        case "darwin-x64":
+            _, err = unzip(".build/temp.zip", dir + "/.build/")
+            if err != nil {
+                log.Fatal(err)
+            }
+            
+            _, err = unzip(".build/FlutterEmbedder.framework.zip", dir)
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            fmt.Println("Unzipped:\n")
+
+        case "linux-x64":
+
+        case "windows-x64":
     }
 }
