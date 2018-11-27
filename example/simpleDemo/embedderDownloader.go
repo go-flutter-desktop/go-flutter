@@ -146,7 +146,7 @@ func printDownloadPercent(done chan int64, path string, total int64) {
 func downloadFile(filepath string, url string) error {
 
 	// Print download url in case user needs it.
-	fmt.Printf("Downloading file from %s\n", url)
+	fmt.Printf("Downloading file from\n '%s'\n to '%s'\n\n", url, filepath)
 
 	if _, err := os.Stat(filepath); !os.IsNotExist(err) {
 		if !askForConfirmation() {
