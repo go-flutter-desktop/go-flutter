@@ -19,6 +19,19 @@ import (
 	"time"
 )
 
+func createSymLink(symlink string, file string) {
+
+	err := os.Remove(symlink)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.Symlink(file, symlink)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
 func unzip(src string, dest string) ([]string, error) {
@@ -262,7 +275,7 @@ func main() {
 		log.Fatal("OS not supported")
 	}
 
-	downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/artifacts.zip",hashResponse.Items[0].Sha, platform)
+	downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/artifacts.zip", hashResponse.Items[0].Sha, platform)
 
 	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
 	if err3 != nil {
@@ -271,29 +284,39 @@ func main() {
 		fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
 	}
 
-	err4 := downloadFile(dir + "/.build/artifacts.zip", downloadIcudtlURL)
-    if err != nil {
-        log.Fatal(err4)
-    } else{
-        fmt.Printf("Downloaded artifact for %s platform.")
-    }
+	err4 := downloadFile(dir+"/.build/artifacts.zip", downloadIcudtlURL)
+	if err != nil {
+		log.Fatal(err4)
+	} else {
+		fmt.Printf("Downloaded artifact for %s platform.\n", platform)
+	}
 
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = unzip(".build/artifacts.zip", dir+"/.build/")
+	_, err = unzip(".build/artifacts.zip", dir+"/.build/artifacts/")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	switch platform {
 	case "darwin-x64":
-		_, err = unzip(".build/FlutterEmbedder.framework.zip", dir+"/FlutterEmbedder.framework")
+		_, err = unzip(".build/FlutterEmbedder.framework.zip", dir+"/FlutterEmbedder.framework/")
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		createSymLink("FlutterEmbedder.framework/Versions/Current", "FlutterEmbedder.framework/Versions/A")
+
+		createSymLink("FlutterEmbedder.framework/FlutterEmbedder", "FlutterEmbedder.framework/Versions/Current/FlutterEmbedder")
+
+		createSymLink("FlutterEmbedder.framework/Headers", "FlutterEmbedder.framework/Versions/Current/Headers")
+
+		createSymLink("FlutterEmbedder.framework/Modules", "FlutterEmbedder.framework/Versions/Current/Modules")
+
+		createSymLink("FlutterEmbedder.framework/Resources", "FlutterEmbedder.framework/Versions/Current/Resources")
 
 	case "linux-x64":
 		err := os.Rename(".build/libflutter_engine.so", dir+"/libflutter_engine.so")
