@@ -58,9 +58,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Run script that will download share library, unzip it and move it.
-# Downloaded version is the one corresponding to your flutter version
-go run embedderDownloader.go
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-L${PWD}"
@@ -71,7 +70,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go run main.go
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
@@ -99,9 +98,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Run script that will download share library, unzip it and move it.
-# Downloaded version is the one corresponding to your flutter version
-go run embedderDownloader.go
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
@@ -112,7 +110,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go run main.go
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
@@ -140,9 +138,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Run script that will download share library, unzip it and move it.
-# Downloaded version is the one corresponding to your flutter version
-go run embedderDownloader.go
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
@@ -153,7 +150,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go run main.go
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
