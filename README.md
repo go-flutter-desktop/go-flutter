@@ -28,15 +28,6 @@ which, I hope, will encourage people to contribute :grin:.
 
 ## How to install
 
-For this Flutter version:
-```
-$ flutter --version
-Flutter 0.7.3 • channel beta • https://github.com/flutter/flutter.git
-Framework • revision 3b309bda07 (2 weeks ago) • 2018-08-28 12:39:24 -0700
-Engine • revision af42b6dc95
-Tools • Dart 2.1.0-dev.1.0.flutter-ccb16f7282
-```
-
 <details>
 <summary> :package: :penguin: Linux</summary>
 <h4>From binaries</h4>
