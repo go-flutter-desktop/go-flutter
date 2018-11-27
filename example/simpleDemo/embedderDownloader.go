@@ -105,7 +105,7 @@ func askForConfirmation() bool {
 // Function to prind download percent completion
 func printDownloadPercent(done chan int64, path string, total int64) {
 
-	var stop bool = false
+	var stop = false
 
 	for {
 		select {
