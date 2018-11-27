@@ -34,7 +34,6 @@ func main() {
 		 * Linux    : flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat
 		 * Windows  : flutter/bin/cache/artifacts/engine/windows-x64/icudtl.dat
 		 */
-		//gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/darwin-x64/icudtl.dat"),
 		gutter.OptionICUDataPath(dir + "/.build/artifacts/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionWindowDimension(800, 600),
