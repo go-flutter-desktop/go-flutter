@@ -242,34 +242,47 @@ func main() {
 	}
 
 	var platform = "undefined"
-	var downloadURL = ""
+	var downloadShareLibraryURL = ""
+    downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter//%s/artifacts.zip",platform)
 
 	// Retrieve the OS and set variable to retrieve correct flutter embedder
 	switch runtime.GOOS {
 	case "darwin":
 		platform = "darwin-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
 
 	case "linux":
 		platform = "linux-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
 	case "windows":
 		platform = "windows-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
 	default:
 		log.Fatal("OS not supported")
 	}
 
-	err3 := downloadFile(dir+"/.build/temp.zip", downloadURL)
+	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
 	if err3 != nil {
 		log.Fatal(err3)
 	} else {
 		fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
 	}
 
+	err4 := downloadFile(dir + "/.build/artifact.zip", downloadIcudtlURL)
+    if err != nil {
+        log.Fatal(err4)
+    } else{
+        fmt.Printf("Downloaded artifact for %s platform.")
+    }
+
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = unzip(".build/artifact.zip", dir+"/.build/")
 	if err != nil {
 		log.Fatal(err)
 	}
