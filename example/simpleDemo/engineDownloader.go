@@ -243,7 +243,6 @@ func main() {
 
 	var platform = "undefined"
 	var downloadShareLibraryURL = ""
-    downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter//%s/artifacts.zip",platform)
 
 	// Retrieve the OS and set variable to retrieve correct flutter embedder
 	switch runtime.GOOS {
@@ -263,6 +262,8 @@ func main() {
 		log.Fatal("OS not supported")
 	}
 
+	downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/artifacts.zip",hashResponse.Items[0].Sha, platform)
+
 	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
 	if err3 != nil {
 		log.Fatal(err3)
@@ -270,7 +271,7 @@ func main() {
 		fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
 	}
 
-	err4 := downloadFile(dir + "/.build/artifact.zip", downloadIcudtlURL)
+	err4 := downloadFile(dir + "/.build/artifacts.zip", downloadIcudtlURL)
     if err != nil {
         log.Fatal(err4)
     } else{
@@ -282,7 +283,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, err = unzip(".build/artifact.zip", dir+"/.build/")
+	_, err = unzip(".build/artifacts.zip", dir+"/.build/")
 	if err != nil {
 		log.Fatal(err)
 	}
