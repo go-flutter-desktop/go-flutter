@@ -197,7 +197,7 @@ func (flu *EngineOpenGL) SendPlatformMessageResponse(
 		flu.Engine,
 		(*C.FlutterPlatformMessageResponseHandle)(responseTo.ResponseHandle),
 		(*C.uint8_t)(unsafe.Pointer(C.CBytes(data))),
-		(C.ulong)(len(data)))
+		(C.size_t)(len(data)))
 
 	return (Result)(res)
 
