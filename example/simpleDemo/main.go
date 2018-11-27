@@ -29,6 +29,11 @@ func main() {
 
 	options := []gutter.Option{
 		gutter.OptionAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
+		/* Depending on your architecture you need to change the enginer
+		 * Mac OS X : flutter/bin/cache/artifacts/engine/darwin-x64/icudtl.dat
+		 * Linux    : flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat
+		 * Windows  : flutter/bin/cache/artifacts/engine/windows-x64/icudtl.dat
+		 */
 		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"),
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionWindowDimension(800, 600),

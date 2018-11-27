@@ -58,11 +58,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/linux-x64/linux-x64-embedder -O .build/temp.zip
-
-# Extract the share library
-unzip .build/temp.zip -x flutter_embedder.h
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-L${PWD}"
@@ -73,7 +70,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go build
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
@@ -101,11 +98,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-# => https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/windows-x64/windows-x64-embedder.zip
-
-# Move the share library
-# => "flutter_engine.dll" must be in the flutter example project (where the main.go is)
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
@@ -116,7 +110,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go build
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
@@ -144,12 +138,8 @@ cd flutter_project/demo/
 flutter build bundle
 cd ../..
 
-# Download the share library (CORRESPONDING to the Flutter's version shown above)
-wget https://storage.googleapis.com/flutter_infra/flutter/af42b6dc95bd9f719e43c4e9f29a00640f0f0bba/darwin-x64/FlutterEmbedder.framework.zip -O .build/temp.zip
-
-# Move the share library
-unzip .build/temp.zip -d .build && unzip .build/FlutterEmbedder.framework.zip -d .build/FlutterEmbedder.framework
-mv .build/FlutterEmbedder.framework .
+# Download the share library, the one corresponding to your flutter version.
+go run engineDownloader.go
 
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
@@ -160,7 +150,7 @@ go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
 # Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
-go build
+go build main.go
 
 # `go run main.go` is not working ATM.
 ```
