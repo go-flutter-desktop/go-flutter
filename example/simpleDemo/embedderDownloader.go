@@ -244,27 +244,27 @@ func main() {
     }
 
 	var platform = "undefined"
-    var downloadUrl = ""
+    var downloadURL = ""
 	
     // Retrieve the OS and set variable to retrieve correct flutter embedder
     switch runtime.GOOS {
     case "darwin":
         platform = "darwin-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+        downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
 
     case "linux":
         platform = "linux-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+        downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
     case "windows":
         platform = "windows-x64"
-        downloadUrl = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+        downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 
     default:
         log.Fatal("OS not supported")
     }
 
-    err3 := downloadFile(dir + "/.build/temp.zip", downloadUrl)
+    err3 := downloadFile(dir + "/.build/temp.zip", downloadURL)
     if err3 != nil {
         log.Fatal(err3)
     } else{
@@ -284,13 +284,13 @@ func main() {
         }
 
     case "linux-x64":
-        err := os.Rename("libflutter_engine.so", dir + "/libflutter_engine.so")
+        err := os.Rename(".build/libflutter_engine.so", dir + "/libflutter_engine.so")
         if err != nil {
             log.Fatal(err)
         }
 
     case "windows-x64":
-        err := os.Rename("flutter_engine.dll", dir + "/flutter_engine.dll")
+        err := os.Rename(".build/flutter_engine.dll", dir + "/flutter_engine.dll")
         if err != nil {
             log.Fatal(err)
         }
