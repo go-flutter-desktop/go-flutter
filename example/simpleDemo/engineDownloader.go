@@ -21,12 +21,7 @@ import (
 
 func createSymLink(symlink string, file string) {
 
-	if _, err := os.Stat(symlink); !os.IsNotExist(err) {
-		err := os.Remove(symlink)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	os.Remove(symlink)
 
 	err := os.Symlink(file, symlink)
 	if err != nil {
@@ -143,7 +138,7 @@ func printDownloadPercent(done chan int64, path string, total int64) {
 				size = 1
 			}
 
-			var percent float64 = float64(size) / float64(total) * 100
+			var percent = float64(size) / float64(total) * 100
 
 			// We use `\033[2K\r` to avoid carriage return, it will print above previous.
 			fmt.Printf("\033[2K\r %.0f %% / 100 %%", percent)
@@ -296,7 +291,7 @@ func main() {
 		log.Fatal(err4)
 	} else {
 		fmt.Printf("Downloaded artifact for %s platform.\n", platform)
-	}
+	} 
 
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
 	if err != nil {
@@ -315,20 +310,27 @@ func main() {
 
 	switch platform {
 	case "darwin-x64":
-		_, err = unzip(".build/FlutterEmbedder.framework.zip", dir+"/FlutterEmbedder.framework/")
+		_, err = unzip(dir+"/.build/FlutterEmbedder.framework.zip", dir+"/.build/FlutterEmbedder.framework/")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		createSymLink("FlutterEmbedder.framework/Versions/Current", "FlutterEmbedder.framework/Versions/A")
+		os.RemoveAll(dir + "/FlutterEmbedder.framework")
 
-		createSymLink("FlutterEmbedder.framework/FlutterEmbedder", "FlutterEmbedder.framework/Versions/Current/FlutterEmbedder")
+		err := os.Rename(dir+"/.build/FlutterEmbedder.framework/", dir+"/FlutterEmbedder.framework/")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		createSymLink("FlutterEmbedder.framework/Headers", "FlutterEmbedder.framework/Versions/Current/Headers")
+		createSymLink(dir+"/FlutterEmbedder.framework/Versions/Current", dir+"/FlutterEmbedder.framework/Versions/A")
 
-		createSymLink("FlutterEmbedder.framework/Modules", "FlutterEmbedder.framework/Versions/Current/Modules")
+		createSymLink(dir+"/FlutterEmbedder.framework/FlutterEmbedder", dir+"/FlutterEmbedder.framework/Versions/Current/FlutterEmbedder")
 
-		createSymLink("FlutterEmbedder.framework/Resources", "FlutterEmbedder.framework/Versions/Current/Resources")
+		createSymLink(dir+"/FlutterEmbedder.framework/Headers", dir+"/FlutterEmbedder.framework/Versions/Current/Headers")
+
+		createSymLink(dir+"/FlutterEmbedder.framework/Modules", dir+"/FlutterEmbedder.framework/Versions/Current/Modules")
+
+		createSymLink(dir+"/FlutterEmbedder.framework/Resources", dir+"/FlutterEmbedder.framework/Versions/Current/Resources")
 
 	case "linux-x64":
 		err := os.Rename(".build/libflutter_engine.so", dir+"/libflutter_engine.so")
