@@ -345,7 +345,7 @@ func main() {
 	}
 	fmt.Printf("Unzipped files and moved them to correct repository.\n")
 
-	fmt.Printf("Don't forget to let know CGO compiler need to know where to look for the share library.\n")
+	fmt.Printf("\nTo let know the CGO compiler where to look for the share library, Please run:\n\t")
 	fmt.Printf("%s\n", endMessage)
 
 	fmt.Printf("Done.\n")
