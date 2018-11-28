@@ -59,7 +59,6 @@ export CGO_LDFLAGS="-L${PWD}"
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
-# Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
 go build main.go
 
@@ -100,7 +99,6 @@ set CGO_LDFLAGS=-L%cd%
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
-# Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
 go build main.go
 
@@ -140,7 +138,6 @@ export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
 
-# Make sure the path in "main.go" to the `icudtl.dat` is correct.
 # Build the example project
 go build main.go
 
