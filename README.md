@@ -95,6 +95,7 @@ go run engineDownloader.go
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
 # The share library must stay next to the generated binary.
+# If you ran into a MinGW ld error, checkout: https://github.com/Drakirus/go-flutter-desktop-embedder/issues/34
 
 # Get the libraries
 go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
