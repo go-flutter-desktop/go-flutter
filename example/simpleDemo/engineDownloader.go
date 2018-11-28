@@ -19,6 +19,21 @@ import (
 	"time"
 )
 
+func createSymLink(symlink string, file string) {
+
+	if _, err := os.Stat(symlink); !os.IsNotExist(err) {
+		err := os.Remove(symlink)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err := os.Symlink(file, symlink)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
 func unzip(src string, dest string) ([]string, error) {
@@ -154,6 +169,7 @@ func downloadFile(filepath string, url string) error {
 			os.Exit(0)
 		}
 	}
+
 	start := time.Now()
 
 	// Create the file
@@ -242,31 +258,44 @@ func main() {
 	}
 
 	var platform = "undefined"
-	var downloadURL = ""
+	var downloadShareLibraryURL = ""
+	var endMessage = ""
 
 	// Retrieve the OS and set variable to retrieve correct flutter embedder
 	switch runtime.GOOS {
 	case "darwin":
 		platform = "darwin-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+		endMessage = "export CGO_LDFLAGS=\"-F${PWD} -Wl,-rpath,@executable_path\""
 
 	case "linux":
 		platform = "linux-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		endMessage = "export CGO_LDFLAGS=\"-L${PWD}\""
 
 	case "windows":
 		platform = "windows-x64"
-		downloadURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		endMessage = "set CGO_LDFLAGS=-L%cd%"
 
 	default:
 		log.Fatal("OS not supported")
 	}
 
-	err3 := downloadFile(dir+"/.build/temp.zip", downloadURL)
+	downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/artifacts.zip", hashResponse.Items[0].Sha, platform)
+
+	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
 	if err3 != nil {
 		log.Fatal(err3)
 	} else {
 		fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
+	}
+
+	err4 := downloadFile(dir+"/.build/artifacts.zip", downloadIcudtlURL)
+	if err != nil {
+		log.Fatal(err4)
+	} else {
+		fmt.Printf("Downloaded artifact for %s platform.\n", platform)
 	}
 
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
@@ -274,12 +303,32 @@ func main() {
 		log.Fatal(err)
 	}
 
+	_, err = unzip(".build/artifacts.zip", dir+"/.build/artifacts/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.Rename(".build/artifacts/icudtl.dat", dir+"/icudtl.dat")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	switch platform {
 	case "darwin-x64":
-		_, err = unzip(".build/FlutterEmbedder.framework.zip", dir+"/FlutterEmbedder.framework")
+		_, err = unzip(".build/FlutterEmbedder.framework.zip", dir+"/FlutterEmbedder.framework/")
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		createSymLink("FlutterEmbedder.framework/Versions/Current", "FlutterEmbedder.framework/Versions/A")
+
+		createSymLink("FlutterEmbedder.framework/FlutterEmbedder", "FlutterEmbedder.framework/Versions/Current/FlutterEmbedder")
+
+		createSymLink("FlutterEmbedder.framework/Headers", "FlutterEmbedder.framework/Versions/Current/Headers")
+
+		createSymLink("FlutterEmbedder.framework/Modules", "FlutterEmbedder.framework/Versions/Current/Modules")
+
+		createSymLink("FlutterEmbedder.framework/Resources", "FlutterEmbedder.framework/Versions/Current/Resources")
 
 	case "linux-x64":
 		err := os.Rename(".build/libflutter_engine.so", dir+"/libflutter_engine.so")
@@ -296,6 +345,8 @@ func main() {
 	}
 	fmt.Printf("Unzipped files and moved them to correct repository.\n")
 
-	fmt.Printf("Done.\n")
+	fmt.Printf("Don't forget to let know CGO compiler need to know where to look for the share library.\n")
+	fmt.Printf("%s\n", endMessage)
 
+	fmt.Printf("Done.\n")
 }
