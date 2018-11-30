@@ -270,7 +270,7 @@ func main() {
 
 	case "windows":
 		platform = "windows-x64"
-		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder.zip", hashResponse.Items[0].Sha, platform, platform)
 		endMessage = "set CGO_LDFLAGS=-L%cd%"
 
 	default:
@@ -291,7 +291,7 @@ func main() {
 		log.Fatal(err4)
 	} else {
 		fmt.Printf("Downloaded artifact for %s platform.\n", platform)
-	} 
+	}
 
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
 	if err != nil {
