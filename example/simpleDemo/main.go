@@ -81,7 +81,7 @@ func ownPlugin(
 		fmt.Printf("Reading (A number): ")
 		reader := bufio.NewReader(os.Stdin)
 		s, _ := reader.ReadString('\n')
-		s = strings.Trim(s, " \n")
+		s = strings.TrimRight(s, "\r\n")
 		if _, err := strconv.Atoi(s); err == nil {
 			flutterEngine.SendPlatformMessageResponse(platMessage, []byte("[ "+s+" ]"))
 		} else {
