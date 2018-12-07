@@ -174,7 +174,7 @@ func (flu *EngineOpenGL) SendPlatformMessage(Message *PlatformMessage) Result {
 	cPlatformMessage := C.FlutterPlatformMessage{
 		channel:      C.CString(Message.Channel),
 		message:      (*C.uint8_t)(unsafe.Pointer(C.CString(strMessage))),
-		message_size: C.uintptr_t(len(strMessage)),
+		message_size: C.size_t(len(strMessage)),
 	}
 
 	cPlatformMessage.struct_size = C.size_t(unsafe.Sizeof(cPlatformMessage))
