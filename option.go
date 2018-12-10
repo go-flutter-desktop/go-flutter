@@ -29,8 +29,8 @@ func OptionVMArguments(a []string) Option {
 	}
 }
 
-// OptionWindowDimension specify the startup's dimention of the window.
-func OptionWindowDimension(x int, y int) Option {
+// ApplicationWindowDimension specify the startup's dimention of the window.
+func ApplicationWindowDimension(x int, y int) Option {
 	return func(c *config) {
 		c.WindowDimension.x = x
 		c.WindowDimension.y = y
