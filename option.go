@@ -14,8 +14,8 @@ func ProjectAssetPath(p string) Option {
 	}
 }
 
-// OptionICUDataPath specify the path to the ICUData.
-func OptionICUDataPath(p string) Option {
+// ApplicationICUDataPath specify the path to the ICUData.
+func ApplicationICUDataPath(p string) Option {
 	return func(c *config) {
 		c.ICUDataPath = p
 	}
