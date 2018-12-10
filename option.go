@@ -7,8 +7,8 @@ import (
 // Option for gutter
 type Option func(*config)
 
-// OptionAssetPath specify the flutter asset directory.
-func OptionAssetPath(p string) Option {
+// ProjectAssetPath specify the flutter asset directory.
+func ProjectAssetPath(p string) Option {
 	return func(c *config) {
 		c.AssetPath = p
 	}
