@@ -27,16 +27,14 @@ func main() {
 	_, currentFilePath, _, _ := runtime.Caller(0)
 	dir := path.Dir(currentFilePath)
 
+	initialApplicationHeight := 600
+	initialApplicationWidth := 800
+
 	options := []gutter.Option{
-		gutter.OptionAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
-		/* Depending on your architecture you need to change the enginer
-		 * Mac OS X : flutter/bin/cache/artifacts/engine/darwin-x64/icudtl.dat
-		 * Linux    : flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat
-		 * Windows  : flutter/bin/cache/artifacts/engine/windows-x64/icudtl.dat
-		 */
-		gutter.OptionICUDataPath(dir + "/icudtl.dat"),
-		gutter.OptionWindowInitializer(setIcon),
-		gutter.OptionWindowDimension(800, 600),
+		gutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
+		/* This path should not be changed. icudtl.dat is handled by engineDownloader.go */
+		gutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
+		gutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),

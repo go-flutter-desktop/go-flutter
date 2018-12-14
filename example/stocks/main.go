@@ -17,7 +17,7 @@ func main() {
 	)
 
 	options := []gutter.Option{
-		gutter.OptionAssetPath("flutter_project/stocks/build/flutter_assets"),
+		gutter.ProjectAssetPath("flutter_project/stocks/build/flutter_assets"),
 		gutter.OptionICUDataPath("/opt/flutter/bin/cache/artifacts/engine/linux-x64/icudtl.dat"), // Linux (arch)
 		// gutter.OptionICUDataPath("./FlutterEmbedder.framework/Resources/icudtl.dat"),             // OSX
 		gutter.OptionWindowDimension(800, 600),
