@@ -1,14 +1,25 @@
 package gutter
 
 import (
+	"log"
+	"os"
+
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 // Option for gutter
 type Option func(*config)
 
+// Check path
+func checkPath(p string) {
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+}
+
 // ProjectAssetPath specify the flutter asset directory.
 func ProjectAssetPath(p string) Option {
+	checkPath(p)
 	return func(c *config) {
 		c.AssetPath = p
 	}
@@ -16,6 +27,7 @@ func ProjectAssetPath(p string) Option {
 
 // ApplicationICUDataPath specify the path to the ICUData.
 func ApplicationICUDataPath(p string) Option {
+	checkPath(p)
 	return func(c *config) {
 		c.ICUDataPath = p
 	}
@@ -31,6 +43,16 @@ func OptionVMArguments(a []string) Option {
 
 // ApplicationWindowDimension specify the startup's dimention of the window.
 func ApplicationWindowDimension(x int, y int) Option {
+	// Check for initial application display size
+	if x < 1 {
+		log.Fatal("Wrong initial value for width ")
+	}
+
+	// Check for initial application display size
+	if y < 1 {
+		log.Fatal("Wrong initial value for height ")
+	}
+
 	return func(c *config) {
 		c.WindowDimension.x = x
 		c.WindowDimension.y = y

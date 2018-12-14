@@ -30,26 +30,6 @@ func main() {
 	initialApplicationHeight := 600
 	initialApplicationWidth := 800
 
-	// Missing build folder
-	if _, err := os.Stat(dir + "/flutter_project/demo/build/"); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
-
-	// Missing icudtl.dat folder
-	if _, err := os.Stat(dir + "/icudtl.dat"); os.IsNotExist(err) {
-		log.Fatal(err)
-	}
-
-	// Check for initial application display size
-	if initialApplicationHeight < 1 {
-		log.Fatal("Wrong initial value for height ")
-	}
-
-	// Check for initial application display size
-	if initialApplicationWidth < 1 {
-		log.Fatal("Wrong initial value for width ")
-	}
-
 	options := []gutter.Option{
 		gutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
 		/* This path should not be changed. icudtl.dat is handled by engineDownloader.go */
