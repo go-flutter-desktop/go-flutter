@@ -33,35 +33,52 @@ func (p *textinputPlugin) addChar(char []rune) {
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) MoveCursorHome(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
+func (p *textinputPlugin) MoveCursorHomeSimple() {
 	p.selectionBase = 0
-	if !modsIsShift {
-		p.selectionExtent = p.selectionBase
-	}
+	p.selectionExtent = p.selectionBase
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
+func (p *textinputPlugin) MoveCursorHomeSelect() {
+	p.selectionBase = 0
+	p.updateEditingState()
+}
+
+func (p *textinputPlugin) MoveCursorEndSimple() {
 	p.selectionBase = len(p.word)
-	if !modsIsShift {
-		p.selectionExtent = p.selectionBase
-	}
+	p.selectionExtent = p.selectionBase
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
-	if modsIsWordModifierShift {
-		if p.isSelected() {
-			p.selectionExtent = indexStartLeadingWord(p.word, p.selectionExtent)
-		} else {
-			p.selectionExtent = indexStartLeadingWord(p.word, p.selectionBase)
-		}
-	} else if modsIsWordModifier {
-		p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
-		p.selectionExtent = p.selectionBase
-	} else if modsIsShift {
-		p.selectionExtent--
-	} else if !p.isSelected() {
+func (p *textinputPlugin) MoveCursorEndSelect() {
+	p.selectionBase = len(p.word)
+	p.updateEditingState()
+}
+
+func (p *textinputPlugin) MoveCursorLeftSimple() {
+	p.selectionExtent--
+	p.updateEditingState()
+}
+
+func (p *textinputPlugin) MoveCursorLeftWord() {
+	p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
+	p.selectionExtent = p.selectionBase
+	p.updateEditingState()
+
+}
+
+func (p *textinputPlugin) MoveCursorLeftLine() {
+	if p.isSelected() {
+		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionExtent)
+	} else {
+		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionBase)
+	}
+	p.updateEditingState()
+
+}
+
+func (p *textinputPlugin) MoveCursorLeftReset() {
+	if !p.isSelected() {
 		if p.selectionBase > 0 {
 			p.selectionBase--
 			p.selectionExtent = p.selectionBase
@@ -72,19 +89,30 @@ func (p *textinputPlugin) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, 
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) MoveCursorRight(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
-	if modsIsWordModifierShift {
-		if p.isSelected() {
-			p.selectionExtent = indexEndForwardWord(p.word, p.selectionExtent)
-		} else {
-			p.selectionExtent = indexEndForwardWord(p.word, p.selectionBase)
-		}
-	} else if modsIsWordModifier {
-		p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
-		p.selectionExtent = p.selectionBase
-	} else if modsIsShift {
-		p.selectionExtent++
-	} else if !p.isSelected() {
+func (p *textinputPlugin) MoveCursorRightSimple() {
+	p.selectionExtent++
+	p.updateEditingState()
+}
+
+func (p *textinputPlugin) MoveCursorRightWord() {
+	p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
+	p.selectionExtent = p.selectionBase
+	p.updateEditingState()
+
+}
+
+func (p *textinputPlugin) MoveCursorRightLine() {
+	if p.isSelected() {
+		p.selectionExtent = indexEndForwardWord(p.word, p.selectionExtent)
+	} else {
+		p.selectionExtent = indexEndForwardWord(p.word, p.selectionBase)
+	}
+	p.updateEditingState()
+
+}
+
+func (p *textinputPlugin) MoveCursorRightReset() {
+	if !p.isSelected() {
 		if p.selectionBase < len(p.word) {
 			p.selectionBase++
 			p.selectionExtent = p.selectionBase
@@ -92,9 +120,7 @@ func (p *textinputPlugin) MoveCursorRight(modsIsModifier bool, modsIsShift bool,
 	} else {
 		p.selectionBase = p.selectionExtent
 	}
-
 	p.updateEditingState()
-
 }
 
 func (p *textinputPlugin) SelectAll() {
@@ -103,41 +129,49 @@ func (p *textinputPlugin) SelectAll() {
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) Delete(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
-	if p.RemoveSelectedText() {
-		p.updateEditingState()
-		return
-	}
-
+func (p *textinputPlugin) DeleteSimple() {
 	if p.selectionBase < len(p.word) {
 		p.word = append(p.word[:p.selectionBase], p.word[p.selectionBase+1:]...)
 		p.updateEditingState()
 	}
 }
 
-func (p *textinputPlugin) Backspace(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
-	if p.RemoveSelectedText() {
-		p.updateEditingState()
-		return
-	}
+func (p *textinputPlugin) DeleteWord() {
+	UpTo := indexEndForwardWord(p.word, p.selectionBase)
+	p.word = append(p.word[:p.selectionBase], p.word[UpTo:]...)
+	p.updateEditingState()
+}
 
+func (p *textinputPlugin) DeleteLine() {
+	p.word = p.word[:p.selectionBase]
+	p.updateEditingState()
+}
+
+
+func (p *textinputPlugin) BackspaceSimple(){
 	if len(p.word) > 0 && p.selectionBase > 0 {
-		if modsIsWordModifier {
-			deleteUpTo := indexStartLeadingWord(p.word, p.selectionBase)
-			p.word = append(p.word[:deleteUpTo], p.word[p.selectionBase:]...)
-			p.selectionBase = deleteUpTo
-			p.selectionExtent = deleteUpTo
-			p.updateEditingState()
-		} else {
-			p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
-			if p.selectionBase > 0 {
-				p.selectionBase--
-			}
-			p.selectionExtent = p.selectionBase
-			p.updateEditingState()
-		}
+		p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
+		p.selectionBase--
+		p.selectionExtent = p.selectionBase
+		p.updateEditingState()
 	}
+}
 
+func (p *textinputPlugin) BackspaceWord(){
+	if len(p.word) > 0 && p.selectionBase > 0 {
+		deleteUpTo := indexStartLeadingWord(p.word, p.selectionBase)
+		p.word = append(p.word[:deleteUpTo], p.word[p.selectionBase:]...)
+		p.selectionBase = deleteUpTo
+		p.selectionExtent = deleteUpTo
+		p.updateEditingState()
+	}
+}
+
+func (p *textinputPlugin) BackspaceLine(){
+	p.word = p.word[:0]
+	p.selectionBase = 0
+	p.selectionExtent = 0
+	p.updateEditingState()
 }
 
 // RemoveSelectedText do nothing if no text is selected
