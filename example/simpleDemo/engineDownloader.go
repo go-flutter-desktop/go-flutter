@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -202,6 +203,18 @@ func downloadFile(filepath string, url string) error {
 }
 
 func main() {
+	// Support flag
+	chinaPtr := flag.Bool("china", false, "Whether or not installation is in China")
+	flag.Parse()
+	var targetedDomain = ""
+
+	// If flag china is passse, targeted domain is changed (China partially blocking google)
+	if *chinaPtr {
+		targetedDomain = "https://storage.flutter-io.cn"
+	} else {
+		targetedDomain = "https://storage.googleapis.com"
+	}
+
 	// Execute flutter command to retrieve the version
 	out, err := exec.Command("flutter", "--version").Output()
 	if err != nil {
@@ -260,24 +273,24 @@ func main() {
 	switch runtime.GOOS {
 	case "darwin":
 		platform = "darwin-x64"
-		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
+		downloadShareLibraryURL = fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/FlutterEmbedder.framework.zip", hashResponse.Items[0].Sha, platform)
 		endMessage = "export CGO_LDFLAGS=\"-F${PWD} -Wl,-rpath,@executable_path\""
 
 	case "linux":
 		platform = "linux-x64"
-		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 		endMessage = "export CGO_LDFLAGS=\"-L${PWD}\""
 
 	case "windows":
 		platform = "windows-x64"
-		downloadShareLibraryURL = fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/%s-embedder.zip", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
 		endMessage = "set CGO_LDFLAGS=-L%cd%"
 
 	default:
 		log.Fatal("OS not supported")
 	}
 
-	downloadIcudtlURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra/flutter/%s/%s/artifacts.zip", hashResponse.Items[0].Sha, platform)
+	downloadIcudtlURL := fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/artifacts.zip", hashResponse.Items[0].Sha, platform)
 
 	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
 	if err3 != nil {
