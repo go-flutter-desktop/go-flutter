@@ -3,6 +3,7 @@ package gutter
 import (
 	"encoding/json"
 	"log"
+	"runtime"
 	"time"
 	"unsafe"
 
@@ -93,73 +94,82 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 
 var state = textModel{}
 
-func glfwKeyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func glfwKey() func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
-	if key == glfw.KeyEscape && action == glfw.Press {
-		w.SetShouldClose(true)
+	var modifierKey glfw.ModifierKey
+
+	switch runtime.GOOS {
+	case "darwin":
+		modifierKey = glfw.ModSuper
+	default:
+		modifierKey = glfw.ModControl
 	}
 
-	if action == glfw.Repeat || action == glfw.Press {
-		if state.clientID != 0 {
+	return func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if key == glfw.KeyEscape && action == glfw.Press {
+			w.SetShouldClose(true)
+		}
 
-			switch key {
-			case glfw.KeyEnter:
-				if mods == glfw.ModControl {
-					performAction(w, "done")
-				} else {
-					state.addChar([]rune{'\n'})
-					performAction(w, "newline")
-				}
+		if action == glfw.Repeat || action == glfw.Press {
+			if state.clientID != 0 {
 
-			case glfw.KeyHome:
-				state.MoveCursorHome(int(mods))
-
-			case glfw.KeyEnd:
-				state.MoveCursorEnd(int(mods))
-
-			case glfw.KeyLeft:
-				state.MoveCursorLeft(int(mods))
-
-			case glfw.KeyRight:
-				state.MoveCursorRight(int(mods))
-
-			case glfw.KeyDelete:
-				state.Delete(int(mods))
-
-			case glfw.KeyBackspace:
-				state.Backspace(int(mods))
-
-			case glfw.KeyA:
-				if mods == glfw.ModControl {
-					state.SelectAll()
-				}
-
-			case glfw.KeyC:
-				if mods == glfw.ModControl && state.isSelected() {
-					_, _, selectedContent := state.GetSelectedText()
-					w.SetClipboardString(selectedContent)
-				}
-
-			case glfw.KeyX:
-				if mods == glfw.ModControl && state.isSelected() {
-					_, _, selectedContent := state.GetSelectedText()
-					w.SetClipboardString(selectedContent)
-					state.RemoveSelectedText()
-				}
-
-			case glfw.KeyV:
-				if mods == glfw.ModControl {
-					var clpString, err = w.GetClipboardString()
-					if err != nil {
-						log.Printf("unable to get the clipboard content: %v\n", err)
+				switch key {
+				case glfw.KeyEnter:
+					if mods == glfw.ModControl {
+						performAction(w, "done")
 					} else {
-						state.addChar([]rune(clpString))
+						state.addChar([]rune{'\n'})
+						performAction(w, "newline")
+					}
+
+				case glfw.KeyHome:
+					state.MoveCursorHome(int(mods))
+
+				case glfw.KeyEnd:
+					state.MoveCursorEnd(int(mods))
+
+				case glfw.KeyLeft:
+					state.MoveCursorLeft(int(mods))
+
+				case glfw.KeyRight:
+					state.MoveCursorRight(int(mods))
+
+				case glfw.KeyDelete:
+					state.Delete(int(mods))
+
+				case glfw.KeyBackspace:
+					state.Backspace(int(mods))
+
+				case glfw.KeyA:
+					if mods == modifierKey {
+						state.SelectAll()
+					}
+				case glfw.KeyC:
+					if mods == modifierKey && state.isSelected() {
+						_, _, selectedContent := state.GetSelectedText()
+						w.SetClipboardString(selectedContent)
+					}
+
+				case glfw.KeyX:
+					if mods == modifierKey && state.isSelected() {
+						_, _, selectedContent := state.GetSelectedText()
+						w.SetClipboardString(selectedContent)
+						state.RemoveSelectedText()
+					}
+
+				case glfw.KeyV:
+					if mods == modifierKey {
+						var clpString, err = w.GetClipboardString()
+						if err != nil {
+							log.Printf("unable to get the clipboard content: %v\n", err)
+						} else {
+							state.addChar([]rune(clpString))
+						}
 					}
 				}
 			}
 		}
 	}
-
 }
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
@@ -243,6 +253,8 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
 
+	glfwKeyCallback := glfwKey()
+
 	window.SetKeyCallback(glfwKeyCallback)
 	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
 	window.SetMouseButtonCallback(glfwMouseButtonCallback)
@@ -286,11 +298,11 @@ func performAction(window *glfw.Window, action string) {
 		"TextInputAction." + action,
 	})
 	message := flutter.Message{
-		Args: actionArgs,
-		Method:"TextInputClient.performAction",
+		Args:   actionArgs,
+		Method: "TextInputClient.performAction",
 	}
 	var mess = &flutter.PlatformMessage{
-		Channel:textInputChannel,
+		Channel: textInputChannel,
 		Message: message,
 	}
 	flutterOGL := flutter.SelectEngine(0)
