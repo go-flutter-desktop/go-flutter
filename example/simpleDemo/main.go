@@ -13,7 +13,8 @@ import (
 	"strings"
 	"time"
 
-	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
+	gutter "../.."
+	//gutter "github.com/Drakirus/go-flutter-desktop-embedder"
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -39,6 +40,7 @@ func main() {
 		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
 		gutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
+		gutter.OptionKeyboardLayout("FR"),
 	}
 
 	if err = gutter.Run(options...); err != nil {
