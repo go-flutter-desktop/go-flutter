@@ -41,7 +41,7 @@ func (state *textModel) addChar(char []rune) {
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorHome(mods int) {
+func (state *textModel) MoveCursorHome(mods int, modifierKey int) {
 	state.selectionBase = 0
 	if mods != ModShift {
 		state.selectionExtent = state.selectionBase
@@ -49,7 +49,7 @@ func (state *textModel) MoveCursorHome(mods int) {
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorEnd(mods int) {
+func (state *textModel) MoveCursorEnd(mods int, modifierKey int) {
 	state.selectionBase = len(state.word)
 	if mods != ModShift {
 		state.selectionExtent = state.selectionBase
@@ -57,8 +57,8 @@ func (state *textModel) MoveCursorEnd(mods int) {
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorLeft(mods int) {
-	if mods == ModShiftControl || mods == ModControl {
+func (state *textModel) MoveCursorLeft(mods int, modifierKey int) {
+	if mods == ModShiftControl || mods == modifierKey {
 		state.selectionBase = indexStartLeadingWord(state.word, state.selectionBase)
 	} else if state.selectionBase > 0 {
 
@@ -69,15 +69,15 @@ func (state *textModel) MoveCursorLeft(mods int) {
 		}
 	}
 
-	if mods == ModNone || mods == ModControl {
+	if mods == ModNone || mods == modifierKey {
 		state.selectionExtent = state.selectionBase
 	}
 
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorRight(mods int) {
-	if mods == ModShiftControl || mods == ModControl {
+func (state *textModel) MoveCursorRight(mods int, modifierKey int) {
+	if mods == ModShiftControl || mods == modifierKey {
 		state.selectionBase = indexEndForwardWord(state.word, state.selectionBase)
 	} else if state.selectionBase < len(state.word) {
 
@@ -88,7 +88,7 @@ func (state *textModel) MoveCursorRight(mods int) {
 		}
 	}
 
-	if mods == ModNone || mods == ModControl {
+	if mods == ModNone || mods == modifierKey {
 		state.selectionExtent = state.selectionBase
 	}
 
@@ -101,7 +101,7 @@ func (state *textModel) SelectAll() {
 	state.notifyState()
 }
 
-func (state *textModel) Delete(mods int) {
+func (state *textModel) Delete(mods int, modifierKey int) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
@@ -113,14 +113,14 @@ func (state *textModel) Delete(mods int) {
 	}
 }
 
-func (state *textModel) Backspace(mods int) {
+func (state *textModel) Backspace(mods int, modifierKey int) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
 	}
 
 	if len(state.word) > 0 && state.selectionBase > 0 {
-		if mods == ModControl {
+		if mods == modifierKey {
 			deleteUpTo := indexStartLeadingWord(state.word, state.selectionBase)
 			state.word = append(state.word[:deleteUpTo], state.word[state.selectionBase:]...)
 			state.selectionBase = deleteUpTo

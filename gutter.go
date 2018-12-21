@@ -123,22 +123,22 @@ func glfwKey() func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					}
 
 				case glfw.KeyHome:
-					state.MoveCursorHome(int(mods))
+					state.MoveCursorHome(int(mods), int(modifierKey))
 
 				case glfw.KeyEnd:
-					state.MoveCursorEnd(int(mods))
+					state.MoveCursorEnd(int(mods), int(modifierKey))
 
 				case glfw.KeyLeft:
-					state.MoveCursorLeft(int(mods))
+					state.MoveCursorLeft(int(mods), int(modifierKey))
 
 				case glfw.KeyRight:
-					state.MoveCursorRight(int(mods))
+					state.MoveCursorRight(int(mods), int(modifierKey))
 
 				case glfw.KeyDelete:
-					state.Delete(int(mods))
+					state.Delete(int(mods), int(modifierKey))
 
 				case glfw.KeyBackspace:
-					state.Backspace(int(mods))
+					state.Backspace(int(mods), int(modifierKey))
 
 				case glfw.KeyA:
 					if mods == modifierKey {
