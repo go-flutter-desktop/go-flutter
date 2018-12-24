@@ -8,15 +8,13 @@
 </a>
 
 A Go (golang) [Custom Flutter Engine
-Embedder](https://github.com/flutter/engine/wiki/Custom-Flutter-Engine-Embedders)
+Embedder](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders)
 for desktop
 
 # Purpose
 This project doesn't compete with
 [this](https://github.com/google/flutter-desktop-embedding) awesome one.
-The purpose of this project is to support the 
-[Flutter](https://github.com/flutter/flutter) framework on Windows, MacOS, and
-Linux using a **SINGLE** code base.  
+The purpose of this project is to implement the [Flutter's embedding API](https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h) on Windows, MacOS, and Linux using a **SINGLE** code base.  
 
 [**GLFW**](https://github.com/go-gl/glfw) fits the job because it
 provides the right abstractions over the OpenGL's Buffer/mouse/keyboard for each platform.  
