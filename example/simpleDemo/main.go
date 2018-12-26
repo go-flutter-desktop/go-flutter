@@ -13,8 +13,7 @@ import (
 	"strings"
 	"time"
 
-	gutter "../.."
-	//gutter "github.com/Drakirus/go-flutter-desktop-embedder"
+	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
