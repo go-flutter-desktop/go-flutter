@@ -12,17 +12,13 @@ Embedder](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedder
 for desktop
 
 # Purpose
-This project doesn't compete with
-[this](https://github.com/google/flutter-desktop-embedding) awesome one.
-The purpose of this project is to implement the [Flutter's embedding API](https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h) on Windows, MacOS, and Linux using a **SINGLE** code base.  
 
-[**GLFW**](https://github.com/go-gl/glfw) fits the job because it
-provides the right abstractions over the OpenGL's Buffer/mouse/keyboard for each platform.  
+> Disclaimer: Despite being very similar in the end goal, This project doesn't compete with
+> [this](https://github.com/google/flutter-desktop-embedding) awesome one.
 
-The choice of [Golang](https://github.com/golang/go) comes from the fact that it
-has the same tooling on every platform.  
-Plus golang is a great language because it keeps everything simple and readable,
-which, I hope, will encourage people to contribute :grin:.
+The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. The purpose of this project is to implement [Flutter's Embedding API](https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h) using a **SINGLE** code base that runs on Windows, MacOS, and Linux.  [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
+
+The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus golang is a great language because it keeps everything simple and readable, which, I hope, will encourage people to contribute :grin:.
 
 ## How to install
 
