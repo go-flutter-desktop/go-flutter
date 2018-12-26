@@ -93,7 +93,7 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 
 var state = textModel{}
 
-func glfwKey(keyboardLayout keyboardShortcuts) func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
 	return func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if key == glfw.KeyEscape && action == glfw.Press {
@@ -130,25 +130,25 @@ func glfwKey(keyboardLayout keyboardShortcuts) func(w *glfw.Window, key glfw.Key
 				case glfw.KeyBackspace:
 					state.Backspace(int(mods))
 
-				case keyboardLayout.selectAll:
+				case keyboardLayout.SelectAll:
 					if mods == glfw.ModControl {
 						state.SelectAll()
 					}
 
-				case keyboardLayout.copy:
+				case keyboardLayout.Copy:
 					if mods == glfw.ModControl && state.isSelected() {
 						_, _, selectedContent := state.GetSelectedText()
 						w.SetClipboardString(selectedContent)
 					}
 
-				case keyboardLayout.cut:
+				case keyboardLayout.Cut:
 					if mods == glfw.ModControl && state.isSelected() {
 						_, _, selectedContent := state.GetSelectedText()
 						w.SetClipboardString(selectedContent)
 						state.RemoveSelectedText()
 					}
 
-				case keyboardLayout.paste:
+				case keyboardLayout.Paste:
 					if mods == glfw.ModControl {
 						var clpString, err = w.GetClipboardString()
 						if err != nil {
