@@ -160,8 +160,7 @@ The examples are available [here](./example/).
 - [ ] System plugins [Platform channels used by the Flutter system](https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/system_channels.dart)
   - [x] Window Title
   - [x] Text input
-  - [x] Clipboard (through shortcuts)
-  - [ ] Clipboard (through the click)
+  - [x] Clipboard (through shortcuts and UI)
   - [x] Keyboard shortcuts
     - [x] <kbd>ctrl-c</kbd>  <kbd>ctrl-v</kbd>  <kbd>ctrl-x</kbd>  <kbd>ctrl-a</kbd>
     - [x] <kbd>Home</kbd>  <kbd>End</kbd>  <kbd>shift-Home</kbd>  <kbd>shift-End</kbd>
