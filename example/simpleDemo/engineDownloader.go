@@ -283,7 +283,7 @@ func main() {
 
 	case "windows":
 		platform = "windows-x64"
-		downloadShareLibraryURL = fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/%s-embedder", hashResponse.Items[0].Sha, platform, platform)
+		downloadShareLibraryURL = fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/%s-embedder.zip", hashResponse.Items[0].Sha, platform, platform)
 		endMessage = "set CGO_LDFLAGS=-L%cd%"
 
 	default:
