@@ -90,7 +90,7 @@ func OptionAddPluginReceiver(handler PluginReceivers, channelName string) Option
 // when the FlutterEngine send a PlatformMessage to the Embedder
 func OptionKeyboardLayout(keyboardLayout KeyboardShortcuts) Option {
 	return func(c *config) {
-		c.KeyboardLayout = keyboardLayout
+		c.KeyboardLayout = &keyboardLayout
 	}
 }
 
@@ -105,7 +105,7 @@ type config struct {
 	PixelRatio               float64
 	VMArguments              []string
 	PlatformMessageReceivers map[string][]PluginReceivers // The Key is the Channel name.
-	KeyboardLayout           KeyboardShortcuts
+	KeyboardLayout           *KeyboardShortcuts
 }
 
 // KeyboardShortcuts Struct where user can define his own keyboard shortcut.
