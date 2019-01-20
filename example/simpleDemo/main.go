@@ -30,14 +30,6 @@ func main() {
 	initialApplicationHeight := 600
 	initialApplicationWidth := 800
 
-	// Default key for shortcuts (US-layout)
-	keyboardLayout := gutter.KeyboardShortcuts{
-		Cut:       glfw.KeyX,
-		Copy:      glfw.KeyC,
-		Paste:     glfw.KeyV,
-		SelectAll: glfw.KeyA,
-	}
-
 	options := []gutter.Option{
 		gutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
 		/* This path should not be changed. icudtl.dat is handled by engineDownloader.go */
@@ -47,7 +39,7 @@ func main() {
 		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
 		gutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
-		gutter.OptionKeyboardLayout(keyboardLayout),
+		gutter.OptionKeyboardLayout(gutter.KeyboardAzertyLayout),
 	}
 
 	if err = gutter.Run(options...); err != nil {
