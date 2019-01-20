@@ -243,8 +243,13 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
+	var glfwKeyCallback func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey)
 
-	glfwKeyCallback := glfwKey(c.KeyboardLayout)
+	if c.KeyboardLayout == nil {
+		glfwKeyCallback = glfwKey(*c.KeyboardLayout)
+	} else {
+		glfwKeyCallback = glfwKey(KeyboardQwertyLayout)
+	}
 
 	window.SetKeyCallback(glfwKeyCallback)
 	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
