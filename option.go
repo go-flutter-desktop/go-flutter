@@ -86,6 +86,14 @@ func OptionAddPluginReceiver(handler PluginReceivers, channelName string) Option
 	}
 }
 
+// OptionKeyboardLayout allow application to support keyboard that have a different layout
+// when the FlutterEngine send a PlatformMessage to the Embedder
+func OptionKeyboardLayout(keyboardLayout KeyboardShortcuts) Option {
+	return func(c *config) {
+		c.KeyboardLayout = &keyboardLayout
+	}
+}
+
 type config struct {
 	WindowDimension struct {
 		x int
@@ -97,6 +105,16 @@ type config struct {
 	PixelRatio               float64
 	VMArguments              []string
 	PlatformMessageReceivers map[string][]PluginReceivers // The Key is the Channel name.
+	KeyboardLayout           *KeyboardShortcuts
+}
+
+// KeyboardShortcuts Struct where user can define his own keyboard shortcut.
+// This will allow application to support keyboard layout different from US layout
+type KeyboardShortcuts struct {
+	Cut       glfw.Key
+	Copy      glfw.Key
+	Paste     glfw.Key
+	SelectAll glfw.Key
 }
 
 func (t config) merge(options ...Option) config {
