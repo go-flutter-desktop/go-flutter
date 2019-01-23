@@ -94,7 +94,7 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 
 var state = textModel{}
 
-func glfwKey() func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
 	var modifierKey glfw.ModifierKey
 
@@ -115,7 +115,7 @@ func glfwKey() func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 
 				switch key {
 				case glfw.KeyEnter:
-					if mods == glfw.ModControl {
+					if mods == modifierKey {
 						performAction(w, "done")
 					} else {
 						state.addChar([]rune{'\n'})
@@ -140,24 +140,25 @@ func glfwKey() func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				case glfw.KeyBackspace:
 					state.Backspace(int(mods), int(modifierKey))
 
-				case glfw.KeyA:
+				case keyboardLayout.SelectAll:
 					if mods == modifierKey {
 						state.SelectAll()
 					}
-				case glfw.KeyC:
+
+				case keyboardLayout.Copy:
 					if mods == modifierKey && state.isSelected() {
 						_, _, selectedContent := state.GetSelectedText()
 						w.SetClipboardString(selectedContent)
 					}
 
-				case glfw.KeyX:
+				case keyboardLayout.Cut:
 					if mods == modifierKey && state.isSelected() {
 						_, _, selectedContent := state.GetSelectedText()
 						w.SetClipboardString(selectedContent)
 						state.RemoveSelectedText()
 					}
 
-				case glfw.KeyV:
+				case keyboardLayout.Paste:
 					if mods == modifierKey {
 						var clpString, err = w.GetClipboardString()
 						if err != nil {
@@ -252,8 +253,13 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
 	width, height := window.GetFramebufferSize()
 	glfwWindowSizeCallback(window, width, height)
+	var glfwKeyCallback func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey)
 
-	glfwKeyCallback := glfwKey()
+	if c.KeyboardLayout != nil {
+		glfwKeyCallback = glfwKey(*c.KeyboardLayout)
+	} else {
+		glfwKeyCallback = glfwKey(KeyboardQwertyLayout)
+	}
 
 	window.SetKeyCallback(glfwKeyCallback)
 	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
