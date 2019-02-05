@@ -20,6 +20,7 @@ const (
 	ModControl      int = 2
 	ModShiftControl int = 3
 	ModAlt          int = 4
+	ModShiftAlt     int = 5
 	ModSuper        int = 8
 	ModShiftSuper   int = 9
 )
@@ -42,7 +43,7 @@ func (state *textModel) addChar(char []rune) {
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
+func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
 	state.selectionBase = 0
 	if !modsIsShift {
 		state.selectionExtent = state.selectionBase
@@ -50,7 +51,7 @@ func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, mo
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
+func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
 	state.selectionBase = len(state.word)
 	if !modsIsShift {
 		state.selectionExtent = state.selectionBase
@@ -58,36 +59,46 @@ func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, mod
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
-	if modsIsModifierShift {
+func (state *textModel) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+	if modsIsShiftAlt {
 		if state.isSelected() {
 			state.selectionExtent = indexStartLeadingWord(state.word, state.selectionExtent)
 		} else {
 			state.selectionExtent = indexStartLeadingWord(state.word, state.selectionBase)
 		}
+	} else if modsIsAlt {
+		state.selectionBase = indexStartLeadingWord(state.word, state.selectionBase)
+		state.selectionExtent = state.selectionBase
 	} else if modsIsShift {
 		state.selectionExtent--
 	} else if !state.isSelected() {
-		state.selectionBase--
-		state.selectionExtent = state.selectionBase
+		if state.selectionBase > 0 {
+			state.selectionBase--
+			state.selectionExtent = state.selectionBase
+		}
 	} else {
 		state.selectionBase = state.selectionExtent
 	}
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorRight(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
-	if modsIsModifierShift {
+func (state *textModel) MoveCursorRight(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+	if modsIsShiftAlt {
 		if state.isSelected() {
 			state.selectionExtent = indexEndForwardWord(state.word, state.selectionExtent)
 		} else {
 			state.selectionExtent = indexEndForwardWord(state.word, state.selectionBase)
 		}
+	} else if modsIsAlt {
+		state.selectionBase = indexEndForwardWord(state.word, state.selectionBase)
+		state.selectionExtent = state.selectionBase
 	} else if modsIsShift {
 		state.selectionExtent++
 	} else if !state.isSelected() {
-		state.selectionBase++
-		state.selectionExtent = state.selectionBase
+		if state.selectionBase < len(state.word) {
+			state.selectionBase++
+			state.selectionExtent = state.selectionBase
+		}
 	} else {
 		state.selectionBase = state.selectionExtent
 	}
@@ -102,7 +113,7 @@ func (state *textModel) SelectAll() {
 	state.notifyState()
 }
 
-func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
+func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
@@ -114,14 +125,14 @@ func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsModi
 	}
 }
 
-func (state *textModel) Backspace(modsIsModifier bool, modsIsShift bool, modsIsModifierShift bool) {
+func (state *textModel) Backspace(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
 	}
 
 	if len(state.word) > 0 && state.selectionBase > 0 {
-		if modsIsModifier {
+		if modsIsAlt {
 			deleteUpTo := indexStartLeadingWord(state.word, state.selectionBase)
 			state.word = append(state.word[:deleteUpTo], state.word[state.selectionBase:]...)
 			state.selectionBase = deleteUpTo
