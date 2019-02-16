@@ -70,3 +70,8 @@ func proxy_make_resource_current(v unsafe.Pointer) C.bool {
 	index := *(*C.int)(w.GetUserPointer())
 	return C.bool(flutterEngines[index].FMakeResourceCurrent(v))
 }
+
+//export proxy_gl_proc_resolver
+func proxy_gl_proc_resolver(v unsafe.Pointer, procname *C.char) unsafe.Pointer {
+	return glfw.GetProcAddress(C.GoString(procname))
+}
