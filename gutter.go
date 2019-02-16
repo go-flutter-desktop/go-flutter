@@ -184,33 +184,32 @@ func glfwCharCallback(w *glfw.Window, char rune) {
 // Flutter Engine
 func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 
-	flutterOGL := flutter.EngineOpenGL{
-		// Engine arguments
-		AssetsPath:  c.AssetPath,
-		IcuDataPath: c.ICUDataPath,
-		// Render callbacks
-		FMakeCurrent: func(v unsafe.Pointer) bool {
-			w := glfw.GoWindow(v)
-			w.MakeContextCurrent()
-			return true
-		},
-		FClearCurrent: func(v unsafe.Pointer) bool {
-			glfw.DetachCurrentContext()
-			return true
-		},
-		FPresent: func(v unsafe.Pointer) bool {
-			w := glfw.GoWindow(v)
-			w.SwapBuffers()
-			return true
-		},
-		FFboCallback: func(v unsafe.Pointer) int32 {
-			return 0
-		},
-		FMakeResourceCurrent: func(v unsafe.Pointer) bool {
-			return false
-		},
-		PixelRatio: c.PixelRatio,
+	flutterOGL := flutter.NewEngineOpenGL()
+	// Engine arguments
+	flutterOGL.AssetsPath = c.AssetPath
+	flutterOGL.IcuDataPath = c.ICUDataPath
+	// Render callbacks
+	flutterOGL.FMakeCurrent = func(v unsafe.Pointer) bool {
+		w := glfw.GoWindow(v)
+		w.MakeContextCurrent()
+		return true
 	}
+	flutterOGL.FClearCurrent = func(v unsafe.Pointer) bool {
+		glfw.DetachCurrentContext()
+		return true
+	}
+	flutterOGL.FPresent = func(v unsafe.Pointer) bool {
+		w := glfw.GoWindow(v)
+		w.SwapBuffers()
+		return true
+	}
+	flutterOGL.FFboCallback = func(v unsafe.Pointer) int32 {
+		return 0
+	}
+	flutterOGL.FMakeResourceCurrent = func(v unsafe.Pointer) bool {
+		return false
+	}
+	flutterOGL.PixelRatio = c.PixelRatio
 
 	// PlatformMessage
 	flutterOGL.FPlatfromMessage = func(platMessage *flutter.PlatformMessage, window unsafe.Pointer) bool {
@@ -221,7 +220,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		// Dispatch the message from the Flutter Engine, to all of the PluginReceivers
 		// having the same flutter.PlatformMessage.Channel name
 		for _, receivers := range c.PlatformMessageReceivers[platMessage.Channel] {
-			hasDispatched = receivers(platMessage, &flutterOGL, windows) || hasDispatched
+			hasDispatched = receivers(platMessage, flutterOGL, windows) || hasDispatched
 		}
 
 		return hasDispatched
@@ -232,8 +231,8 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		updateEditingState(window)
 	}
 
-	NbEngine := flutter.NumberOfEngines()
-	window.SetUserPointer(unsafe.Pointer(&NbEngine))
+	flutterOGLIndex := flutterOGL.Index()
+	window.SetUserPointer(unsafe.Pointer(&flutterOGLIndex))
 	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
 
 	if result != flutter.KSuccess {
@@ -255,7 +254,7 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
 	window.SetMouseButtonCallback(glfwMouseButtonCallback)
 	window.SetCharCallback(glfwCharCallback)
-	return &flutterOGL
+	return flutterOGL
 }
 
 // Update the TextInput with the current state
