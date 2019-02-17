@@ -68,7 +68,8 @@ func glfwCursorPositionCallbackAtPhase(
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	flutterOGL := flutter.SelectEngine(0)
+	index := *(*int)(window.GetUserPointer())
+	flutterOGL := flutter.SelectEngine(index)
 
 	flutterOGL.EngineSendPointerEvent(event)
 }
@@ -165,7 +166,8 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 
 func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
 
-	flutterOGL := flutter.SelectEngine(0)
+	index := *(*int)(window.GetUserPointer())
+	flutterOGL := flutter.SelectEngine(index)
 
 	event := flutter.WindowMetricsEvent{
 		Width:      width,
@@ -283,7 +285,9 @@ func updateEditingState(window *glfw.Window) {
 		Message: message,
 	}
 
-	flutterOGL := flutter.SelectEngine(0)
+	index := *(*int)(window.GetUserPointer())
+	flutterOGL := flutter.SelectEngine(index)
+
 	flutterOGL.SendPlatformMessage(mess)
 }
 
@@ -300,6 +304,9 @@ func performAction(window *glfw.Window, action string) {
 		Channel: textInputChannel,
 		Message: message,
 	}
-	flutterOGL := flutter.SelectEngine(0)
+
+	index := *(*int)(window.GetUserPointer())
+	flutterOGL := flutter.SelectEngine(index)
+
 	flutterOGL.SendPlatformMessage(mess)
 }
