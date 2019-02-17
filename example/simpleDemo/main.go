@@ -36,7 +36,6 @@ func main() {
 		gutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
 		gutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
 		gutter.OptionWindowInitializer(setIcon),
-		gutter.OptionPixelRatio(1.2),
 		gutter.OptionVMArguments([]string{"--dart-non-checked-mode", "--observatory-port=50300"}),
 		gutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
 		// Default keyboard is Qwerty, if you want to change it, you can check keyboard.go in gutter package.

@@ -2,6 +2,7 @@ package gutter
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 	"unsafe"
@@ -9,6 +10,9 @@ import (
 	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
+
+// dpPerInch defines the amount of display pixels per inch as defined for Flutter.
+const dpPerInch = 160.0
 
 // Run executes a flutter application with the provided options.
 // given limitations this method must be called by the main function directly.
@@ -76,18 +80,28 @@ func glfwCursorPositionCallbackAtPhase(
 
 func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
 
-	if key == glfw.MouseButton1 && action == glfw.Press {
+	if key == glfw.MouseButton1 {
 		x, y := window.GetCursorPos()
-		glfwCursorPositionCallbackAtPhase(window, flutter.KDown, x, y)
-		window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
-			glfwCursorPositionCallbackAtPhase(window, flutter.KMove, x, y)
-		})
-	}
 
-	if key == glfw.MouseButton1 && action == glfw.Release {
-		x, y := window.GetCursorPos()
-		glfwCursorPositionCallbackAtPhase(window, flutter.KUp, x, y)
-		window.SetCursorPosCallback(nil)
+		// recalculate x and y from screen cordinates to pixels
+		widthPx, _ := window.GetFramebufferSize()
+		width, _ := window.GetSize()
+		pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+		x = x * pixelsPerScreenCoordinate
+		y = y * pixelsPerScreenCoordinate
+
+		if action == glfw.Press {
+			glfwCursorPositionCallbackAtPhase(window, flutter.KDown, x, y)
+			window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
+				glfwCursorPositionCallbackAtPhase(window, flutter.KMove, x, y)
+			})
+		}
+
+		if action == glfw.Release {
+			x, y := window.GetCursorPos()
+			glfwCursorPositionCallbackAtPhase(window, flutter.KUp, x, y)
+			window.SetCursorPosCallback(nil)
+		}
 	}
 
 }
@@ -164,17 +178,31 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 	}
 }
 
-func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
+func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinatesPerInch float64) func(*glfw.Window, int, int) {
+	return func(window *glfw.Window, widthPx int, heightPx int) {
+		index := *(*int)(window.GetUserPointer())
+		flutterOGL := flutter.SelectEngine(index)
 
-	index := *(*int)(window.GetUserPointer())
-	flutterOGL := flutter.SelectEngine(index)
+		if pixelRatio == 0 {
+			width, _ := window.GetSize()
+			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+			dpi := pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
+			pixelRatio = dpi / dpPerInch
 
-	event := flutter.WindowMetricsEvent{
-		Width:      width,
-		Height:     height,
-		PixelRatio: flutterOGL.PixelRatio,
+			// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+			if pixelRatio < 1.0 {
+				fmt.Println("calculated pixelRatio limited to a minimum of 1.0")
+				pixelRatio = 1.0
+			}
+		}
+
+		event := flutter.WindowMetricsEvent{
+			Width:      widthPx,
+			Height:     heightPx,
+			PixelRatio: pixelRatio,
+		}
+		flutterOGL.EngineSendWindowMetricsEvent(event)
 	}
-	flutterOGL.EngineSendWindowMetricsEvent(event)
 }
 
 func glfwCharCallback(w *glfw.Window, char rune) {
@@ -211,7 +239,6 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	flutterOGL.FMakeResourceCurrent = func(v unsafe.Pointer) bool {
 		return false
 	}
-	flutterOGL.PixelRatio = c.PixelRatio
 
 	// PlatformMessage
 	flutterOGL.FPlatfromMessage = func(platMessage *flutter.PlatformMessage, window unsafe.Pointer) bool {
@@ -242,8 +269,9 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		panic("Couldn't launch the FlutterEngine")
 	}
 
+	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(c.PixelRatio, getScreenCoordinatesPerInch())
 	width, height := window.GetFramebufferSize()
-	glfwWindowSizeCallback(window, width, height)
+	glfwFramebufferSizeCallback(window, width, height)
 	var glfwKeyCallback func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey)
 
 	if c.KeyboardLayout != nil {
@@ -253,10 +281,30 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	}
 
 	window.SetKeyCallback(glfwKeyCallback)
-	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
+	window.SetFramebufferSizeCallback(glfwFramebufferSizeCallback)
 	window.SetMouseButtonCallback(glfwMouseButtonCallback)
 	window.SetCharCallback(glfwCharCallback)
 	return flutterOGL
+}
+
+// getScreenCoordinatesPerInch returns the number of screen coordinates per
+// inch for the main monitor. If the information is unavailable it returns
+// a default value that assumes that a screen coordinate is one dp.
+func getScreenCoordinatesPerInch() float64 {
+	// TODO: multi-monitor support (#74)
+	primaryMonitor := glfw.GetPrimaryMonitor()
+	if primaryMonitor == nil {
+		return dpPerInch
+	}
+	primaryMonitorMode := primaryMonitor.GetVideoMode()
+	if primaryMonitorMode == nil {
+		return dpPerInch
+	}
+	primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
+	if primaryMonitorWidthMM == 0 {
+		return dpPerInch
+	}
+	return float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
 }
 
 // Update the TextInput with the current state
