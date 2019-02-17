@@ -59,7 +59,6 @@ type EngineOpenGL struct {
 	FPlatfromMessage func(message *PlatformMessage, window unsafe.Pointer) bool
 
 	// Engine arguments
-	PixelRatio  float64
 	AssetsPath  string
 	IcuDataPath string
 }
