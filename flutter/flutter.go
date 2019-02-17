@@ -8,15 +8,20 @@ package flutter
 import "C"
 import (
 	"encoding/json"
+	"sync"
 	"unsafe"
 )
 
 // the current FlutterEngine running (associated with his callback)
 var flutterEngines []*EngineOpenGL
+var flutterEnginesLock sync.RWMutex
 
 // SelectEngine return a EngineOpenGL from an index
 func SelectEngine(index int) *EngineOpenGL {
-	return flutterEngines[index]
+	flutterEnginesLock.RLock()
+	engine := flutterEngines[index]
+	flutterEnginesLock.RUnlock()
+	return engine
 }
 
 // NumberOfEngines return the number of engine registered into this embedder
@@ -40,6 +45,9 @@ type EngineOpenGL struct {
 	// Flutter Engine.
 	Engine C.FlutterEngine
 
+	// index of the engine in the global flutterEngines slice
+	index int
+
 	// Necessary callbacks for rendering.
 	FMakeCurrent         func(v unsafe.Pointer) bool
 	FClearCurrent        func(v unsafe.Pointer) bool
@@ -56,11 +64,24 @@ type EngineOpenGL struct {
 	IcuDataPath string
 }
 
+// NewEngineOpenGL creates an empty EngineOpenGL
+// and assigns it an index for global lookup.
+func NewEngineOpenGL() *EngineOpenGL {
+	flu := &EngineOpenGL{}
+	flutterEnginesLock.Lock()
+	flutterEngines = append(flutterEngines, flu)
+	flu.index = len(flutterEngines) - 1
+	flutterEnginesLock.Unlock()
+	return flu
+}
+
+// Index returns the index of the engine in the global flutterEngines slice
+func (flu *EngineOpenGL) Index() int {
+	return flu.index
+}
+
 // Run launches the Flutter Engine in a background thread.
 func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
-
-	flutterEngines = append(flutterEngines, flu)
-
 	args := C.FlutterProjectArgs{
 		assets_path:   C.CString(flu.AssetsPath),
 		main_path:     C.CString(""),
