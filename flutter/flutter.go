@@ -82,6 +82,13 @@ func (flu *EngineOpenGL) Index() int {
 
 // Run launches the Flutter Engine in a background thread.
 func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
+	// validate this EngineOpenGL was created correctly
+	flutterEnginesLock.RLock()
+	if len(flutterEngines) <= flu.index || flutterEngines[flu.index] != flu {
+		panic("EngineOpenGL was wrongly created. Use embedder.NewEngineOpenGL().")
+	}
+	flutterEnginesLock.RUnlock()
+
 	args := C.FlutterProjectArgs{
 		assets_path:   C.CString(flu.AssetsPath),
 		icu_data_path: C.CString(flu.IcuDataPath),
