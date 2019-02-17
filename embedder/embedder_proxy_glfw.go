@@ -1,4 +1,4 @@
-package flutter
+package embedder
 
 /*
 #include "flutter_embedder.h"
@@ -31,8 +31,8 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, window unsafe.
 			ResponseHandle: message.response_handle,
 		}
 		index := *(*int)(glfw.GoWindow(window).GetUserPointer())
-		engine := SelectEngine(index)
-		return C.bool(engine.FPlatfromMessage(FlutterPlatformMessage, window))
+		flutterEngine := FlutterEngineByIndex(index)
+		return C.bool(flutterEngine.FPlatfromMessage(FlutterPlatformMessage, window))
 	}
 	return C.bool(false)
 }
@@ -41,40 +41,40 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, window unsafe.
 func proxy_make_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
 	index := *(*int)(w.GetUserPointer())
-	engine := SelectEngine(index)
-	return C.bool(engine.FMakeCurrent(v))
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FMakeCurrent(v))
 }
 
 //export proxy_clear_current
 func proxy_clear_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
 	index := *(*int)(w.GetUserPointer())
-	engine := SelectEngine(index)
-	return C.bool(engine.FClearCurrent(v))
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FClearCurrent(v))
 }
 
 //export proxy_present
 func proxy_present(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
 	index := *(*int)(w.GetUserPointer())
-	engine := SelectEngine(index)
-	return C.bool(engine.FPresent(v))
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FPresent(v))
 }
 
 //export proxy_fbo_callback
 func proxy_fbo_callback(v unsafe.Pointer) C.uint32_t {
 	w := glfw.GoWindow(v)
 	index := *(*int)(w.GetUserPointer())
-	engine := SelectEngine(index)
-	return C.uint32_t(engine.FFboCallback(v))
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.uint32_t(flutterEngine.FFboCallback(v))
 }
 
 //export proxy_make_resource_current
 func proxy_make_resource_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
 	index := *(*int)(w.GetUserPointer())
-	engine := SelectEngine(index)
-	return C.bool(engine.FMakeResourceCurrent(v))
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FMakeResourceCurrent(v))
 }
 
 //export proxy_gl_proc_resolver
