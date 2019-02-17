@@ -84,8 +84,6 @@ func (flu *EngineOpenGL) Index() int {
 func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 	args := C.FlutterProjectArgs{
 		assets_path:   C.CString(flu.AssetsPath),
-		main_path:     C.CString(""),
-		packages_path: C.CString(""),
 		icu_data_path: C.CString(flu.IcuDataPath),
 	}
 
