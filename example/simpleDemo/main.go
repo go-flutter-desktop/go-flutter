@@ -49,7 +49,7 @@ func main() {
 		gutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
 
 		gutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
-		gutter.OptionPixelRatio(1.2),
+		// gutter.OptionPixelRatio(1.2),
 		gutter.OptionWindowInitializer(setIcon),
 		gutter.OptionVMArguments([]string{
 			// "--disable-dart-asserts", // release mode flag
