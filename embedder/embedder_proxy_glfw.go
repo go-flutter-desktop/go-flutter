@@ -1,4 +1,4 @@
-package flutter
+package embedder
 
 /*
 #include "flutter_embedder.h"
@@ -18,7 +18,7 @@ import (
 // C proxies
 
 //export proxy_on_platform_message
-func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer unsafe.Pointer) C.bool {
+func proxy_on_platform_message(message *C.FlutterPlatformMessage, window unsafe.Pointer) C.bool {
 	if message.message != nil {
 		str := C.GoStringN(C.c_str(message.message), C.int(message.message_size))
 
@@ -30,43 +30,54 @@ func proxy_on_platform_message(message *C.FlutterPlatformMessage, userPointer un
 			Channel:        C.GoString(message.channel),
 			ResponseHandle: message.response_handle,
 		}
-		return C.bool(flutterEngines[0].FPlatfromMessage(FlutterPlatformMessage, userPointer))
+		index := *(*int)(glfw.GoWindow(window).GetUserPointer())
+		flutterEngine := FlutterEngineByIndex(index)
+		return C.bool(flutterEngine.FPlatfromMessage(FlutterPlatformMessage, window))
 	}
 	return C.bool(false)
-
 }
 
 //export proxy_make_current
 func proxy_make_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
-	index := *(*C.int)(w.GetUserPointer())
-	return C.bool(flutterEngines[index].FMakeCurrent(v))
+	index := *(*int)(w.GetUserPointer())
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FMakeCurrent(v))
 }
 
 //export proxy_clear_current
 func proxy_clear_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
-	index := *(*C.int)(w.GetUserPointer())
-	return C.bool(flutterEngines[index].FClearCurrent(v))
+	index := *(*int)(w.GetUserPointer())
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FClearCurrent(v))
 }
 
 //export proxy_present
 func proxy_present(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
-	index := *(*C.int)(w.GetUserPointer())
-	return C.bool(flutterEngines[index].FPresent(v))
+	index := *(*int)(w.GetUserPointer())
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FPresent(v))
 }
 
 //export proxy_fbo_callback
 func proxy_fbo_callback(v unsafe.Pointer) C.uint32_t {
 	w := glfw.GoWindow(v)
-	index := *(*C.int)(w.GetUserPointer())
-	return C.uint32_t(flutterEngines[index].FFboCallback(v))
+	index := *(*int)(w.GetUserPointer())
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.uint32_t(flutterEngine.FFboCallback(v))
 }
 
 //export proxy_make_resource_current
 func proxy_make_resource_current(v unsafe.Pointer) C.bool {
 	w := glfw.GoWindow(v)
-	index := *(*C.int)(w.GetUserPointer())
-	return C.bool(flutterEngines[index].FMakeResourceCurrent(v))
+	index := *(*int)(w.GetUserPointer())
+	flutterEngine := FlutterEngineByIndex(index)
+	return C.bool(flutterEngine.FMakeResourceCurrent(v))
+}
+
+//export proxy_gl_proc_resolver
+func proxy_gl_proc_resolver(v unsafe.Pointer, procname *C.char) unsafe.Pointer {
+	return glfw.GetProcAddress(C.GoString(procname))
 }

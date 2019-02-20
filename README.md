@@ -1,31 +1,25 @@
 <img src="./mascot.png" width="170" align="right">
 
-# Go Flutter desktop embedder 
+# go-flutter - A package that brings Flutter to the desktop
 
-[![Join the chat at https://gitter.im/go-flutter-desktop-embedder/Lobby](https://badges.gitter.im/go-flutter-desktop-embedder/Lobby.svg)](https://gitter.im/go-flutter-desktop-embedder/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-<a href="https://stackoverflow.com/questions/tagged/flutter?sort=votes">
-   <img alt="Awesome Flutter" src="https://img.shields.io/badge/Awesome-Flutter-blue.svg?longCache=true&style=flat-square" />
-</a>
+[![Join the chat at https://gitter.im/go-flutter-desktop/go-flutter](https://badges.gitter.im/go-flutter-desktop/go-flutter.svg)](hhttps://gitter.im/go-flutter-desktop/go-flutter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-A Go (golang) [Custom Flutter Engine
-Embedder](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders)
-for desktop
+## Purpose
 
-# Purpose
+[Flutter](http://flutter.io/) allows you to build beautiful native apps on iOS and Android from a single codebase.
 
-> Disclaimer: Despite being very similar in the end goal, This project doesn't compete with
-> [this](https://github.com/google/flutter-desktop-embedding) awesome one.
+This project brings Flutter to the desktop through the power of [Go](http://golang.org/) and [GLFW](https://github.com/go-gl/glfw).
 
-The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. The purpose of this project is to implement [Flutter's Embedding API](https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h) using a **SINGLE** code base that runs on Windows, MacOS, and Linux.  [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
+The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. This project implements the [Flutter's Embedding API](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders) using a single code base that runs on Windows, MacOS, and Linux. For rendering, [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
 
-The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus golang is a great language because it keeps everything simple and readable, which, I hope, will encourage people to contribute :grin:.
+The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus Golang is a great language because it keeps everything simple and readable, which makes it easy to build cross-platform plugins.
 
 ## How to install
 
 <details>
 <summary> :package: :penguin: Linux</summary>
 <h4>From binaries</h4>
-Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
+Check out the <a href="https://github.com/go-flutter-desktop/go-flutter/releases">Release</a> page for prebuilt versions.
 
 <h4>From source</h4>
 
@@ -34,7 +28,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 ```bash
 # Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+git clone https://github.com/go-flutter-desktop/go-flutter.git
 cd go-flutter-desktop-embedder
 
 # Build the flutter simpleDemo project
@@ -51,7 +45,7 @@ export CGO_LDFLAGS="-L${PWD}"
 # The share library must stay next to the generated binary.
 
 # Get the libraries
-go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
+go get -u -v github.com/go-flutter-desktop/go-flutter
 
 # Build the example project
 go build main.go
@@ -64,7 +58,7 @@ go build main.go
 <details>
 <summary> :package: :checkered_flag: Windows</summary>
 <h4>From binaries</h4>
-Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
+Check out the <a href="https://github.com/go-flutter-desktop/go-flutter/releases">Release</a> page for prebuilt versions.
 
 <h4>From source</h4>
 
@@ -73,7 +67,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 ```bash
 # Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+git clone https://github.com/go-flutter-desktop/go-flutter.git
 cd go-flutter-desktop-embedder
 
 # Build the flutter simpleDemo project
@@ -88,10 +82,10 @@ go run engineDownloader.go
 # REQUIRED before every `go build`. The CGO compiler need to know where to look for the share library
 set CGO_LDFLAGS=-L%cd%
 # The share library must stay next to the generated binary.
-# If you ran into a MinGW ld error, checkout: https://github.com/Drakirus/go-flutter-desktop-embedder/issues/34
+# If you ran into a MinGW ld error, checkout: https://github.com/go-flutter-desktop/go-flutter/issues/34
 
 # Get the libraries
-go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
+go get -u -v github.com/go-flutter-desktop/go-flutter
 
 # Build the example project
 go build main.go
@@ -104,7 +98,7 @@ go build main.go
 <details>
 <summary> :package: :apple: MacOS</summary>
 <h4>From binaries</h4>
-Check out the <a href="https://github.com/Drakirus/go-flutter-desktop-embedder/releases">Release</a> page for prebuilt versions.
+Check out the <a href="https://github.com/go-flutter-desktop/go-flutter/releases">Release</a> page for prebuilt versions.
 
 <h4>From source</h4>
 
@@ -113,7 +107,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 
 ```bash
 # Clone
-git clone https://github.com/Drakirus/go-flutter-desktop-embedder.git
+git clone https://github.com/go-flutter-desktop/go-flutter.git
 cd go-flutter-desktop-embedder
 
 # Build the flutter simpleDemo project
@@ -130,7 +124,7 @@ export CGO_LDFLAGS="-F${PWD} -Wl,-rpath,@executable_path"
 # The share library must stay next to the generated binary.
 
 # Get the libraries
-go get -u -v github.com/Drakirus/go-flutter-desktop-embedder
+go get -u -v github.com/go-flutter-desktop/go-flutter
 
 # Build the example project
 go build main.go

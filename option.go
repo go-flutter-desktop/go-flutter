@@ -1,4 +1,4 @@
-package gutter
+package flutter
 
 import (
 	"log"
@@ -66,7 +66,9 @@ func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
 	}
 }
 
-// OptionPixelRatio specify the scale factor for the physical screen.
+// OptionPixelRatio forces the the scale factor for the screen.
+// By default, go-flutter will calculate the correct pixel ratio for the user, based
+// on their monitor DPI. Setting this option is not advised.
 func OptionPixelRatio(ratio float64) Option {
 	return func(c *config) {
 		c.PixelRatio = ratio

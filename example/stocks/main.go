@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
+	gutter "github.com/go-flutter-desktop/go-flutter"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

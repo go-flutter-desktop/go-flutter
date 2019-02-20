@@ -31,8 +31,31 @@ typedef enum {
 
 typedef struct _FlutterEngine* FlutterEngine;
 
+typedef struct {
+  //   horizontal scale factor
+  double scaleX;
+  //    horizontal skew factor
+  double skewX;
+  //   horizontal translation
+  double transX;
+  //    vertical skew factor
+  double skewY;
+  //   vertical scale factor
+  double scaleY;
+  //   vertical translation
+  double transY;
+  //    input x-axis perspective factor
+  double pers0;
+  //    input y-axis perspective factor
+  double pers1;
+  //    perspective scale factor
+  double pers2;
+} FlutterTransformation;
+
 typedef bool (*BoolCallback)(void* /* user data */);
+typedef FlutterTransformation (*TransformationCallback)(void* /* user data */);
 typedef uint32_t (*UIntCallback)(void* /* user data */);
+typedef void* (*ProcResolver)(void* /* user data */, const char* /* name */);
 
 typedef struct {
   // The size of this struct. Must be sizeof(FlutterOpenGLRendererConfig).
@@ -41,7 +64,22 @@ typedef struct {
   BoolCallback clear_current;
   BoolCallback present;
   UIntCallback fbo_callback;
+  // This is an optional callback. Flutter will ask the emebdder to create a GL
+  // context current on a background thread. If the embedder is able to do so,
+  // Flutter will assume that this context is in the same sharegroup as the main
+  // rendering context and use this context for asynchronous texture uploads.
+  // Though optional, it is recommended that all embedders set this callback as
+  // it will lead to better performance in texture handling.
   BoolCallback make_resource_current;
+  // By default, the renderer config assumes that the FBO does not change for
+  // the duration of the engine run. If this argument is true, the
+  // engine will ask the embedder for an updated FBO target (via an fbo_callback
+  // invocation) after a present call.
+  bool fbo_reset_after_present;
+  // The transformation to apply to the render target before any rendering
+  // operations. This callback is optional.
+  TransformationCallback surface_transformation;
+  ProcResolver gl_proc_resolver;
 } FlutterOpenGLRendererConfig;
 
 typedef struct {

@@ -1,4 +1,4 @@
-package flutter
+package embedder
 
 /*
 // Linux Build Tags
@@ -21,5 +21,5 @@ import "C"
 
 import (
 	// prevents dep from stripping out the c source files in flutter library.
-	_ "github.com/Drakirus/go-flutter-desktop-embedder/flutter/library"
+	_ "github.com/go-flutter-desktop/go-flutter/embedder/library"
 )

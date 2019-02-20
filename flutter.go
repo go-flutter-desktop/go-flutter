@@ -1,15 +1,19 @@
-package gutter
+package flutter
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"runtime"
 	"time"
 	"unsafe"
 
-	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
+	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
+
+// dpPerInch defines the amount of display pixels per inch as defined for Flutter.
+const dpPerInch = 160.0
 
 // Run executes a flutter application with the provided options.
 // given limitations this method must be called by the main function directly.
@@ -41,14 +45,14 @@ func Run(options ...Option) (err error) {
 		return err
 	}
 
-	engine := runFlutter(window, c)
+	flu := runFlutter(window, c)
 
-	defer engine.Shutdown()
+	defer flu.Shutdown()
 
 	for !window.ShouldClose() {
 		// glfw.WaitEvents()
 		glfw.PollEvents()
-		flutter.EngineFlushPendingTasksNow()
+		embedder.FlutterEngineFlushPendingTasksNow()
 	}
 
 	return nil
@@ -56,40 +60,50 @@ func Run(options ...Option) (err error) {
 
 // GLFW callbacks to the Flutter Engine
 func glfwCursorPositionCallbackAtPhase(
-	window *glfw.Window, phase flutter.PointerPhase,
+	window *glfw.Window, phase embedder.PointerPhase,
 	x float64, y float64,
 ) {
 	winWidth, _ := window.GetSize()
 	frameBuffWidth, _ := window.GetFramebufferSize()
 	contentScale := float64(frameBuffWidth / winWidth)
-	event := flutter.PointerEvent{
+	event := embedder.PointerEvent{
 		Phase:     phase,
 		X:         x * contentScale,
 		Y:         y * contentScale,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	flutterOGL := flutter.SelectEngine(0)
+	index := *(*int)(window.GetUserPointer())
+	flutterEngine := embedder.FlutterEngineByIndex(index)
 
-	flutterOGL.EngineSendPointerEvent(event)
+	flutterEngine.SendPointerEvent(event)
 }
 
 func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-
-	if key == glfw.MouseButton1 && action == glfw.Press {
+	if key == glfw.MouseButton1 {
 		x, y := window.GetCursorPos()
-		glfwCursorPositionCallbackAtPhase(window, flutter.KDown, x, y)
-		window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
-			glfwCursorPositionCallbackAtPhase(window, flutter.KMove, x, y)
-		})
-	}
 
-	if key == glfw.MouseButton1 && action == glfw.Release {
-		x, y := window.GetCursorPos()
-		glfwCursorPositionCallbackAtPhase(window, flutter.KUp, x, y)
-		window.SetCursorPosCallback(nil)
-	}
+		// recalculate x and y from screen cordinates to pixels
+		widthPx, _ := window.GetFramebufferSize()
+		width, _ := window.GetSize()
+		pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+		x = x * pixelsPerScreenCoordinate
+		y = y * pixelsPerScreenCoordinate
 
+		if action == glfw.Press {
+			glfwCursorPositionCallbackAtPhase(window, embedder.KDown, x, y)
+			window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
+				x = x * pixelsPerScreenCoordinate
+				y = y * pixelsPerScreenCoordinate
+				glfwCursorPositionCallbackAtPhase(window, embedder.KMove, x, y)
+			})
+		}
+
+		if action == glfw.Release {
+			glfwCursorPositionCallbackAtPhase(window, embedder.KUp, x, y)
+			window.SetCursorPosCallback(nil)
+		}
+	}
 }
 
 var state = textModel{}
@@ -194,16 +208,31 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 	}
 }
 
-func glfwWindowSizeCallback(window *glfw.Window, width int, height int) {
+func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinatesPerInch float64) func(*glfw.Window, int, int) {
+	return func(window *glfw.Window, widthPx int, heightPx int) {
+		index := *(*int)(window.GetUserPointer())
+		flutterEngine := embedder.FlutterEngineByIndex(index)
 
-	flutterOGL := flutter.SelectEngine(0)
+		if pixelRatio == 0 {
+			width, _ := window.GetSize()
+			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+			dpi := pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
+			pixelRatio = dpi / dpPerInch
 
-	event := flutter.WindowMetricsEvent{
-		Width:      width,
-		Height:     height,
-		PixelRatio: flutterOGL.PixelRatio,
+			// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+			if pixelRatio < 1.0 {
+				fmt.Println("calculated pixelRatio limited to a minimum of 1.0")
+				pixelRatio = 1.0
+			}
+		}
+
+		event := embedder.WindowMetricsEvent{
+			Width:      widthPx,
+			Height:     heightPx,
+			PixelRatio: pixelRatio,
+		}
+		flutterEngine.SendWindowMetricsEvent(event)
 	}
-	flutterOGL.EngineSendWindowMetricsEvent(event)
 }
 
 func glfwCharCallback(w *glfw.Window, char rune) {
@@ -213,46 +242,45 @@ func glfwCharCallback(w *glfw.Window, char rune) {
 }
 
 // Flutter Engine
-func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
+func runFlutter(window *glfw.Window, c config) *embedder.FlutterEngine {
+	flutterEngine := embedder.NewFlutterEngine()
 
-	flutterOGL := flutter.EngineOpenGL{
-		// Engine arguments
-		AssetsPath:  c.AssetPath,
-		IcuDataPath: c.ICUDataPath,
-		// Render callbacks
-		FMakeCurrent: func(v unsafe.Pointer) bool {
-			w := glfw.GoWindow(v)
-			w.MakeContextCurrent()
-			return true
-		},
-		FClearCurrent: func(v unsafe.Pointer) bool {
-			glfw.DetachCurrentContext()
-			return true
-		},
-		FPresent: func(v unsafe.Pointer) bool {
-			w := glfw.GoWindow(v)
-			w.SwapBuffers()
-			return true
-		},
-		FFboCallback: func(v unsafe.Pointer) int32 {
-			return 0
-		},
-		FMakeResourceCurrent: func(v unsafe.Pointer) bool {
-			return false
-		},
-		PixelRatio: c.PixelRatio,
+	// Engine arguments
+	flutterEngine.AssetsPath = c.AssetPath
+	flutterEngine.IcuDataPath = c.ICUDataPath
+
+	// Render callbacks
+	flutterEngine.FMakeCurrent = func(v unsafe.Pointer) bool {
+		w := glfw.GoWindow(v)
+		w.MakeContextCurrent()
+		return true
+	}
+	flutterEngine.FClearCurrent = func(v unsafe.Pointer) bool {
+		glfw.DetachCurrentContext()
+		return true
+	}
+	flutterEngine.FPresent = func(v unsafe.Pointer) bool {
+		w := glfw.GoWindow(v)
+		w.SwapBuffers()
+		return true
+	}
+	flutterEngine.FFboCallback = func(v unsafe.Pointer) int32 {
+		return 0
+	}
+	flutterEngine.FMakeResourceCurrent = func(v unsafe.Pointer) bool {
+		return false
 	}
 
 	// PlatformMessage
-	flutterOGL.FPlatfromMessage = func(platMessage *flutter.PlatformMessage, window unsafe.Pointer) bool {
+	flutterEngine.FPlatfromMessage = func(platMessage *embedder.PlatformMessage, window unsafe.Pointer) bool {
 		windows := glfw.GoWindow(window)
 
 		hasDispatched := false
 
 		// Dispatch the message from the Flutter Engine, to all of the PluginReceivers
-		// having the same flutter.PlatformMessage.Channel name
+		// having the same embedder.PlatformMessage.Channel name
 		for _, receivers := range c.PlatformMessageReceivers[platMessage.Channel] {
-			hasDispatched = receivers(platMessage, &flutterOGL, windows) || hasDispatched
+			hasDispatched = receivers(platMessage, flutterEngine, windows) || hasDispatched
 		}
 
 		return hasDispatched
@@ -263,17 +291,18 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 		updateEditingState(window)
 	}
 
-	NbEngine := flutter.NumberOfEngines()
-	window.SetUserPointer(unsafe.Pointer(&NbEngine))
-	result := flutterOGL.Run(window.GLFWWindow(), c.VMArguments)
+	flutterEngineIndex := flutterEngine.Index()
+	window.SetUserPointer(unsafe.Pointer(&flutterEngineIndex))
+	result := flutterEngine.Run(window.GLFWWindow(), c.VMArguments)
 
-	if result != flutter.KSuccess {
+	if result != embedder.KSuccess {
 		window.Destroy()
 		panic("Couldn't launch the FlutterEngine")
 	}
 
+	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(c.PixelRatio, getScreenCoordinatesPerInch())
 	width, height := window.GetFramebufferSize()
-	glfwWindowSizeCallback(window, width, height)
+	glfwFramebufferSizeCallback(window, width, height)
 	var glfwKeyCallback func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey)
 
 	if c.KeyboardLayout != nil {
@@ -283,15 +312,34 @@ func runFlutter(window *glfw.Window, c config) *flutter.EngineOpenGL {
 	}
 
 	window.SetKeyCallback(glfwKeyCallback)
-	window.SetFramebufferSizeCallback(glfwWindowSizeCallback)
+	window.SetFramebufferSizeCallback(glfwFramebufferSizeCallback)
 	window.SetMouseButtonCallback(glfwMouseButtonCallback)
 	window.SetCharCallback(glfwCharCallback)
-	return &flutterOGL
+	return flutterEngine
+}
+
+// getScreenCoordinatesPerInch returns the number of screen coordinates per
+// inch for the main monitor. If the information is unavailable it returns
+// a default value that assumes that a screen coordinate is one dp.
+func getScreenCoordinatesPerInch() float64 {
+	// TODO: multi-monitor support (#74)
+	primaryMonitor := glfw.GetPrimaryMonitor()
+	if primaryMonitor == nil {
+		return dpPerInch
+	}
+	primaryMonitorMode := primaryMonitor.GetVideoMode()
+	if primaryMonitorMode == nil {
+		return dpPerInch
+	}
+	primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
+	if primaryMonitorWidthMM == 0 {
+		return dpPerInch
+	}
+	return float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
 }
 
 // Update the TextInput with the current state
 func updateEditingState(window *glfw.Window) {
-
 	editingState := argsEditingState{
 		Text:                   string(state.word),
 		SelectionAffinity:      "TextAffinity.downstream",
@@ -305,18 +353,20 @@ func updateEditingState(window *glfw.Window) {
 		editingState,
 	})
 
-	message := flutter.Message{
+	message := embedder.Message{
 		Args:   editingStateMarchalled,
 		Method: textUpdateStateMethod,
 	}
 
-	var mess = &flutter.PlatformMessage{
+	var mess = &embedder.PlatformMessage{
 		Channel: textInputChannel,
 		Message: message,
 	}
 
-	flutterOGL := flutter.SelectEngine(0)
-	flutterOGL.SendPlatformMessage(mess)
+	index := *(*int)(window.GetUserPointer())
+	flutterEngine := embedder.FlutterEngineByIndex(index)
+
+	flutterEngine.SendPlatformMessage(mess)
 }
 
 func performAction(window *glfw.Window, action string) {
@@ -324,14 +374,17 @@ func performAction(window *glfw.Window, action string) {
 		state.clientID,
 		"TextInputAction." + action,
 	})
-	message := flutter.Message{
+	message := embedder.Message{
 		Args:   actionArgs,
 		Method: "TextInputClient.performAction",
 	}
-	var mess = &flutter.PlatformMessage{
+	var mess = &embedder.PlatformMessage{
 		Channel: textInputChannel,
 		Message: message,
 	}
-	flutterOGL := flutter.SelectEngine(0)
-	flutterOGL.SendPlatformMessage(mess)
+
+	index := *(*int)(window.GetUserPointer())
+	flutterEngine := embedder.FlutterEngineByIndex(index)
+
+	flutterEngine.SendPlatformMessage(mess)
 }
