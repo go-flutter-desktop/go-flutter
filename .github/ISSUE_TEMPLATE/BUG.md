@@ -31,7 +31,7 @@ Golang's compiling errors
 
 ## Does the prebuilt and portable version works ?
 
-###### Download [Link](https://github.com/Drakirus/go-flutter-desktop-embedder/releases)
+###### Download [Link](https://github.com/go-flutter-desktop/go-flutter/releases)
  <!-- Please answer either yes or no -->
  - Yes / No
 

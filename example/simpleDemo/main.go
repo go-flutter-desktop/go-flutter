@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	gutter "github.com/Drakirus/go-flutter-desktop-embedder"
-	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
+	"github.com/go-flutter-desktop/go-flutter"
+	"github.com/go-flutter-desktop/go-flutter/embedder"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -42,29 +42,29 @@ func main() {
 	initialApplicationHeight := 600
 	initialApplicationWidth := 800
 
-	options := []gutter.Option{
-		gutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
+	options := []flutter.Option{
+		flutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
 
 		// This path should not be changed. icudtl.dat is handled by engineDownloader.go
-		gutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
+		flutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
 
-		gutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
+		flutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
 		// gutter.OptionPixelRatio(1.2),
-		gutter.OptionWindowInitializer(setIcon),
-		gutter.OptionVMArguments([]string{
+		flutter.OptionWindowInitializer(setIcon),
+		flutter.OptionVMArguments([]string{
 			// "--disable-dart-asserts", // release mode flag
 			// "--disable-observatory",
 			"--observatory-port=50300",
 		}),
-		//
-		gutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
+
+		flutter.OptionAddPluginReceiver(ownPlugin, "plugin_demo"),
 
 		// Default keyboard is Qwerty, if you want to change it, you can check keyboard.go in gutter package.
 		// Otherwise you can create your own by usinng `KeyboardShortcuts` struct.
-		//gutter.OptionKeyboardLayout(gutter.KeyboardAzertyLayout),
+		//flutter.OptionKeyboardLayout(flutter.KeyboardAzertyLayout),
 	}
 
-	if err := gutter.Run(options...); err != nil {
+	if err := flutter.Run(options...); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -72,8 +72,8 @@ func main() {
 
 // Plugin that read the stdin and send the number to the dart side
 func ownPlugin(
-	platMessage *flutter.PlatformMessage,
-	flutterEngine *flutter.EngineOpenGL,
+	platMessage *embedder.PlatformMessage,
+	flutterEngine *embedder.FlutterEngine,
 	window *glfw.Window,
 ) bool {
 

@@ -1,4 +1,4 @@
-package flutter
+package embedder
 
 // #include "flutter_embedder.h"
 // FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
@@ -12,21 +12,21 @@ import (
 	"unsafe"
 )
 
-// the current FlutterEngine running (associated with his callback)
-var flutterEngines []*EngineOpenGL
+// A list of flutter engines that are managed by this embedder.
+var flutterEngines []*FlutterEngine
 var flutterEnginesLock sync.RWMutex
 
-// SelectEngine return a EngineOpenGL from an index
-func SelectEngine(index int) *EngineOpenGL {
+// FlutterEngineByIndex returns an existing FlutterEngine by its index in this embedder.
+func FlutterEngineByIndex(index int) *FlutterEngine {
 	flutterEnginesLock.RLock()
 	engine := flutterEngines[index]
 	flutterEnginesLock.RUnlock()
 	return engine
 }
 
-// NumberOfEngines return the number of engine registered into this embedder
-func NumberOfEngines() C.int {
-	return C.int(len(flutterEngines))
+// CountFlutterEngines return the number of engines registered in this embedder.
+func CountFlutterEngines() int {
+	return len(flutterEngines)
 }
 
 // Result corresponds to the C.enum retuned by the shared flutter library
@@ -40,8 +40,8 @@ const (
 	KInvalidArguments      Result = C.kInvalidArguments
 )
 
-// EngineOpenGL corresponds to the C.FlutterEngine with his associated callback's method.
-type EngineOpenGL struct {
+// FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
+type FlutterEngine struct {
 	// Flutter Engine.
 	Engine C.FlutterEngine
 
@@ -63,28 +63,28 @@ type EngineOpenGL struct {
 	IcuDataPath string
 }
 
-// NewEngineOpenGL creates an empty EngineOpenGL
+// NewFlutterEngine creates an empty FlutterEngine
 // and assigns it an index for global lookup.
-func NewEngineOpenGL() *EngineOpenGL {
-	flu := &EngineOpenGL{}
+func NewFlutterEngine() *FlutterEngine {
+	fe := &FlutterEngine{}
 	flutterEnginesLock.Lock()
-	flutterEngines = append(flutterEngines, flu)
-	flu.index = len(flutterEngines) - 1
+	flutterEngines = append(flutterEngines, fe)
+	fe.index = len(flutterEngines) - 1
 	flutterEnginesLock.Unlock()
-	return flu
+	return fe
 }
 
 // Index returns the index of the engine in the global flutterEngines slice
-func (flu *EngineOpenGL) Index() int {
+func (flu *FlutterEngine) Index() int {
 	return flu.index
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
-	// validate this EngineOpenGL was created correctly
+func (flu *FlutterEngine) Run(window uintptr, vmArgs []string) Result {
+	// validate this FlutterEngine was created correctly
 	flutterEnginesLock.RLock()
 	if len(flutterEngines) <= flu.index || flutterEngines[flu.index] != flu {
-		panic("EngineOpenGL was wrongly created. Use embedder.NewEngineOpenGL().")
+		panic("FlutterEngine was wrongly created. Use embedder.NewFlutterEngine().")
 	}
 	flutterEnginesLock.RUnlock()
 
@@ -109,7 +109,7 @@ func (flu *EngineOpenGL) Run(window uintptr, vmArgs []string) Result {
 }
 
 // Shutdown stops the Flutter engine.
-func (flu *EngineOpenGL) Shutdown() Result {
+func (flu *FlutterEngine) Shutdown() Result {
 	res := C.FlutterEngineShutdown(flu.Engine)
 	return (Result)(res)
 }
@@ -133,8 +133,8 @@ type PointerEvent struct {
 	Y         float64
 }
 
-// EngineSendPointerEvent is used to send an PointerEvent to the Flutter engine.
-func (flu *EngineOpenGL) EngineSendPointerEvent(Event PointerEvent) Result {
+// SendPointerEvent is used to send an PointerEvent to the Flutter engine.
+func (flu *FlutterEngine) SendPointerEvent(Event PointerEvent) Result {
 
 	cEvents := C.FlutterPointerEvent{
 		phase:     (_Ctype_FlutterPointerPhase)(Event.Phase),
@@ -156,8 +156,8 @@ type WindowMetricsEvent struct {
 	PixelRatio float64
 }
 
-// EngineSendWindowMetricsEvent is used to send a WindowMetricsEvent to the Flutter Engine.
-func (flu *EngineOpenGL) EngineSendWindowMetricsEvent(Metric WindowMetricsEvent) Result {
+// SendWindowMetricsEvent is used to send a WindowMetricsEvent to the Flutter Engine.
+func (flu *FlutterEngine) SendWindowMetricsEvent(Metric WindowMetricsEvent) Result {
 
 	cMetric := C.FlutterWindowMetricsEvent{
 		width:       C.size_t(Metric.Width),
@@ -188,7 +188,7 @@ type Message struct {
 }
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
-func (flu *EngineOpenGL) SendPlatformMessage(Message *PlatformMessage) Result {
+func (flu *FlutterEngine) SendPlatformMessage(Message *PlatformMessage) Result {
 
 	marshalled, err := json.Marshal(&Message.Message)
 	if err != nil {
@@ -213,7 +213,7 @@ func (flu *EngineOpenGL) SendPlatformMessage(Message *PlatformMessage) Result {
 }
 
 // SendPlatformMessageResponse is used to send a message to the Flutter side using the correct ResponseHandle!
-func (flu *EngineOpenGL) SendPlatformMessageResponse(
+func (flu *FlutterEngine) SendPlatformMessageResponse(
 	responseTo *PlatformMessage,
 	data []byte,
 ) Result {
@@ -228,8 +228,8 @@ func (flu *EngineOpenGL) SendPlatformMessageResponse(
 
 }
 
-// EngineFlushPendingTasksNow flush tasks on a  message loop not controlled by the Flutter engine.
+// FlutterEngineFlushPendingTasksNow flush tasks on a  message loop not controlled by the Flutter engine.
 // deprecated soon.
-func EngineFlushPendingTasksNow() {
+func FlutterEngineFlushPendingTasksNow() {
 	C.__FlutterEngineFlushPendingTasksNow()
 }

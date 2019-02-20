@@ -1,4 +1,4 @@
-package gutter
+package flutter
 
 import (
 	"log"

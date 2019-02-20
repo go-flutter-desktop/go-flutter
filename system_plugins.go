@@ -1,9 +1,9 @@
-package gutter
+package flutter
 
 import (
 	"encoding/json"
 
-	"github.com/Drakirus/go-flutter-desktop-embedder/flutter"
+	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -32,10 +32,9 @@ type ArgsAppSwitcherDescription struct {
 }
 
 func addHandlerWindowTitle() Option {
-
 	var handler PluginReceivers = func(
-		platMessage *flutter.PlatformMessage,
-		flutterEngine *flutter.EngineOpenGL,
+		platMessage *embedder.PlatformMessage,
+		flutterEngine *embedder.FlutterEngine,
 		window *glfw.Window,
 	) bool {
 		message := &platMessage.Message
@@ -50,12 +49,11 @@ func addHandlerWindowTitle() Option {
 	}
 
 	return OptionAddPluginReceiver(handler, platformChannel)
-
 }
 
 func addHandlerClipboard() Option {
-	handler := func(platMessage *flutter.PlatformMessage,
-		flutterEngine *flutter.EngineOpenGL,
+	handler := func(platMessage *embedder.PlatformMessage,
+		flutterEngine *embedder.FlutterEngine,
 		window *glfw.Window) bool {
 
 		message := &platMessage.Message
@@ -122,10 +120,9 @@ type argsEditingState struct {
 }
 
 func addHandlerTextInput() Option {
-
 	var handler PluginReceivers = func(
-		platMessage *flutter.PlatformMessage,
-		flutterEngine *flutter.EngineOpenGL,
+		platMessage *embedder.PlatformMessage,
+		flutterEngine *embedder.FlutterEngine,
 		window *glfw.Window,
 	) bool {
 
@@ -154,5 +151,4 @@ func addHandlerTextInput() Option {
 	}
 
 	return OptionAddPluginReceiver(handler, textInputChannel)
-
 }
