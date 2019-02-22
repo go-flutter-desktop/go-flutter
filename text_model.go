@@ -43,7 +43,7 @@ func (state *textModel) addChar(char []rune) {
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
 	state.selectionBase = 0
 	if !modsIsShift {
 		state.selectionExtent = state.selectionBase
@@ -51,7 +51,7 @@ func (state *textModel) MoveCursorHome(modsIsModifier bool, modsIsShift bool, mo
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
 	state.selectionBase = len(state.word)
 	if !modsIsShift {
 		state.selectionExtent = state.selectionBase
@@ -59,14 +59,14 @@ func (state *textModel) MoveCursorEnd(modsIsModifier bool, modsIsShift bool, mod
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
-	if modsIsShiftAlt {
+func (state *textModel) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
+	if modsIsWordModifierShift {
 		if state.isSelected() {
 			state.selectionExtent = indexStartLeadingWord(state.word, state.selectionExtent)
 		} else {
 			state.selectionExtent = indexStartLeadingWord(state.word, state.selectionBase)
 		}
-	} else if modsIsAlt {
+	} else if modsIsWordModifier {
 		state.selectionBase = indexStartLeadingWord(state.word, state.selectionBase)
 		state.selectionExtent = state.selectionBase
 	} else if modsIsShift {
@@ -82,14 +82,14 @@ func (state *textModel) MoveCursorLeft(modsIsModifier bool, modsIsShift bool, mo
 	state.notifyState()
 }
 
-func (state *textModel) MoveCursorRight(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
-	if modsIsShiftAlt {
+func (state *textModel) MoveCursorRight(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
+	if modsIsWordModifierShift {
 		if state.isSelected() {
 			state.selectionExtent = indexEndForwardWord(state.word, state.selectionExtent)
 		} else {
 			state.selectionExtent = indexEndForwardWord(state.word, state.selectionBase)
 		}
-	} else if modsIsAlt {
+	} else if modsIsWordModifier {
 		state.selectionBase = indexEndForwardWord(state.word, state.selectionBase)
 		state.selectionExtent = state.selectionBase
 	} else if modsIsShift {
@@ -113,7 +113,7 @@ func (state *textModel) SelectAll() {
 	state.notifyState()
 }
 
-func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
@@ -125,14 +125,14 @@ func (state *textModel) Delete(modsIsModifier bool, modsIsShift bool, modsIsShif
 	}
 }
 
-func (state *textModel) Backspace(modsIsModifier bool, modsIsShift bool, modsIsShiftAlt bool, modsIsAlt bool) {
+func (state *textModel) Backspace(modsIsModifier bool, modsIsShift bool, modsIsWordModifierShift bool, modsIsWordModifier bool) {
 	if state.RemoveSelectedText() {
 		state.notifyState()
 		return
 	}
 
 	if len(state.word) > 0 && state.selectionBase > 0 {
-		if modsIsAlt {
+		if modsIsWordModifier {
 			deleteUpTo := indexStartLeadingWord(state.word, state.selectionBase)
 			state.word = append(state.word[:deleteUpTo], state.word[state.selectionBase:]...)
 			state.selectionBase = deleteUpTo

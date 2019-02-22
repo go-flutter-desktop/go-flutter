@@ -112,33 +112,36 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 
 	var modifierKey glfw.ModifierKey
 	var wordTravellerKey int
+	var wordTravellerKeyShift int
 
 	switch runtime.GOOS {
 	case "darwin":
 		modifierKey = glfw.ModSuper
 		wordTravellerKey = ModAlt
+		wordTravellerKeyShift = ModShiftAlt
 
 	default:
 		modifierKey = glfw.ModControl
 		wordTravellerKey = ModControl
+		wordTravellerKeyShift = ModShiftControl
 
 	}
 
 	return func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		var modsIsModfifier = false
 		var modsIsShift = false
-		var modsIsAltShift = false
-		var modsIsAlt = false
+		var modsIsWordModifierShift = false
+		var modsIsWordModifier = false
 
 		switch {
-		case int(mods) == ModShiftAlt:
-			modsIsAltShift = true
+		case int(mods) == wordTravellerKeyShift:
+			modsIsWordModifierShift = true
+		case int(mods) == wordTravellerKey:
+			modsIsWordModifier = true
 		case mods == modifierKey:
 			modsIsModfifier = true
 		case int(mods) == ModShift:
 			modsIsShift = true
-		case int(mods) == wordTravellerKey:
-			modsIsAlt = true
 		}
 
 		if key == glfw.KeyEscape && action == glfw.Press {
@@ -158,22 +161,22 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 					}
 
 				case glfw.KeyHome:
-					state.MoveCursorHome(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.MoveCursorHome(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case glfw.KeyEnd:
-					state.MoveCursorEnd(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.MoveCursorEnd(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case glfw.KeyLeft:
-					state.MoveCursorLeft(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.MoveCursorLeft(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case glfw.KeyRight:
-					state.MoveCursorRight(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.MoveCursorRight(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case glfw.KeyDelete:
-					state.Delete(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.Delete(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case glfw.KeyBackspace:
-					state.Backspace(modsIsModfifier, modsIsShift, modsIsAltShift, modsIsAlt)
+					state.Backspace(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
 
 				case keyboardLayout.SelectAll:
 					if mods == modifierKey {
