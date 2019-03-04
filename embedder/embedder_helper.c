@@ -12,8 +12,8 @@ void *proxy_gl_proc_resolver(void *v, const char *procname);
 bool proxy_on_platform_message(FlutterPlatformMessage *message, void *window);
 
 // C helper
-FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs *Args,
-                         const char *const *vmArgs, int nVmAgrs)
+FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs *Args,
+                               const char *const *vmArgs, int nVmAgrs)
 {
 
         FlutterRendererConfig config = {};
