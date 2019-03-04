@@ -134,13 +134,25 @@ go build main.go
 
 </details>
 
-
-
 ## Flutter Demos Projects
 
 The examples are available [here](./example/).
 
 <img src="./stocks.jpg" width="900" align="center" alt="Screenshot of the Stocks demo app on macOS">
+
+## Version compatibility
+
+### Flutter version
+
+Flutter is a relatively new project. It's framework and engine are updated often. This project tries to stay compatible with the [beta channel](https://github.com/flutter/flutter/wiki/Flutter-build-release-channels) of flutter.
+
+### Go version
+
+Updating Go is simple, and Go [seldomly has backwards incompatible changes](https://golang.org/doc/go1compat). This project remains compatible with the [latest Go stable release](https://golang.org/dl/).
+
+### GLFW version
+
+This project uses go-gl/glfw for GLFW v3.2.
 
 ## Support
 
@@ -148,9 +160,9 @@ The examples are available [here](./example/).
 - [x] Windows :checkered_flag:
 - [x] MacOS :apple:
 - [x] Importable go library
-- [ ] Plugins [Medium article on how the the Flutter's messaging works](https://medium.com/flutter-io/flutter-platform-channels-ce7f540a104e)
-   - [x] JSON MethodChannel
-   - [ ] StandardMethodCodec, ...
+- [ ] Plugins [Medium article on how the Flutter's messaging works](https://medium.com/flutter-io/flutter-platform-channels-ce7f540a104e)
+  - [x] JSON MethodChannel
+  - [ ] StandardMethodCodec, ...
 - [ ] System plugins [Platform channels used by the Flutter system](https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/system_channels.dart)
   - [x] Window Title
   - [x] Text input
