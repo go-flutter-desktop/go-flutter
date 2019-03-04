@@ -1,7 +1,7 @@
 package embedder
 
 // #include "flutter_embedder.h"
-// FlutterResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
+// FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
