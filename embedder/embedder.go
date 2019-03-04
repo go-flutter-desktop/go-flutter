@@ -137,7 +137,7 @@ type PointerEvent struct {
 func (flu *FlutterEngine) SendPointerEvent(Event PointerEvent) Result {
 
 	cEvents := C.FlutterPointerEvent{
-		phase:     (_Ctype_FlutterPointerPhase)(Event.Phase),
+		phase:     (C.FlutterPointerPhase)(Event.Phase),
 		x:         C.double(Event.X),
 		y:         C.double(Event.Y),
 		timestamp: C.size_t(Event.Timestamp),
