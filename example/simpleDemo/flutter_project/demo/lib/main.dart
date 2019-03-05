@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/foundation.dart'
-    show debugDefaultTargetPlatformOverride;
+import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
 
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -40,10 +39,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-
   static MethodChannel _channel = new MethodChannel('plugin_demo', new JSONMethodCodec());
-  Future GetVersion() async {
+  Future getVersion() async {
     var res = await _channel.invokeMethod('getNumber');
     print(res);
     setState(() {
@@ -51,12 +48,24 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _MyHomePageState() {
+    _channel.setMethodCallHandler((mc) async {
+      switch (mc.method) {
+        case "submit":
+          final prev = _submittedMsg;
+          setState(() {
+            _submittedMsg = mc.arguments;
+          });
+          return prev;
+      }
+    });
+    getVersion();
+  }
 
   int _counter = 0;
-  bool _ok = false;
   String _submittedMsg = "nothing yet";
   FocusNode myFocus = FocusNode();
-  
+
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -65,10 +74,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_ok) {
-      GetVersion();
-      _ok = true;
-    }
     return new Scaffold(
       appBar: new AppBar(
         title: new Text(widget.title),
@@ -96,6 +101,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       _submittedMsg = value;
                     });
+                    _channel.invokeMethod(
+                      "print",
+                      {
+                        "textfield": value,
+                        "number": _counter,
+                      },
+                    );
                   },
                   onEditingComplete: () => FocusScope.of(context).requestFocus(myFocus),
                 ),

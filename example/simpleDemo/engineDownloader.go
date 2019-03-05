@@ -1,3 +1,5 @@
+// +build neverBuildMe
+
 package main
 
 import (
@@ -292,19 +294,21 @@ func main() {
 
 	downloadIcudtlURL := fmt.Sprintf(targetedDomain+"/flutter_infra/flutter/%s/%s/artifacts.zip", hashResponse.Items[0].Sha, platform)
 
-	err3 := downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
-	if err3 != nil {
-		log.Fatal(err3)
-	} else {
-		fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
-	}
-
-	err4 := downloadFile(dir+"/.build/artifacts.zip", downloadIcudtlURL)
+	err = os.MkdirAll(dir+"/.build", 0755)
 	if err != nil {
-		log.Fatal(err4)
-	} else {
-		fmt.Printf("Downloaded artifact for %s platform.\n", platform)
+		log.Fatal(err)
 	}
+	err = downloadFile(dir+"/.build/temp.zip", downloadShareLibraryURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Downloaded embedder for %s platform, matching version : %s\n", platform, hashResponse.Items[0].Sha)
+
+	err = downloadFile(dir+"/.build/artifacts.zip", downloadIcudtlURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Downloaded artifact for %s platform.\n", platform)
 
 	_, err = unzip(".build/temp.zip", dir+"/.build/")
 	if err != nil {
