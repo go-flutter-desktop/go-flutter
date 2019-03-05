@@ -19,23 +19,21 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-func setIcon(window *glfw.Window) error {
+func iconProvider() ([]image.Image, error) {
 	_, currentFilePath, _, _ := runtime.Caller(0)
 	dir := path.Dir(currentFilePath)
 	imgFile, err := os.Open(dir + "/assets/icon.png")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img, _, err := image.Decode(imgFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	window.SetIcon([]image.Image{img})
-	return nil
+	return []image.Image{img}, nil
 }
 
 func main() {
-
 	_, currentFilePath, _, _ := runtime.Caller(0)
 	dir := path.Dir(currentFilePath)
 
@@ -43,14 +41,13 @@ func main() {
 	initialApplicationWidth := 800
 
 	options := []flutter.Option{
-		flutter.ProjectAssetPath(dir + "/flutter_project/demo/build/flutter_assets"),
+		flutter.ProjectAssetsPath(dir + "/flutter_project/demo/build/flutter_assets"),
 
 		// This path should not be changed. icudtl.dat is handled by engineDownloader.go
 		flutter.ApplicationICUDataPath(dir + "/icudtl.dat"),
 
 		flutter.ApplicationWindowDimension(initialApplicationWidth, initialApplicationHeight),
-		// gutter.OptionPixelRatio(1.2),
-		flutter.OptionWindowInitializer(setIcon),
+		flutter.WindowIcon(iconProvider),
 		flutter.OptionVMArguments([]string{
 			// "--disable-dart-asserts", // release mode flag
 			// "--disable-observatory",
@@ -65,7 +62,8 @@ func main() {
 	}
 
 	if err := flutter.Run(options...); err != nil {
-		log.Fatalln(err)
+		fmt.Printf("Failed running the Flutter app: %v\n", err)
+		os.Exit(1)
 	}
 
 }
@@ -85,14 +83,23 @@ func ownPlugin(
 
 	time.Sleep(2 * time.Second)
 	go func() {
-		fmt.Printf("Reading (A number): ")
-		reader := bufio.NewReader(os.Stdin)
-		s, _ := reader.ReadString('\n')
-		s = strings.TrimRight(s, "\r\n")
-		if _, err := strconv.Atoi(s); err == nil {
-
+		for {
+			fmt.Printf("Reading (A number): ")
+			reader := bufio.NewReader(os.Stdin)
+			s, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Printf("failed to read from stdin: %v", err)
+				return
+			}
+			s = strings.TrimRight(s, "\r\n")
+			_, err = strconv.Atoi(s)
+			if err != nil {
+				fmt.Printf("Failed to parse number: %v\n", err)
+				fmt.Println("Try again")
+				continue
+			}
 			flutterEngine.SendPlatformMessageResponse(platMessage, []byte("[ "+s+" ]"))
-
+			return
 		}
 	}()
 

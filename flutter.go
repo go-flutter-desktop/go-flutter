@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/pkg/errors"
 )
 
 // dpPerInch defines the amount of display pixels per inch as defined for Flutter.
@@ -30,19 +31,31 @@ func Run(options ...Option) (err error) {
 
 	c = c.merge(options...)
 
-	if err = glfw.Init(); err != nil {
-		return err
+	err = glfw.Init()
+	if err != nil {
+		return errors.Wrap(err, "glfw init")
 	}
 	defer glfw.Terminate()
 
 	window, err = glfw.CreateWindow(c.WindowDimension.x, c.WindowDimension.y, "Loading..", nil, nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "creating glfw window")
 	}
 	defer window.Destroy()
 
-	if err = c.WindowInitializer(window); err != nil {
-		return err
+	if c.WindowIconProvider != nil {
+		images, err := c.WindowIconProvider()
+		if err != nil {
+			return errors.Wrap(err, "getting images from icon provider")
+		}
+		window.SetIcon(images)
+	}
+
+	if c.WindowInitializerDeprecated != nil {
+		err = c.WindowInitializerDeprecated(window)
+		if err != nil {
+			return errors.Wrap(err, "executing window initializer")
+		}
 	}
 
 	flu := runFlutter(window, c)
@@ -211,11 +224,14 @@ func glfwKey(keyboardLayout KeyboardShortcuts) func(w *glfw.Window, key glfw.Key
 	}
 }
 
+// newGLFWFramebufferSizeCallback creates a func that is called on framebuffer resizes.
+// When pixelRatio is set, the pixelRatio communicated to the Flutter embedder is not calculated.
 func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinatesPerInch float64) func(*glfw.Window, int, int) {
 	return func(window *glfw.Window, widthPx int, heightPx int) {
 		index := *(*int)(window.GetUserPointer())
 		flutterEngine := embedder.FlutterEngineByIndex(index)
 
+		// calculate pixelRatio when it has not been forced.
 		if pixelRatio == 0 {
 			width, _ := window.GetSize()
 			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
@@ -249,7 +265,7 @@ func runFlutter(window *glfw.Window, c config) *embedder.FlutterEngine {
 	flutterEngine := embedder.NewFlutterEngine()
 
 	// Engine arguments
-	flutterEngine.AssetsPath = c.AssetPath
+	flutterEngine.AssetsPath = c.AssetsPath
 	flutterEngine.IcuDataPath = c.ICUDataPath
 
 	// Render callbacks
@@ -303,7 +319,7 @@ func runFlutter(window *glfw.Window, c config) *embedder.FlutterEngine {
 		panic("Couldn't launch the FlutterEngine")
 	}
 
-	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(c.PixelRatio, getScreenCoordinatesPerInch())
+	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(c.ForcePixelRatio, getScreenCoordinatesPerInch())
 	width, height := window.GetFramebufferSize()
 	glfwFramebufferSizeCallback(window, width, height)
 	var glfwKeyCallback func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey)
