@@ -29,7 +29,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 ```bash
 # Clone
 git clone https://github.com/go-flutter-desktop/go-flutter.git
-cd go-flutter-desktop-embedder
+cd go-flutter
 
 # Build the flutter simpleDemo project
 cd example/simpleDemo/
@@ -68,7 +68,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 ```bash
 # Clone
 git clone https://github.com/go-flutter-desktop/go-flutter.git
-cd go-flutter-desktop-embedder
+cd go-flutter
 
 # Build the flutter simpleDemo project
 cd example/simpleDemo/
@@ -108,7 +108,7 @@ Go read first: [go-gl/glfw](https://github.com/go-gl/glfw/)
 ```bash
 # Clone
 git clone https://github.com/go-flutter-desktop/go-flutter.git
-cd go-flutter-desktop-embedder
+cd go-flutter
 
 # Build the flutter simpleDemo project
 cd example/simpleDemo/
