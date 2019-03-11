@@ -1,4 +1,4 @@
-module gitub.com/go-flutter-desktop/go-flutter
+module github.com/go-flutter-desktop/go-flutter
 
 go 1.12
 
