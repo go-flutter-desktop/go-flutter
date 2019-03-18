@@ -1,16 +1,14 @@
 ---
-name: I have a problem with the embedder.
-about: You are writing an application with Flutter but the embedder is crashing,
-       throws an exception or something looks wrong.
-       
+name: I have a problem with go-flutter.
+about: You are writing an application with Flutter but the application is 
+       crashing, throws an exception or something looks wrong.
 ---
 
-<!-- Thank you for trying the embedder! -->
+<!-- Thank you for trying go-flutter! -->
 
 ## Flutter version
 
-<!-- Please tell us wich flutter version are you using -->
-###### `$ flutter --version`
+<!-- Please tell us wich flutter version are you using, we generally try to stay compatible with the beta channel. Run `flutter --version` to get the version -->
 
 ```
 Flutter x.xx.x • channel dev • https://github.com/flutter/flutter.git
@@ -21,19 +19,12 @@ Tools • Dart x.x.x (build xxxxxxxxxx)
 
 ## Golang errors (Optional)
 
-<!-- If needed, Please tell us the output of the embedder build -->
-###### `$ go build main.go`
-<!-- Make sure you followed the README.md instructions -->
+<!-- If compilation fails, please tell us the output of go build -->
+<!-- Please make sure you followed the README.md instructions -->
 
 ```
 Golang's compiling errors
 ```
-
-## Does the prebuilt and portable version works ?
-
-###### Download [Link](https://github.com/go-flutter-desktop/go-flutter/releases)
- <!-- Please answer either yes or no -->
- - Yes / No
 
 ## Steps to Reproduce
 
