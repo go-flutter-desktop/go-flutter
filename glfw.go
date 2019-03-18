@@ -18,13 +18,13 @@ func glfwCursorPositionCallbackAtPhase(
 	window *glfw.Window, phase embedder.PointerPhase,
 	x float64, y float64,
 ) {
-	winWidth, _ := window.GetSize()
-	frameBuffWidth, _ := window.GetFramebufferSize()
-	contentScale := float64(frameBuffWidth / winWidth)
+	width, _ := window.GetSize()
+	widthPx, _ := window.GetFramebufferSize()
+	pixelsPerScreenCoordinate := float64(widthPx / width)
 	event := embedder.PointerEvent{
 		Phase:     phase,
-		X:         x * contentScale,
-		Y:         y * contentScale,
+		X:         x * pixelsPerScreenCoordinate,
+		Y:         y * pixelsPerScreenCoordinate,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
