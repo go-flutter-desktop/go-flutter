@@ -2,6 +2,8 @@
 
 # go-flutter - A package that brings Flutter to the desktop
 
+[![Documentation](https://godoc.org/github.com/go-flutter-desktop/go-flutter?status.svg)](http://godoc.org/github.com/go-flutter-desktop/go-flutter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-flutter-desktop/go-flutter)](https://goreportcard.com/report/github.com/go-flutter-desktop/go-flutter)
 [![Join the chat at https://gitter.im/go-flutter-desktop/go-flutter](https://badges.gitter.im/go-flutter-desktop/go-flutter.svg)](hhttps://gitter.im/go-flutter-desktop/go-flutter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Purpose
