@@ -141,7 +141,7 @@ func (a *Application) Run() error {
 
 	defaultPlatformPlugin.glfwTasker = tasker.New()
 
-	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(a.config.forcePixelRatio, getScreenCoordinatesPerInch())
+	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(a.config.forcePixelRatio)
 	width, height := a.window.GetFramebufferSize()
 	glfwFramebufferSizeCallback(a.window, width, height)
 

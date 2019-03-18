@@ -1,6 +1,7 @@
 package flutter
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -64,7 +65,7 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 // newGLFWFramebufferSizeCallback creates a func that is called on framebuffer
 // resizes. When pixelRatio is zero, the pixelRatio communicated to the Flutter
 // embedder is calculated based on physical and logical screen dimensions.
-func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinatesPerInch float64) func(*glfw.Window, int, int) {
+func newGLFWFramebufferSizeCallback(pixelRatio float64) func(*glfw.Window, int, int) {
 	var oncePrintPixelRatioLimit sync.Once
 
 	return func(window *glfw.Window, widthPx int, heightPx int) {
@@ -73,6 +74,26 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinates
 
 		// calculate pixelRatio when it has not been forced.
 		if pixelRatio == 0 {
+
+			// TODO(#74): multi-monitor support
+			primaryMonitor := glfw.GetPrimaryMonitor()
+			if primaryMonitor == nil {
+				pixelRatio = 1.0
+				goto SendWindowMetricsEvent
+			}
+			primaryMonitorMode := primaryMonitor.GetVideoMode()
+			primaryMonitor.GetVideoModes()
+			if primaryMonitorMode == nil {
+				pixelRatio = 1.0
+				goto SendWindowMetricsEvent
+			}
+			primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
+			if primaryMonitorWidthMM == 0 {
+				pixelRatio = 1.0
+				goto SendWindowMetricsEvent
+			}
+			monitorScreenCoordinatesPerInch := float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
+
 			width, _ := window.GetSize()
 			if width == 0 {
 				pixelRatio = 1.0
@@ -82,12 +103,24 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinates
 			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
 			dpi := pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 			pixelRatio = dpi / dpPerInch
+			pixelRatio = 0.2
 
 			// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
 			if pixelRatio < 1.0 {
+				metrics := map[string]interface{}{
+					"ppsc":           pixelsPerScreenCoordinate,
+					"windowWidthPx":  widthPx,
+					"windowWidthSc":  width,
+					"mscpi":          monitorScreenCoordinatesPerInch,
+					"dpi":            dpi,
+					"pixelRatio":     pixelRatio,
+					"monitorWidthMm": primaryMonitorWidthMM,
+					"monitorWidthSc": primaryMonitorMode.Width,
+				}
 				pixelRatio = 1.0
 				oncePrintPixelRatioLimit.Do(func() {
-					fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0")
+					metricsBytes, _ := json.Marshal(metrics)
+					fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
 				})
 			}
 		}
@@ -100,25 +133,4 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64, monitorScreenCoordinates
 		}
 		flutterEngine.SendWindowMetricsEvent(event)
 	}
-}
-
-// getScreenCoordinatesPerInch returns the number of screen coordinates per inch
-// for the main monitor. If the information is unavailable it returns a default
-// value that assumes that a screen coordinate is one dp.
-func getScreenCoordinatesPerInch() float64 {
-	// TODO(#74): multi-monitor support
-	primaryMonitor := glfw.GetPrimaryMonitor()
-	if primaryMonitor == nil {
-		return dpPerInch
-	}
-	primaryMonitorMode := primaryMonitor.GetVideoMode()
-	primaryMonitor.GetVideoModes()
-	if primaryMonitorMode == nil {
-		return dpPerInch
-	}
-	primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
-	if primaryMonitorWidthMM == 0 {
-		return dpPerInch
-	}
-	return float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
 }
