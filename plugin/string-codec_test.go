@@ -28,3 +28,23 @@ func TestStringEncodeDecode(t *testing.T) {
 		Equal(t, v, v2)
 	}
 }
+
+func TestStringEncodeFail(t *testing.T) {
+	codec := StringCodec{}
+
+	// invalid type
+	_, err := codec.EncodeMessage(int(42))
+	NotNil(t, err)
+
+	// invalid 2-octet utf-8 sequence
+	_, err = codec.EncodeMessage("\xc3\x28")
+	NotNil(t, err)
+}
+
+func TestStringDecodeFail(t *testing.T) {
+	codec := StringCodec{}
+
+	// invalid 2-octet utf-8 sequence
+	_, err := codec.DecodeMessage([]byte("\xc3\x28"))
+	NotNil(t, err)
+}
