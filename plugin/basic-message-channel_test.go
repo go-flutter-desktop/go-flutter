@@ -143,3 +143,33 @@ func TestBasicMethodChannelBinaryCodecHandle(t *testing.T) {
 	}
 	Equal(t, []byte{0x01, 0x02}, replyString)
 }
+
+func TestBasicMethodChannelNilHandler(t *testing.T) {
+	codec := StringCodec{}
+	messenger := NewTestingBinaryMessenger()
+	channel := NewBasicMessageChannel(messenger, "ch", codec)
+	channel.HandleFunc(nil)
+	reply, err := messenger.MockSend("ch", []byte("abcd"))
+	Nil(t, reply)
+	Nil(t, err)
+}
+func TestBasicMethodChannelNilMockHandler(t *testing.T) {
+	codec := StringCodec{}
+	messenger := NewTestingBinaryMessenger()
+	messenger.MockSetChannelHandler("ch", nil)
+	channel := NewBasicMessageChannel(messenger, "ch", codec)
+	reply, err := channel.Send("hello")
+	Nil(t, reply)
+	NotNil(t, err)
+	Equal(t, "failed to send outgoing message: no handler set", err.Error())
+}
+
+func TestBasicMethodChannelEncodeFail(t *testing.T) {
+	codec := StringCodec{}
+	messenger := NewTestingBinaryMessenger()
+	channel := NewBasicMessageChannel(messenger, "ch", codec)
+	reply, err := channel.Send(int(42)) // invalid value
+	Nil(t, reply)
+	NotNil(t, err)
+	Equal(t, "failed to encode outgoing message: invalid type provided to message codec: expected message to be of type string", err.Error())
+}
