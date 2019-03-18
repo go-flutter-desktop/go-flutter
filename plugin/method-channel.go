@@ -61,8 +61,11 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 		return nil, errors.Wrap(err, "failed to send methodcall")
 	}
 	result, err = m.methodCodec.DecodeEnvelope(encodedReply)
-	if flutterError, ok := result.(*FlutterError); ok {
+	if flutterError, ok := err.(*FlutterError); ok {
 		return nil, flutterError
+	}
+	if err != nil {
+		return nil, err
 	}
 	return result, nil
 }

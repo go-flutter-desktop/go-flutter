@@ -1,5 +1,42 @@
 package plugin
 
+import (
+	"encoding/json"
+	"testing"
+
+	. "github.com/stretchr/testify/assert"
+)
+
+func TestMethodChannelJSONInvoke(t *testing.T) {
+	messenger := NewTestingBinaryMessenger()
+	codec := JSONMethodCodec{}
+	channel := NewMethodChannel(messenger, "ch", codec)
+	messenger.MockSetChannelHandler("ch", func(msg []byte) ([]byte, error) {
+		methodCall, err := codec.DecodeMethodCall(msg)
+		Nil(t, err)
+		NotNil(t, methodCall)
+		if methodCall.Method == "sayHello" {
+			var greeting string
+			err = json.Unmarshal(methodCall.Arguments.(json.RawMessage), &greeting)
+			Nil(t, err)
+			return codec.EncodeSuccessEnvelope(greeting + " world")
+		}
+		return codec.EncodeErrorEnvelope("unknown", "", nil)
+	})
+	result, err := channel.InvokeMethod("sayHello", "hello")
+	Nil(t, err)
+	Equal(t, json.RawMessage(`"hello world"`), result)
+
+	result, err = channel.InvokeMethod("invalidMethod", "")
+	Nil(t, result)
+	expectedError := FlutterError{
+		Code:    "unknown",
+		Message: "",
+		Details: json.RawMessage(`null`),
+	}
+	Equal(t, expectedError, err)
+}
+
 //   group('MethodChannel', () {
 //     const MessageCodec<dynamic> jsonMessage = JSONMessageCodec();
 //     const MethodCodec jsonMethod = JSONMethodCodec();
@@ -156,68 +193,3 @@ package plugin
 //       }
 //     });
 //   });
-//   group('EventChannel', () {
-//     const MessageCodec<dynamic> jsonMessage = JSONMessageCodec();
-//     const MethodCodec jsonMethod = JSONMethodCodec();
-//     const EventChannel channel = EventChannel('ch', jsonMethod);
-//     void emitEvent(dynamic event) {
-//       BinaryMessages.handlePlatformMessage(
-//         'ch',
-//         event,
-//             (ByteData reply) {},
-//       );
-//     }
-//     test('can receive event stream', () async {
-//       bool canceled = false;
-//       BinaryMessages.setMockMessageHandler(
-//         'ch',
-//         (ByteData message) async {
-//           final Map<dynamic, dynamic> methodCall = jsonMessage.decodeMessage(message);
-//           if (methodCall['method'] == 'listen') {
-//             final String argument = methodCall['args'];
-//             emitEvent(jsonMethod.encodeSuccessEnvelope(argument + '1'));
-//             emitEvent(jsonMethod.encodeSuccessEnvelope(argument + '2'));
-//             emitEvent(null);
-//             return jsonMethod.encodeSuccessEnvelope(null);
-//           } else if (methodCall['method'] == 'cancel') {
-//             canceled = true;
-//             return jsonMethod.encodeSuccessEnvelope(null);
-//           } else {
-//             fail('Expected listen or cancel');
-//           }
-//         },
-//       );
-//       final List<dynamic> events = await channel.receiveBroadcastStream('hello').toList();
-//       expect(events, orderedEquals(<String>['hello1', 'hello2']));
-//       await Future<void>.delayed(Duration.zero);
-//       expect(canceled, isTrue);
-//     });
-//     test('can receive error event', () async {
-//       BinaryMessages.setMockMessageHandler(
-//         'ch',
-//         (ByteData message) async {
-//           final Map<dynamic, dynamic> methodCall = jsonMessage.decodeMessage(message);
-//           if (methodCall['method'] == 'listen') {
-//             final String argument = methodCall['args'];
-//             emitEvent(jsonMethod.encodeErrorEnvelope(code: '404', message: 'Not Found.', details: argument));
-//             return jsonMethod.encodeSuccessEnvelope(null);
-//           } else if (methodCall['method'] == 'cancel') {
-//             return jsonMethod.encodeSuccessEnvelope(null);
-//           } else {
-//             fail('Expected listen or cancel');
-//           }
-//         },
-//       );
-//       final List<dynamic> events = <dynamic>[];
-//       final List<dynamic> errors = <dynamic>[];
-//       channel.receiveBroadcastStream('hello').listen(events.add, onError: errors.add);
-//       await Future<void>.delayed(Duration.zero);
-//       expect(events, isEmpty);
-//       expect(errors, hasLength(1));
-//       expect(errors[0], isInstanceOf<PlatformException>());
-//       final PlatformException error = errors[0];
-//       expect(error.code, '404');
-//       expect(error.message, 'Not Found.');
-//       expect(error.details, 'hello');
-//     });
-// });
