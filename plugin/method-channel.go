@@ -76,38 +76,38 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 //
 // When no handler is registered for a method, it will be handled silently by
 // sending a nil reply (null on the dart side).
-func (b *MethodChannel) Handle(methodName string, handler MethodHandler) {
-	b.methodsLock.Lock()
+func (m *MethodChannel) Handle(methodName string, handler MethodHandler) {
+	m.methodsLock.Lock()
 	if handler == nil {
-		delete(b.methods, methodName)
+		delete(m.methods, methodName)
 	} else {
-		b.methods[methodName] = handler
+		m.methods[methodName] = handler
 	}
-	b.methodsLock.Unlock()
+	m.methodsLock.Unlock()
 }
 
-// HandleFunc is a shorthand for b.Handle(MethodHandlerFunc(f))
-func (b *MethodChannel) HandleFunc(methodName string, f func(arguments interface{}) (reply interface{}, err error)) {
+// HandleFunc is a shorthand for m.Handle(MethodHandlerFunc(f))
+func (m *MethodChannel) HandleFunc(methodName string, f func(arguments interface{}) (reply interface{}, err error)) {
 	if f == nil {
-		b.Handle(methodName, nil)
+		m.Handle(methodName, nil)
 		return
 	}
 
-	b.Handle(methodName, MethodHandlerFunc(f))
+	m.Handle(methodName, MethodHandlerFunc(f))
 }
 
 // handleChannel decodes incoming binary message to a method call, calls the
 // handler, and encodes the outgoing reply.
-func (b *MethodChannel) handleChannel(binaryMessage []byte) (binaryReply []byte, err error) {
-	methodCall, err := b.methodCodec.DecodeMethodCall(binaryMessage)
+func (m *MethodChannel) handleChannel(binaryMessage []byte) (binaryReply []byte, err error) {
+	methodCall, err := m.methodCodec.DecodeMethodCall(binaryMessage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode incomming message")
 	}
-	b.methodsLock.RLock()
-	methodHandler := b.methods[methodCall.Method]
-	b.methodsLock.RUnlock()
+	m.methodsLock.RLock()
+	methodHandler := m.methods[methodCall.Method]
+	m.methodsLock.RUnlock()
 	if methodHandler == nil {
-		fmt.Printf("go-flutter: no method handler registered for method '%s' on channel '%s'\n", methodCall.Method, b.channelName)
+		fmt.Printf("go-flutter: no method handler registered for method '%s' on channel '%s'\n", methodCall.Method, m.channelName)
 		// return nil as reply, which may be sent back to the dart side
 		return nil, nil
 	}
@@ -115,20 +115,20 @@ func (b *MethodChannel) handleChannel(binaryMessage []byte) (binaryReply []byte,
 	defer func() {
 		p := recover()
 		if p != nil {
-			fmt.Printf("go-flutter: recovered from panic while handling call for method '%s' on channel '%s': %v", methodCall.Method, b.channelName, p)
+			fmt.Printf("go-flutter: recovered from panic while handling call for method '%s' on channel '%s': %v", methodCall.Method, m.channelName, p)
 		}
 	}()
 	reply, err := methodHandler.HandleMethod(methodCall.Arguments)
 	if err != nil {
-		fmt.Printf("go-flutter: handler for method '%s' on channel '%s' returned an error: %v\n", methodCall.Method, b.channelName, err)
-		binaryReply, err = b.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
+		fmt.Printf("go-flutter: handler for method '%s' on channel '%s' returned an error: %v\n", methodCall.Method, m.channelName, err)
+		binaryReply, err = m.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to encode error envelope")
 		}
 		return binaryReply, nil
 	}
 
-	binaryReply, err = b.methodCodec.EncodeSuccessEnvelope(reply)
+	binaryReply, err = m.methodCodec.EncodeSuccessEnvelope(reply)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode success envelope")
 	}
