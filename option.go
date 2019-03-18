@@ -83,7 +83,7 @@ func OptionVMArguments(a []string) Option {
 	}
 }
 
-// ApplicationWindowDimension specify the startup's dimentions of the window.
+// ApplicationWindowDimension specify the startup's dimensions of the window.
 //
 // Deprecated, please use WindowInitialDimensions(x, y).
 func ApplicationWindowDimension(x, y int) Option {
@@ -92,7 +92,7 @@ func ApplicationWindowDimension(x, y int) Option {
 	return WindowInitialDimensions(x, y)
 }
 
-// WindowInitialDimensions specify the startup's dimention of the window.
+// WindowInitialDimensions specify the startup's dimension of the window.
 func WindowInitialDimensions(x, y int) Option {
 	if x < 1 {
 		fmt.Println("go-flutter: invalid initial value for width, must be 1 or greater.")

@@ -13,4 +13,6 @@ type BinaryMessenger interface {
 	SetChannelHandler(channel string, handler ChannelHandlerFunc)
 }
 
+// ChannelHandlerFunc describes the function that handles binary messages sent
+// on a channel.
 type ChannelHandlerFunc func(binaryMessage []byte) (binaryReply []byte, err error)

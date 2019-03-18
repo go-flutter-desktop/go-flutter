@@ -11,7 +11,7 @@ type StringCodec struct{}
 // Compiler test to assert that StringCodec implements MessageCodec
 var _ MessageCodec = &StringCodec{}
 
-// EncodeMessage expectes message to be a string.
+// EncodeMessage expects message to be a string.
 func (StringCodec) EncodeMessage(message interface{}) ([]byte, error) {
 	if message == nil {
 		return nil, nil

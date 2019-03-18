@@ -12,7 +12,7 @@ type task struct {
 	doneCh chan struct{}
 }
 
-// NewTasker prepares a new Tasker.
+// New prepares a new Tasker.
 func New() *Tasker {
 	t := &Tasker{
 		taskCh: make(chan task),

@@ -8,8 +8,8 @@ import (
 
 // The first byte in a standard method envelope determines it's type.
 const (
-	standardMethodEnvelope_success = 0
-	standardMethodEnvelope_error   = 1
+	standardMethodEnvelopeSuccess = 0
+	standardMethodEnvelopeError   = 1
 )
 
 // StandardMethodCodec implements a MethodCodec using the Flutter standard
@@ -64,7 +64,7 @@ func (s StandardMethodCodec) DecodeMethodCall(data []byte) (methodCall MethodCal
 // EncodeSuccessEnvelope fulfils the MethodCodec interface.
 func (s StandardMethodCodec) EncodeSuccessEnvelope(result interface{}) (data []byte, err error) {
 	buf := &bytes.Buffer{}
-	err = buf.WriteByte(standardMethodEnvelope_success)
+	err = buf.WriteByte(standardMethodEnvelopeSuccess)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (s StandardMethodCodec) EncodeSuccessEnvelope(result interface{}) (data []b
 // EncodeErrorEnvelope fulfils the MethodCodec interface.
 func (s StandardMethodCodec) EncodeErrorEnvelope(code string, message string, details interface{}) (data []byte, err error) {
 	buf := &bytes.Buffer{}
-	err = buf.WriteByte(standardMethodEnvelope_error)
+	err = buf.WriteByte(standardMethodEnvelopeError)
 	if err != nil {
 		return nil, err
 	}
@@ -105,14 +105,14 @@ func (s StandardMethodCodec) DecodeEnvelope(envelope []byte) (result interface{}
 		return nil, errors.Wrap(err, "failed reading envelope flag")
 	}
 	switch flag {
-	case standardMethodEnvelope_success:
+	case standardMethodEnvelopeSuccess:
 		result, err = s.codec.readValue(buf)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to decode result")
 		}
 		return result, nil
 
-	case standardMethodEnvelope_error:
+	case standardMethodEnvelopeError:
 		ferr := FlutterError{}
 		var ok bool
 		code, err := s.codec.readValue(buf)

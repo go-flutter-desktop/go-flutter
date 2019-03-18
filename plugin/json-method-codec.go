@@ -11,8 +11,8 @@ type JSONMethodCodec struct{}
 
 var _ MethodCodec = JSONMethodCodec{}
 
-// EncodeMethodCall encodes the MethodCall into binary
-// Returns an error on invalid MethodCall arguments.
+// EncodeMethodCall encodes the MethodCall into binary Returns an error on
+// invalid MethodCall arguments.
 func (j JSONMethodCodec) EncodeMethodCall(methodCall MethodCall) (data []byte, err error) {
 	jmc := struct {
 		Method string      `json:"method"`
@@ -24,7 +24,7 @@ func (j JSONMethodCodec) EncodeMethodCall(methodCall MethodCall) (data []byte, e
 	return json.Marshal(&jmc)
 }
 
-// DecodeMethodCal decodes the MethodCall from binary. Nore that the MethodCall
+// DecodeMethodCall decodes the MethodCall from binary. Nore that the MethodCall
 // arguments are not fully parsed, they are always a json.RawMessage and must be
 // decoded by the MethodHandler. Returns an error on invalid data.
 func (j JSONMethodCodec) DecodeMethodCall(data []byte) (methodCall MethodCall, err error) {
@@ -43,21 +43,22 @@ func (j JSONMethodCodec) DecodeMethodCall(data []byte) (methodCall MethodCall, e
 	return mc, nil
 }
 
-/// Encodes a successful [result] into a binary envelope.
+// EncodeSuccessEnvelope encodes a successful result into a binary envelope. The
+// result value must be encodable in JSON.
 func (j JSONMethodCodec) EncodeSuccessEnvelope(result interface{}) (data []byte, err error) {
 	return json.Marshal([]interface{}{result})
 }
 
-// EncodeErrorEnvelope encodes an error result into a binary envelope.
-// The specified error code, human-readable error message, and error
-// details correspond to the fields of Flutter's PlatformException.
+// EncodeErrorEnvelope encodes an error result into a binary envelope. The
+// specified error code, human-readable error message, and error details
+// correspond to the fields of Flutter's PlatformException.
 func (j JSONMethodCodec) EncodeErrorEnvelope(code string, message string, details interface{}) (data []byte, err error) {
 	return json.Marshal([]interface{}{code, message, details})
 }
 
-// DecodeEnvelope decodes the specified result envelope from binary.
-// Returns a FlutterError as error if provided envelope represents an error,
-// otherwise returns the result as a json.RawMessage
+// DecodeEnvelope decodes the specified result envelope from binary. Returns a
+// FlutterError as error if provided envelope represents an error, otherwise
+// returns the result as a json.RawMessage
 func (j JSONMethodCodec) DecodeEnvelope(envelope []byte) (result interface{}, err error) {
 	fields := []json.RawMessage{}
 	err = json.Unmarshal(envelope, &fields)

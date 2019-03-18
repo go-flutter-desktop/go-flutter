@@ -6,7 +6,7 @@ type BinaryCodec struct{}
 // Compiler test to assert that BinaryCodec implements MessageCodec
 var _ MessageCodec = &BinaryCodec{}
 
-// EncodeMessage expectes message to be a slice of bytes.
+// EncodeMessage expects message to be a slice of bytes.
 func (BinaryCodec) EncodeMessage(message interface{}) ([]byte, error) {
 	if message == nil {
 		return nil, nil

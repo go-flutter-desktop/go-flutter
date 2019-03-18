@@ -37,41 +37,6 @@ func TestMethodChannelJSONInvoke(t *testing.T) {
 	Equal(t, expectedError, err)
 }
 
-//   group('MethodChannel', () {
-//     const MessageCodec<dynamic> jsonMessage = JSONMessageCodec();
-//     const MethodCodec jsonMethod = JSONMethodCodec();
-//     const MethodChannel channel = MethodChannel('ch7', jsonMethod);
-//     test('can invoke method and get result', () async {
-//       BinaryMessages.setMockMessageHandler(
-//         'ch7',
-//         (ByteData message) async {
-//           final Map<dynamic, dynamic> methodCall = jsonMessage.decodeMessage(message);
-//           if (methodCall['method'] == 'sayHello') {
-//             return jsonMessage.encodeMessage(<dynamic>['${methodCall['args']} world']);
-//           } else {
-//             return jsonMessage.encodeMessage(<dynamic>['unknown', null, null]);
-//           }
-//         },
-//       );
-//       final String result = await channel.invokeMethod('sayHello', 'hello');
-//       expect(result, equals('hello world'));
-//     });
-//     test('can invoke list method and get result', () async {
-//       BinaryMessages.setMockMessageHandler(
-//         'ch7',
-//         (ByteData message) async {
-//           final Map<dynamic, dynamic> methodCall = jsonMessage.decodeMessage(message);
-//           if (methodCall['method'] == 'sayHello') {
-//             return jsonMessage.encodeMessage(<dynamic>[<String>['${methodCall['args']}', 'world']]);
-//           } else {
-//             return jsonMessage.encodeMessage(<dynamic>['unknown', null, null]);
-//           }
-//         },
-//       );
-//       expect(channel.invokeMethod<List<String>>('sayHello', 'hello'), throwsA(isInstanceOf<TypeError>()));
-//       expect(await channel.invokeListMethod<String>('sayHello', 'hello'), <String>['hello', 'world']);
-//     });
-
 //     test('can invoke map method and get result', () async {
 //       BinaryMessages.setMockMessageHandler(
 //         'ch7',

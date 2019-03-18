@@ -24,6 +24,10 @@ func (f MethodHandlerFunc) HandleMethod(arguments interface{}) (reply interface{
 	return f(arguments)
 }
 
+// MethodChannel provides way for flutter applications and hosts to communicate.
+// It must be used with a codec, for example the StandardMethodCodec. For more
+// information please read
+// https://flutter.dev/docs/development/platform-integration/platform-channels
 type MethodChannel struct {
 	messenger   BinaryMessenger
 	channelName string

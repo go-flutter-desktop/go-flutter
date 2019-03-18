@@ -185,8 +185,11 @@ type PlatformMessage struct {
 	ResponseHandle PlatformMessageResponseHandle
 }
 
+// PlatformMessageResponseHandle is a pointer that is used to wire a platform
+// message response to the original platform message.
 type PlatformMessageResponseHandle uintptr
 
+// ExpectsReply indicates whether the platform message should be replied to.
 func (p PlatformMessage) ExpectsReply() bool {
 	return p.ResponseHandle != 0
 }

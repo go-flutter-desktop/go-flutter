@@ -11,20 +11,20 @@ import (
 )
 
 const (
-	standardMessageType_null         = 0
-	standardMessageType_true         = 1
-	standardMessageType_false        = 2
-	standardMessageType_int32        = 3
-	standardMessageType_int64        = 4
-	standardMessageType_bigint       = 5
-	standardMessageType_float64      = 6
-	standardMessageType_string       = 7
-	standardMessageType_byteSlice    = 8
-	standardMessageType_int32Slice   = 9
-	standardMessageType_int64Slice   = 10
-	standardMessageType_float64Slice = 11
-	standardMessageType_list         = 12
-	standardMessageType_map          = 13
+	standardMessageTypeNull         = 0
+	standardMessageTypeTrue         = 1
+	standardMessageTypeFalse        = 2
+	standardMessageTypeInt32        = 3
+	standardMessageTypeInt64        = 4
+	standardMessageTypeBigInt       = 5
+	standardMessageTypeFloat64      = 6
+	standardMessageTypeString       = 7
+	standardMessageTypeByteSlice    = 8
+	standardMessageTypeInt32Slice   = 9
+	standardMessageTypeInt64Slice   = 10
+	standardMessageTypeFloat64Slice = 11
+	standardMessageTypeList         = 12
+	standardMessageTypeMap          = 13
 )
 
 // StandardMessageCodec implements a MessageCodec using the Flutter standard
@@ -278,89 +278,89 @@ func (s StandardMessageCodec) writeMap(buf *bytes.Buffer, value map[interface{}]
 // writeValue writes a type discriminator byte followed by the encoded value.
 func (s StandardMessageCodec) writeValue(buf *bytes.Buffer, value interface{}) error {
 	if value == nil {
-		return buf.WriteByte(standardMessageType_null)
+		return buf.WriteByte(standardMessageTypeNull)
 	}
 
 	var err error
 	switch typedValue := value.(type) {
 	case bool:
 		if typedValue {
-			return buf.WriteByte(standardMessageType_true)
+			return buf.WriteByte(standardMessageTypeTrue)
 		}
-		return buf.WriteByte(standardMessageType_false)
+		return buf.WriteByte(standardMessageTypeFalse)
 
 	case int32:
-		err = buf.WriteByte(standardMessageType_int32)
+		err = buf.WriteByte(standardMessageTypeInt32)
 		if err != nil {
 			return err
 		}
 		return s.writeInt32(buf, typedValue)
 
 	case int64:
-		err = buf.WriteByte(standardMessageType_int64)
+		err = buf.WriteByte(standardMessageTypeInt64)
 		if err != nil {
 			return err
 		}
 		return s.writeInt64(buf, typedValue)
 
 	case float64:
-		err = buf.WriteByte(standardMessageType_float64)
+		err = buf.WriteByte(standardMessageTypeFloat64)
 		if err != nil {
 			return err
 		}
 		return s.writeFloat64(buf, typedValue)
 
 	case *big.Int:
-		err = buf.WriteByte(standardMessageType_bigint)
+		err = buf.WriteByte(standardMessageTypeBigInt)
 		if err != nil {
 			return err
 		}
 		return s.writeBigInt(buf, typedValue)
 
 	case string:
-		err = buf.WriteByte(standardMessageType_string)
+		err = buf.WriteByte(standardMessageTypeString)
 		if err != nil {
 			return err
 		}
 		return s.writeString(buf, typedValue)
 
 	case []byte:
-		err = buf.WriteByte(standardMessageType_byteSlice)
+		err = buf.WriteByte(standardMessageTypeByteSlice)
 		if err != nil {
 			return err
 		}
 		return s.writeByteSlice(buf, typedValue)
 
 	case []int32:
-		err = buf.WriteByte(standardMessageType_int32Slice)
+		err = buf.WriteByte(standardMessageTypeInt32Slice)
 		if err != nil {
 			return err
 		}
 		return s.writeInt32Slice(buf, typedValue)
 
 	case []int64:
-		err = buf.WriteByte(standardMessageType_int64Slice)
+		err = buf.WriteByte(standardMessageTypeInt64Slice)
 		if err != nil {
 			return err
 		}
 		return s.writeInt64Slice(buf, typedValue)
 
 	case []float64:
-		err = buf.WriteByte(standardMessageType_float64Slice)
+		err = buf.WriteByte(standardMessageTypeFloat64Slice)
 		if err != nil {
 			return err
 		}
 		return s.writeFloat64Slice(buf, typedValue)
 
 	case []interface{}:
-		err = buf.WriteByte(standardMessageType_list)
+		err = buf.WriteByte(standardMessageTypeList)
 		if err != nil {
 			return err
 		}
 		return s.writeList(buf, typedValue)
 
 	case map[interface{}]interface{}:
-		err = buf.WriteByte(standardMessageType_map)
+		err = buf.WriteByte(standardMessageTypeMap)
 		if err != nil {
 			return err
 		}
@@ -545,46 +545,46 @@ func (s StandardMessageCodec) readValueAligned(buf *bytes.Buffer, originalSize i
 	}
 
 	switch valueType {
-	case standardMessageType_null:
+	case standardMessageTypeNull:
 		return nil, nil
 
-	case standardMessageType_true:
+	case standardMessageTypeTrue:
 		return true, nil
 
-	case standardMessageType_false:
+	case standardMessageTypeFalse:
 		return false, nil
 
-	case standardMessageType_int32:
+	case standardMessageTypeInt32:
 		return s.readInt32(buf)
 
-	case standardMessageType_int64:
+	case standardMessageTypeInt64:
 		return s.readInt64(buf)
 
-	case standardMessageType_float64:
+	case standardMessageTypeFloat64:
 		return s.readFloat64(buf, originalSize)
 
-	case standardMessageType_bigint:
+	case standardMessageTypeBigInt:
 		return s.readBigInt(buf)
 
-	case standardMessageType_string:
+	case standardMessageTypeString:
 		return s.readString(buf)
 
-	case standardMessageType_byteSlice:
+	case standardMessageTypeByteSlice:
 		return s.readByteSlice(buf)
 
-	case standardMessageType_int32Slice:
+	case standardMessageTypeInt32Slice:
 		return s.readInt32Slice(buf, originalSize)
 
-	case standardMessageType_int64Slice:
+	case standardMessageTypeInt64Slice:
 		return s.readInt64Slice(buf, originalSize)
 
-	case standardMessageType_float64Slice:
+	case standardMessageTypeFloat64Slice:
 		return s.readFloat64Slice(buf, originalSize)
 
-	case standardMessageType_list:
+	case standardMessageTypeList:
 		return s.readList(buf, originalSize)
 
-	case standardMessageType_map:
+	case standardMessageTypeMap:
 		return s.readMap(buf, originalSize)
 
 	default:

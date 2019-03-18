@@ -15,7 +15,7 @@ import (
 type Plugin interface {
 	// InitPlugin is called during the startup of the flutter application. The
 	// plugin is responsible for setting up channels using the BinaryMessenger.
-	// If an error is returnd it is printend the application is stopped.
+	// If an error is returned it is printend the application is stopped.
 	InitPlugin(messenger plugin.BinaryMessenger) error
 }
 
