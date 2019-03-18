@@ -1,5 +1,5 @@
 
-#include "library/flutter_embedder.h"
+#include "flutter_embedder.h"
 #include <stdlib.h>
 
 // C proxies def
@@ -9,13 +9,12 @@ bool proxy_present(void *v);
 uint32_t proxy_fbo_callback(void *v);
 bool proxy_make_resource_current(void *v);
 void *proxy_gl_proc_resolver(void *v, const char *procname);
-bool proxy_on_platform_message(FlutterPlatformMessage *message, void *window);
+void proxy_platform_message_callback(const FlutterPlatformMessage *message, void *window);
 
 // C helper
 FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs *Args,
                                const char *const *vmArgs, int nVmAgrs)
 {
-
         FlutterRendererConfig config = {};
         config.type = kOpenGL;
 
@@ -29,7 +28,7 @@ FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterP
 
         Args->command_line_argc = nVmAgrs;
         Args->command_line_argv = vmArgs;
-        Args->platform_message_callback = (FlutterPlatformMessageCallback)proxy_on_platform_message;
+        Args->platform_message_callback = proxy_platform_message_callback;
 
         return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, (void *)window, engine);
 }

@@ -9,35 +9,45 @@ import (
 )
 
 type config struct {
-	WindowDimension struct {
-		x int
-		y int
-	}
-	AssetsPath                  string
-	ICUDataPath                 string
-	WindowInitializerDeprecated func(*glfw.Window) error
-	WindowIconProvider          func() ([]image.Image, error)
-	ForcePixelRatio             float64
-	VMArguments                 []string
-	PlatformMessageReceivers    map[string][]PluginReceivers // The Key is the Channel name.
-	KeyboardLayout              *KeyboardShortcuts
+	assetsPath  string
+	icuDataPath string
+	vmArguments []string
+
+	windowInitializerDeprecated func(*glfw.Window) error
+	windowIconProvider          func() ([]image.Image, error)
+	windowInitialDimensions     windowDimensions
+
+	forcePixelRatio float64
+	keyboardLayout  KeyboardShortcuts
+
+	// PlatformMessageReceivers    map[string][]PluginReceivers // The Key is the Channel name.
+	plugins []Plugin
 }
 
-func (c config) merge(options ...Option) config {
-	for _, option := range options {
-		option(&c)
-	}
-
-	return c
+type windowDimensions struct {
+	x int
+	y int
 }
 
-// Option for gutter
+// defaultApplicationConfig define the default configuration values for a new
+// Application. These values may be changed at any time.
+var defaultApplicationConfig = config{
+	windowInitialDimensions: windowDimensions{
+		x: 800,
+		y: 600,
+	},
+	keyboardLayout: KeyboardQwertyLayout,
+}
+
+// Option for Application
 type Option func(*config)
 
 // ProjectAssetPath specify the flutter assets directory.
+//
+// Deprecated, please use ProjectAssetsPath(path).
 func ProjectAssetPath(p string) Option {
 	// deprecated on 2019-03-05
-	fmt.Println("ProjectAssetPath is deprecated, use ProjectAssetsPath (with an s).")
+	fmt.Println("go-flutter: ProjectAssetPath is deprecated, use ProjectAssetsPath (with an s).")
 	return ProjectAssetsPath(p)
 }
 
@@ -45,11 +55,11 @@ func ProjectAssetPath(p string) Option {
 func ProjectAssetsPath(p string) Option {
 	_, err := os.Stat(p)
 	if err != nil {
-		fmt.Printf("Failed to stat asset path: %v\n", err)
+		fmt.Printf("go-flutter: failed to stat asset path: %v\n", err)
 		os.Exit(1)
 	}
 	return func(c *config) {
-		c.AssetsPath = p
+		c.assetsPath = p
 	}
 }
 
@@ -57,11 +67,11 @@ func ProjectAssetsPath(p string) Option {
 func ApplicationICUDataPath(p string) Option {
 	_, err := os.Stat(p)
 	if err != nil {
-		fmt.Printf("Failed to stat icu data path: %v\n", err)
+		fmt.Printf("go-flutter: failed to stat icu data path: %v\n", err)
 		os.Exit(1)
 	}
 	return func(c *config) {
-		c.ICUDataPath = p
+		c.icuDataPath = p
 	}
 }
 
@@ -69,79 +79,93 @@ func ApplicationICUDataPath(p string) Option {
 func OptionVMArguments(a []string) Option {
 	return func(c *config) {
 		// First should be argument is argv[0]
-		c.VMArguments = append([]string{""}, a...)
+		c.vmArguments = append([]string{""}, a...)
 	}
 }
 
-// ApplicationWindowDimension specify the startup's dimention of the window.
-func ApplicationWindowDimension(x int, y int) Option {
-	// Check for initial application display size
+// ApplicationWindowDimension specify the startup's dimentions of the window.
+//
+// Deprecated, please use WindowInitialDimensions(x, y).
+func ApplicationWindowDimension(x, y int) Option {
+	// deprecated on 2019-03-10
+	fmt.Println("go-flutter: ApplicationWindowDimension is deprecated, use WindowInitialDimensions(x, y).")
+	return WindowInitialDimensions(x, y)
+}
+
+// WindowInitialDimensions specify the startup's dimention of the window.
+func WindowInitialDimensions(x, y int) Option {
 	if x < 1 {
-		fmt.Println("Wrong initial value for width ")
+		fmt.Println("go-flutter: invalid initial value for width, must be 1 or greater.")
 		os.Exit(1)
 	}
-
-	// Check for initial application display size
 	if y < 1 {
-		fmt.Println("Wrong initial value for height ")
+		fmt.Println("go-flutter: invalid initial value for height, must be 1 or greater.")
 		os.Exit(1)
 	}
 
 	return func(c *config) {
-		c.WindowDimension.x = x
-		c.WindowDimension.y = y
+		c.windowInitialDimensions.x = x
+		c.windowInitialDimensions.y = y
 	}
 }
 
 // OptionWindowInitializer allow initializing the window.
+//
+// Deprecated, please use WindowIcon if you'd like to set the window icon.
 func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
 	// deprecated on 2019-03-05
-	fmt.Println("OptionWindowInitializer is deprecated. Please read https://is.gd/gflut_window_init_deprecated")
+	fmt.Println("go-flutter: OptionWindowInitializer is deprecated. Please read https://is.gd/gflut_window_init_deprecated")
 	return func(c *config) {
-		c.WindowInitializerDeprecated = ini
+		c.windowInitializerDeprecated = ini
 	}
 }
 
-// WindowIcon sets an icon provider func, which is called during window initialization.
-// For tips on the kind of images to provide, see https://godoc.org/github.com/go-gl/glfw/v3.2/glfw#Window.SetIcon
+// WindowIcon sets an icon provider func, which is called during window
+// initialization. For tips on the kind of images to provide, see
+// https://godoc.org/github.com/go-gl/glfw/v3.2/glfw#Window.SetIcon
 func WindowIcon(iconProivder func() ([]image.Image, error)) Option {
 	return func(c *config) {
-		c.WindowIconProvider = iconProivder
+		c.windowIconProvider = iconProivder
 	}
 }
 
-// OptionPixelRatio forces the the scale factor for the screen.
-// By default, go-flutter will calculate the correct pixel ratio for the user, based
-// on their monitor DPI. Setting this option is not advised.
+// OptionPixelRatio forces the the scale factor for the screen. By default,
+// go-flutter will calculate the correct pixel ratio for the user, based on
+// their monitor DPI. Setting this option is not advised.
+//
+// Deprecated, please use ForcePixelRatio(ratio).
 func OptionPixelRatio(ratio float64) Option {
+	// deprecated on 2019-03-10
+	fmt.Println("go-flutter: OptionPixelRatio is deprecated. Please use ForcePixelRatio(ratio)")
+	return ForcePixelRatio(ratio)
+}
+
+// ForcePixelRatio forces the the scale factor for the screen. By default,
+// go-flutter will calculate the correct pixel ratio for the user, based on
+// their monitor DPI. Setting this option is not advised.
+func ForcePixelRatio(ratio float64) Option {
 	return func(c *config) {
-		c.ForcePixelRatio = ratio
+		c.forcePixelRatio = ratio
 	}
 }
 
-// OptionAddPluginReceiver add a new function that will be trigger
-// when the FlutterEngine send a PlatformMessage to the Embedder
-func OptionAddPluginReceiver(handler PluginReceivers, channelName string) Option {
+// AddPlugin adds a plugin to the flutter application.
+func AddPlugin(p Plugin) Option {
 	return func(c *config) {
-		// Check for nil, else initialise the map
-		if c.PlatformMessageReceivers == nil {
-			c.PlatformMessageReceivers = make(map[string][]PluginReceivers)
-		}
-		c.PlatformMessageReceivers[channelName] =
-			append(c.PlatformMessageReceivers[channelName], handler)
+		c.plugins = append(c.plugins, p)
 	}
 }
 
-// OptionKeyboardLayout allow application to support keyboard that have a different layout
-// when the FlutterEngine send a PlatformMessage to the Embedder
+// OptionKeyboardLayout allow application to support keyboard that have a
+// different layout and therefore different keyboard shortcuts.
 func OptionKeyboardLayout(keyboardLayout KeyboardShortcuts) Option {
 	return func(c *config) {
-		c.KeyboardLayout = &keyboardLayout
+		c.keyboardLayout = keyboardLayout
 	}
 }
 
-// KeyboardShortcuts Struct where user can define his own keyboard shortcut.
-// This will allow application to support keyboard layout different from US layout
+// KeyboardShortcuts contains the configuration for keyboard shortcut keys. This
+// allows an application to support keyboard layout different from US layout.
 type KeyboardShortcuts struct {
 	Cut       glfw.Key
 	Copy      glfw.Key

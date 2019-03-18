@@ -1,5 +1,7 @@
 github.com/Drakirus/go-flutter-desktop-embedder v0.3.0-alpha h1:iN21X7YbJGf9FFa7tPVHB9yz1z38fmJwR3nsLEXtzt8=
 github.com/Drakirus/go-flutter-desktop-embedder v0.3.0-alpha/go.mod h1:ICLHHUrzG3TCrDLAiMyJyy28vaNt+nAGdqebqOlw7GE=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-flutter-desktop/go-flutter v0.3.0-alpha h1:XZUSmy0xvU86N7LuDE4sv+fK/6jZ4VfpTEkcOWvKgR4=
 github.com/go-flutter-desktop/go-flutter v0.3.0-alpha/go.mod h1:Fg+hlB7ebNxF7qSPxuqQ/29YWq+4QFuEfGVOFBJFbDw=
 github.com/go-gl/glfw v0.0.0-20190217072633-93b30450e032 h1:WUDJN6o1AZlnNR0UZ11zsr0Quh44CV7svcg6VzEsySc=

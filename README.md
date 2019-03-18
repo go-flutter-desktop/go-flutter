@@ -161,8 +161,10 @@ This project uses go-gl/glfw for GLFW v3.2.
 - [x] MacOS :apple:
 - [x] Importable go library
 - [ ] Plugins [Medium article on how the Flutter's messaging works](https://medium.com/flutter-io/flutter-platform-channels-ce7f540a104e)
-  - [x] JSON MethodChannel
-  - [ ] StandardMethodCodec, ...
+  - [x] JSONMethodCodec
+  - [x] StandardMessageCodec, StandardMethodCodec
+  - [x] MethodChannel
+  - [ ] EventChannel
 - [ ] System plugins [Platform channels used by the Flutter system](https://github.com/flutter/flutter/blob/master/packages/flutter/lib/src/services/system_channels.dart)
   - [x] Window Title
   - [x] Text input
@@ -175,3 +177,4 @@ This project uses go-gl/glfw for GLFW v3.2.
     - [x] <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
     - [ ] <kbd>ctrl-Delete</kbd>
   - [ ] Key events
+- [ ] Hot reload
