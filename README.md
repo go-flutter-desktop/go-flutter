@@ -16,6 +16,11 @@ The flutter engine itself doesn't know how to deal with desktop platforms _(eg h
 
 The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus Golang is a great language because it keeps everything simple and readable, which makes it easy to build cross-platform plugins.
 
+## Plugins
+
+Some popular plugins are already implemented over at [github.com/go-flutter-desktop/plugins](https://github.com/go-flutter-desktop/plugins)  
+If you have implemented a plugin that you would like to share, feel free to open a PR!
+
 ## How to install
 
 <details>
@@ -140,7 +145,9 @@ go build main.go
 
 The examples are available [here](./example/).
 
-<img src="./stocks.jpg" width="900" align="center" alt="Screenshot of the Stocks demo app on macOS">
+<p align="center">
+  <img src="./stocks.jpg" width="650" align="center" alt="Screenshot of the Stocks demo app on macOS">
+</p>
 
 ## Version compatibility
 
