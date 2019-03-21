@@ -99,7 +99,7 @@ func (a *Application) Run() error {
 	}
 
 	// Engine arguments
-	a.engine.AssetsPath = a.config.assetsPath
+	a.engine.AssetsPath = a.config.flutterAssetsPath
 	a.engine.IcuDataPath = a.config.icuDataPath
 
 	// Render callbacks

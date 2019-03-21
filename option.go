@@ -9,9 +9,9 @@ import (
 )
 
 type config struct {
-	assetsPath  string
-	icuDataPath string
-	vmArguments []string
+	flutterAssetsPath string
+	icuDataPath       string
+	vmArguments       []string
 
 	windowInitializerDeprecated func(*glfw.Window) error
 	windowIconProvider          func() ([]image.Image, error)
@@ -36,7 +36,9 @@ var defaultApplicationConfig = config{
 		x: 800,
 		y: 600,
 	},
-	keyboardLayout: KeyboardQwertyLayout,
+	keyboardLayout:    KeyboardQwertyLayout,
+	flutterAssetsPath: "flutter_assets",
+	icuDataPath:       "icudtl.dat",
 }
 
 // Option for Application
@@ -55,11 +57,11 @@ func ProjectAssetPath(p string) Option {
 func ProjectAssetsPath(p string) Option {
 	_, err := os.Stat(p)
 	if err != nil {
-		fmt.Printf("go-flutter: failed to stat asset path: %v\n", err)
+		fmt.Printf("go-flutter: failed to stat flutter assets path: %v\n", err)
 		os.Exit(1)
 	}
 	return func(c *config) {
-		c.assetsPath = p
+		c.flutterAssetsPath = p
 	}
 }
 
