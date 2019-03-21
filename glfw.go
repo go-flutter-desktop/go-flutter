@@ -103,7 +103,6 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64) func(*glfw.Window, int, 
 			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
 			dpi := pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 			pixelRatio = dpi / dpPerInch
-			pixelRatio = 0.2
 
 			// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
 			if pixelRatio < 1.0 {
