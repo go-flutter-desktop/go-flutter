@@ -78,7 +78,8 @@ func (b *BasicMessageChannel) Send(message interface{}) (reply interface{}, err 
 // of) this channel.
 //
 // When given nil as handler, any incoming message on this channel will be
-// handled silently by sending a nil reply (null on the dart side).
+// handled silently by sending a nil reply which triggers
+// the dart MissingPluginException exception.
 func (b *BasicMessageChannel) Handle(handler BasicMessageHandler) {
 	b.handler = handler
 }

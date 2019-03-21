@@ -81,8 +81,9 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 // of) this channel. When given nil as handler, the previously registered
 // handler for a method is unregistrered.
 //
-// When no handler is registered for a method, it will be handled silently by
-// sending a nil reply (null on the dart side).
+// When no handler is registered for a method, it will be
+// handled silently by sending a nil reply which triggers
+// the dart MissingPluginException exception.
 func (m *MethodChannel) Handle(methodName string, handler MethodHandler) {
 	m.methodsLock.Lock()
 	if handler == nil {
