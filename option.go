@@ -36,9 +36,7 @@ var defaultApplicationConfig = config{
 		x: 800,
 		y: 600,
 	},
-	keyboardLayout:    KeyboardQwertyLayout,
-	flutterAssetsPath: "flutter_assets",
-	icuDataPath:       "icudtl.dat",
+	keyboardLayout: KeyboardQwertyLayout,
 }
 
 // Option for Application

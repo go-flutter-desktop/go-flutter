@@ -2,6 +2,7 @@ package flutter
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"unsafe"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
+	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 )
 
@@ -98,9 +100,25 @@ func (a *Application) Run() error {
 		}
 	}
 
-	// Engine arguments
-	a.engine.AssetsPath = a.config.flutterAssetsPath
-	a.engine.IcuDataPath = a.config.icuDataPath
+	if a.config.flutterAssetsPath != "" {
+		a.engine.AssetsPath = a.config.flutterAssetsPath
+	} else {
+		execPath, err := execpath.ExecPath()
+		if err != nil {
+			return errors.Wrap(err, "failed to resolve path for executable")
+		}
+		a.engine.AssetsPath = filepath.Join(filepath.Dir(execPath), "flutter_assets")
+	}
+
+	if a.config.icuDataPath != "" {
+		a.engine.IcuDataPath = a.config.icuDataPath
+	} else {
+		execPath, err := execpath.ExecPath()
+		if err != nil {
+			return errors.Wrap(err, "failed to resolve path for executable")
+		}
+		a.engine.IcuDataPath = filepath.Join(filepath.Dir(execPath), "icudtl.dat")
+	}
 
 	// Render callbacks
 	a.engine.FMakeCurrent = func(v unsafe.Pointer) bool {
