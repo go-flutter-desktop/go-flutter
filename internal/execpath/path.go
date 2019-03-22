@@ -1,7 +1,6 @@
 package execpath
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -19,11 +18,9 @@ func ExecPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(execPath)
 	execPath, err = filepath.EvalSymlinks(execPath)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(execPath)
 	return execPath, nil
 }
