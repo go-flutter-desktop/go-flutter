@@ -3,7 +3,6 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"runtime"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
@@ -127,6 +126,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 		if err != nil {
 			fmt.Printf("go-flutter: failed to pop route after escape key press: %v\n", err)
 		}
+		return
 	}
 
 	if action == glfw.Repeat || action == glfw.Press {
@@ -183,10 +183,10 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 			if mods == p.modifierKey {
 				var clpString, err = window.GetClipboardString()
 				if err != nil {
-					log.Printf("unable to get the clipboard content: %v\n", err)
-				} else {
-					p.addChar([]rune(clpString))
+					fmt.Printf("go-flutter: unable to get the clipboard content: %v\n", err)
+					return
 				}
+				p.addChar([]rune(clpString))
 			}
 		}
 	}

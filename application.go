@@ -2,6 +2,7 @@ package flutter
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"unsafe"
@@ -153,8 +154,15 @@ func (a *Application) Run() error {
 
 	result := a.engine.Run(a.window.GLFWWindow(), a.config.vmArguments)
 	if result != embedder.ResultSuccess {
-		a.window.Destroy()
-		panic("Couldn't launch the FlutterEngine")
+		switch result {
+		case embedder.ResultInvalidLibraryVersion:
+			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid library version)\n", result)
+		case embedder.ResultInvalidArguments:
+			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid arguments)\n", result)
+		default:
+			fmt.Printf("go-flutter: engine.Run() returned result code %d (unknown result code)\n", result)
+		}
+		os.Exit(1)
 	}
 
 	defaultPlatformPlugin.glfwTasker = tasker.New()
