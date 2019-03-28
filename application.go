@@ -197,6 +197,7 @@ func (a *Application) Run() error {
 		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
 		embedder.FlutterEngineFlushPendingTasksNow()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
+		messenger.engineTasker.ExecuteTasks()
 	}
 
 	return nil

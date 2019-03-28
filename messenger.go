@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
+	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
@@ -14,14 +15,18 @@ type messenger struct {
 
 	channels     map[string]plugin.ChannelHandlerFunc
 	channelsLock sync.RWMutex
+
+	// engineTasker holds tasks which must be executed in the engine thread
+	engineTasker *tasker.Tasker
 }
 
 var _ plugin.BinaryMessenger = &messenger{}
 
 func newMessenger(engine *embedder.FlutterEngine) *messenger {
 	return &messenger{
-		engine:   engine,
-		channels: make(map[string]plugin.ChannelHandlerFunc),
+		engine:       engine,
+		channels:     make(map[string]plugin.ChannelHandlerFunc),
+		engineTasker: tasker.New(),
 	}
 }
 
@@ -42,6 +47,9 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (binaryReply []by
 	if res != embedder.ResultSuccess {
 		return nil, errors.New("failed to send message")
 	}
+
+	// NOTE: Response from engine is not yet supported by embedder.
+	// https://github.com/flutter/flutter/issues/18852
 	return nil, nil
 }
 
@@ -61,26 +69,45 @@ func (m *messenger) handlePlatformMessage(message *embedder.PlatformMessage) {
 	channelHander := m.channels[message.Channel]
 	m.channelsLock.RUnlock()
 
-	var encodedReply []byte
-
 	if channelHander == nil {
 		// print a log, but continue on to send a nil reply when required
 		fmt.Println("go-flutter: no handler found for channel " + message.Channel)
-	} else {
-		var err error
-		encodedReply, err = channelHander(message.Message)
-		if err != nil {
-			// print a log, but continue on to send a nil reply when required
-			fmt.Printf("go-flutter: handling message on channel "+message.Channel+" failed: %v\n", err)
-			// force encodedReply to be nil, it may be sent when the dart side expects a reply.
-			encodedReply = nil
-		}
+		return
 	}
 
-	if message.ExpectsReply() {
-		res := m.engine.SendPlatformMessageResponse(message.ResponseHandle, encodedReply)
-		if res != embedder.ResultSuccess {
-			fmt.Println("go-flutter: failed sending reply for message on channel " + message.Channel)
-		}
+	var err error
+	err = channelHander(message.Message, responseSender{
+		engine:       m.engine,
+		message:      message,
+		engineTasker: m.engineTasker,
+	})
+	if err != nil {
+		fmt.Printf("go-flutter: handling message on channel "+message.Channel+" failed: %v\n", err)
 	}
+}
+
+type responseSender struct {
+	engine       *embedder.FlutterEngine
+	message      *embedder.PlatformMessage
+	engineTasker *tasker.Tasker
+}
+
+var _ plugin.ResponseSender = responseSender{} // compile-time type check
+
+func (r responseSender) Send(binaryReply []byte) {
+	if !r.message.ExpectsResponse() {
+		return // quick path when no response should be sent
+	}
+
+	// TODO: detect multiple responses on the same message and spam the log
+	// about it.
+
+	// It would be preferable to replace this with channels so sending
+	// doesn't have to wait on the main loop to come around.
+	go r.engineTasker.Do(func() {
+		res := r.engine.SendPlatformMessageResponse(r.message.ResponseHandle, binaryReply)
+		if res != embedder.ResultSuccess {
+			fmt.Println("go-flutter: failed sending response for message on channel " + r.message.Channel)
+		}
+	})
 }

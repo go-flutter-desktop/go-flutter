@@ -2,27 +2,11 @@ package plugin
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sync"
 
 	"github.com/pkg/errors"
 )
-
-// MethodHandler defines the interface for a method handler.
-type MethodHandler interface {
-	// HandleMethod is called whenever an incoming
-	HandleMethod(arguments interface{}) (reply interface{}, err error)
-}
-
-// The MethodHandlerFunc type is an adapter to allow the use of
-// ordinary functions as method handlers. If f is a function
-// with the appropriate signature, MethodHandlerFunc(f) is a
-// MethodHandler that calls f.
-type MethodHandlerFunc func(arguments interface{}) (reply interface{}, err error)
-
-// HandleMethod calls f(arguments).
-func (f MethodHandlerFunc) HandleMethod(arguments interface{}) (reply interface{}, err error) {
-	return f(arguments)
-}
 
 // MethodChannel provides way for flutter applications and hosts to communicate.
 // It must be used with a codec, for example the StandardMethodCodec. For more
@@ -33,8 +17,13 @@ type MethodChannel struct {
 	channelName string
 	methodCodec MethodCodec
 
-	methods     map[string]MethodHandler
+	methods     map[string]methodHandlerRegistration
 	methodsLock sync.RWMutex
+}
+
+type methodHandlerRegistration struct {
+	handler MethodHandler
+	sync    bool
 }
 
 // NewMethodChannel creates a new method channel
@@ -44,14 +33,16 @@ func NewMethodChannel(messenger BinaryMessenger, channelName string, methodCodec
 		channelName: channelName,
 		methodCodec: methodCodec,
 
-		methods: make(map[string]MethodHandler),
+		methods: make(map[string]methodHandlerRegistration),
 	}
-	messenger.SetChannelHandler(channelName, mc.handleChannel)
+	messenger.SetChannelHandler(channelName, mc.handleChannelMessage)
 	return mc
 }
 
 // InvokeMethod sends a methodcall to the binary messenger and waits for a
-// result.
+// result. Results from the Flutter side are not yet implemented in the
+// embedder. Until then, InvokeMethod will always return nil as reult.
+// https://github.com/flutter/flutter/issues/18852
 func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result interface{}, err error) {
 	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
 		Method:    name,
@@ -74,22 +65,22 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 	return result, nil
 }
 
-// Handle registers a message handler on this channel for receiving messages
-// sent from the Flutter application.
+// Handle registers a method handler for method calls with given name.
 //
 // Consecutive calls override any existing handler registration for (the name
-// of) this channel. When given nil as handler, the previously registered
+// of) this method. When given nil as handler, the previously registered
 // handler for a method is unregistrered.
 //
-// When no handler is registered for a method, it will be
-// handled silently by sending a nil reply which triggers
-// the dart MissingPluginException exception.
+// When no handler is registered for a method, it will be handled silently by
+// sending a nil reply which triggers the dart MissingPluginException exception.
 func (m *MethodChannel) Handle(methodName string, handler MethodHandler) {
 	m.methodsLock.Lock()
 	if handler == nil {
 		delete(m.methods, methodName)
 	} else {
-		m.methods[methodName] = handler
+		m.methods[methodName] = methodHandlerRegistration{
+			handler: handler,
+		}
 	}
 	m.methodsLock.Unlock()
 }
@@ -104,44 +95,80 @@ func (m *MethodChannel) HandleFunc(methodName string, f func(arguments interface
 	m.Handle(methodName, MethodHandlerFunc(f))
 }
 
-// handleChannel decodes incoming binary message to a method call, calls the
-// handler, and encodes the outgoing reply.
-func (m *MethodChannel) handleChannel(binaryMessage []byte) (binaryReply []byte, err error) {
-	methodCall, err := m.methodCodec.DecodeMethodCall(binaryMessage)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode incomming message")
+// HandleSync is like Handle, but messages for given method are handled
+// synchronously.
+func (m *MethodChannel) HandleSync(methodName string, handler MethodHandler) {
+	m.methodsLock.Lock()
+	if handler == nil {
+		delete(m.methods, methodName)
+	} else {
+		m.methods[methodName] = methodHandlerRegistration{
+			handler: handler,
+			sync:    true,
+		}
 	}
-	m.methodsLock.RLock()
-	methodHandler := m.methods[methodCall.Method]
-	m.methodsLock.RUnlock()
-	if methodHandler == nil {
-		fmt.Printf("go-flutter: no method handler registered for method '%s' on channel '%s'\n", methodCall.Method, m.channelName)
-		// return nil as reply, which may be sent back to the dart side
-		return nil, nil
+	m.methodsLock.Unlock()
+}
+
+// HandleFuncSync is a shorthand for m.HandleSync(MethodHandlerFunc(f))
+func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments interface{}) (reply interface{}, err error)) {
+	if f == nil {
+		m.HandleSync(methodName, nil)
+		return
 	}
 
+	m.HandleSync(methodName, MethodHandlerFunc(f))
+}
+
+// handleChannelMessage decodes incoming binary message to a method call, calls the
+// handler, and encodes the outgoing reply.
+func (m *MethodChannel) handleChannelMessage(binaryMessage []byte, responseSender ResponseSender) (err error) {
+	methodCall, err := m.methodCodec.DecodeMethodCall(binaryMessage)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode incomming message")
+	}
+
+	m.methodsLock.RLock()
+	registration, registrationExists := m.methods[methodCall.Method]
+	m.methodsLock.RUnlock()
+	if !registrationExists {
+		fmt.Printf("go-flutter: no method handler registered for method '%s' on channel '%s'\n", methodCall.Method, m.channelName)
+		responseSender.Send(nil)
+		return nil
+	}
+
+	if registration.sync {
+		m.handleMethodCall(registration.handler, methodCall, responseSender)
+	} else {
+		go m.handleMethodCall(registration.handler, methodCall, responseSender)
+	}
+
+	return nil
+}
+
+// handleMethodCall handles the methodcall and sends a response.
+func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodCall MethodCall, responseSender ResponseSender) {
 	defer func() {
 		p := recover()
 		if p != nil {
-			fmt.Printf("go-flutter: recovered from panic while handling call for method '%s' on channel '%s': %v", methodCall.Method, m.channelName, p)
+			fmt.Printf("go-flutter: recovered from panic while handling call for method '%s' on channel '%s': %v\n", methodCall.Method, m.channelName, p)
+			debug.PrintStack()
 		}
 	}()
-	reply, err := methodHandler.HandleMethod(methodCall.Arguments)
+
+	reply, err := handler.HandleMethod(methodCall.Arguments)
 	if err != nil {
 		fmt.Printf("go-flutter: handler for method '%s' on channel '%s' returned an error: %v\n", methodCall.Method, m.channelName, err)
-		binaryReply, err = m.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
+		binaryReply, err := m.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to encode error envelope")
+			fmt.Printf("go-flutter: failed to encode error envelope for method '%s' on channel '%s', error: %v\n", methodCall.Method, m.channelName, err)
 		}
-		return binaryReply, nil
+		responseSender.Send(binaryReply)
 	}
 
-	binaryReply, err = m.methodCodec.EncodeSuccessEnvelope(reply)
+	binaryReply, err := m.methodCodec.EncodeSuccessEnvelope(reply)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to encode success envelope")
+		fmt.Printf("go-flutter: failed to encode success envelope for method '%s' on channel '%s', error: %v\n", methodCall.Method, m.channelName, err)
 	}
-
-	return binaryReply, nil
+	responseSender.Send(binaryReply)
 }
-
-var _ ChannelHandlerFunc = (*MethodChannel)(nil).handleChannel // compile-time type check

@@ -58,9 +58,9 @@ func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 	p.window = window
 	p.channel = plugin.NewMethodChannel(p.messenger, textinputChannelName, plugin.JSONMethodCodec{})
-	p.channel.HandleFunc("TextInput.setClient", p.handleSetClient)
-	p.channel.HandleFunc("TextInput.clearClient", p.handleClearClient)
-	p.channel.HandleFunc("TextInput.setEditingState", p.handleSetEditingState)
+	p.channel.HandleFuncSync("TextInput.setClient", p.handleSetClient)
+	p.channel.HandleFuncSync("TextInput.clearClient", p.handleClearClient)
+	p.channel.HandleFuncSync("TextInput.setEditingState", p.handleSetEditingState)
 
 	return nil
 }

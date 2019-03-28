@@ -13,6 +13,13 @@ type BinaryMessenger interface {
 	SetChannelHandler(channel string, handler ChannelHandlerFunc)
 }
 
+// ResponseSender defines the interface that must be implemented by a messenger
+// to handle replies on on message. It is an error to call Send multiple times
+// on the same ResponseSender.
+type ResponseSender interface {
+	Send(binaryReply []byte)
+}
+
 // ChannelHandlerFunc describes the function that handles binary messages sent
-// on a channel.
-type ChannelHandlerFunc func(binaryMessage []byte) (binaryReply []byte, err error)
+// on a channel. For each message, ResponseSender.Send must be called once.
+type ChannelHandlerFunc func(binaryMessage []byte, r ResponseSender) (err error)

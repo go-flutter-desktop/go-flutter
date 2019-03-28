@@ -90,7 +90,7 @@ func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply inte
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode arguments")
 	}
-	go p.glfwTasker.Do(func() {
+	p.glfwTasker.Do(func() {
 		p.window.SetTitle(appSwitcherDescription.Label)
 	})
 	return nil, nil

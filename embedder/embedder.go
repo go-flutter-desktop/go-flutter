@@ -181,7 +181,8 @@ type PlatformMessage struct {
 	Channel string
 	Message []byte
 
-	// ResponseHandle is only set when receiving a platform message. // TODO: is comment true?
+	// ResponseHandle is only set when receiving a platform message.
+	// https://github.com/flutter/flutter/issues/18852
 	ResponseHandle PlatformMessageResponseHandle
 }
 
@@ -189,8 +190,9 @@ type PlatformMessage struct {
 // message response to the original platform message.
 type PlatformMessageResponseHandle uintptr
 
-// ExpectsReply indicates whether the platform message should be replied to.
-func (p PlatformMessage) ExpectsReply() bool {
+// ExpectsResponse indicates whether the platform message should receive a
+// response.
+func (p PlatformMessage) ExpectsResponse() bool {
 	return p.ResponseHandle != 0
 }
 
