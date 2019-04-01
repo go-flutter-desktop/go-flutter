@@ -1,10 +1,12 @@
-github.com/Drakirus/go-flutter-desktop-embedder v0.3.0-alpha h1:iN21X7YbJGf9FFa7tPVHB9yz1z38fmJwR3nsLEXtzt8=
-github.com/Drakirus/go-flutter-desktop-embedder v0.3.0-alpha/go.mod h1:ICLHHUrzG3TCrDLAiMyJyy28vaNt+nAGdqebqOlw7GE=
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-flutter-desktop/go-flutter v0.3.0-alpha h1:XZUSmy0xvU86N7LuDE4sv+fK/6jZ4VfpTEkcOWvKgR4=
-github.com/go-flutter-desktop/go-flutter v0.3.0-alpha/go.mod h1:Fg+hlB7ebNxF7qSPxuqQ/29YWq+4QFuEfGVOFBJFbDw=
 github.com/go-gl/glfw v0.0.0-20190217072633-93b30450e032 h1:WUDJN6o1AZlnNR0UZ11zsr0Quh44CV7svcg6VzEsySc=
 github.com/go-gl/glfw v0.0.0-20190217072633-93b30450e032/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
