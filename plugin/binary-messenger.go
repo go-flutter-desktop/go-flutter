@@ -17,6 +17,7 @@ type BinaryMessenger interface {
 // to handle replies on on message. It is an error to call Send multiple times
 // on the same ResponseSender.
 type ResponseSender interface {
+	// Send may return before the message was passed to the flutter side.
 	Send(binaryReply []byte)
 }
 

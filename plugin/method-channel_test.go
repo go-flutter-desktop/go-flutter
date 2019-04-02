@@ -11,7 +11,7 @@ func TestMethodChannelJSONInvoke(t *testing.T) {
 	messenger := NewTestingBinaryMessenger()
 	codec := JSONMethodCodec{}
 	channel := NewMethodChannel(messenger, "ch", codec)
-	messenger.MockSetChannelHandler("ch", func(msg []byte) ([]byte, error) {
+	messenger.MockSetChannelHandler("ch", func(msg []byte, r ResponseSender) error {
 		methodCall, err := codec.DecodeMethodCall(msg)
 		Nil(t, err)
 		NotNil(t, methodCall)
@@ -19,9 +19,15 @@ func TestMethodChannelJSONInvoke(t *testing.T) {
 			var greeting string
 			err = json.Unmarshal(methodCall.Arguments.(json.RawMessage), &greeting)
 			Nil(t, err)
-			return codec.EncodeSuccessEnvelope(greeting + " world")
+			binaryReply, err := codec.EncodeSuccessEnvelope(greeting + " world")
+			Nil(t, err)
+			r.Send(binaryReply)
+			return nil
 		}
-		return codec.EncodeErrorEnvelope("unknown", "", nil)
+		binaryReply, err := codec.EncodeErrorEnvelope("unknown", "", nil)
+		Nil(t, err)
+		r.Send(binaryReply)
+		return nil
 	})
 	result, err := channel.InvokeMethod("sayHello", "hello")
 	Nil(t, err)

@@ -39,7 +39,10 @@ func (t *TestingBinaryMessenger) Send(channel string, message []byte) (reply []b
 	if handler == nil {
 		return nil, errors.New("no handler set")
 	}
-	return handler(message)
+
+	r := mockResponseSender{}
+	handler(message, &r)
+	return r.binaryReply, nil
 }
 
 // SetMessageHandler registers a binary message handler on given channel.
@@ -60,7 +63,10 @@ func (t *TestingBinaryMessenger) MockSend(channel string, message []byte) (reply
 	if handler == nil {
 		return nil, errors.New("no handler set")
 	}
-	return handler(message)
+
+	r := mockResponseSender{}
+	handler(message, &r)
+	return r.binaryReply, nil
 }
 
 // MockSetChannelHandler imitates a handler set at the other end of the
@@ -69,4 +75,12 @@ func (t *TestingBinaryMessenger) MockSetChannelHandler(channel string, handler C
 	t.mockChannelHandlersLock.Lock()
 	t.mockChannelHandlers[channel] = handler
 	t.mockChannelHandlersLock.Unlock()
+}
+
+type mockResponseSender struct {
+	binaryReply []byte
+}
+
+func (m *mockResponseSender) Send(binaryReply []byte) {
+	m.binaryReply = binaryReply
 }
