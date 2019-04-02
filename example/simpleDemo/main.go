@@ -38,6 +38,7 @@ func main() {
 
 	options := []flutter.Option{
 		flutter.ProjectAssetsPath(dir + "/flutter_project/demo/build/flutter_assets"),
+		// flutter.ForcePixelRatio(1.2),
 
 		// This path should not be changed. icudtl.dat is handled by engineDownloader.go
 		flutter.ApplicationICUDataPath(dir + "/icudtl.dat"),

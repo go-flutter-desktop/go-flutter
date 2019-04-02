@@ -18,9 +18,17 @@ func glfwCursorPositionCallbackAtPhase(
 	window *glfw.Window, phase embedder.PointerPhase,
 	x float64, y float64,
 ) {
+
+	// Pointer events from GLFW are described using screen coordinates.
+	// We need to provide Flutter with the position in pixels.
 	width, _ := window.GetSize()
+	if width == 0 {
+		fmt.Println("go-flutter: Cannot calculate pointer position in zero-width window.")
+		return
+	}
 	widthPx, _ := window.GetFramebufferSize()
-	pixelsPerScreenCoordinate := float64(widthPx / width)
+	pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+
 	event := embedder.PointerEvent{
 		Phase:     phase,
 		X:         x * pixelsPerScreenCoordinate,
@@ -38,19 +46,10 @@ func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action g
 	if key == glfw.MouseButton1 {
 		x, y := window.GetCursorPos()
 
-		// recalculate x and y from screen cordinates to pixels
-		widthPx, _ := window.GetFramebufferSize()
-		width, _ := window.GetSize()
-		pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
-		x = x * pixelsPerScreenCoordinate
-		y = y * pixelsPerScreenCoordinate
-
 		if action == glfw.Press {
 			glfwCursorPositionCallbackAtPhase(window, embedder.PointerPhaseDown, x, y)
 			// TODO(#90): new kHover pointerphase in embedder.h suggests that pos callback is relevant outside "down" as well...
 			window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
-				x = x * pixelsPerScreenCoordinate
-				y = y * pixelsPerScreenCoordinate
 				glfwCursorPositionCallbackAtPhase(window, embedder.PointerPhaseMove, x, y)
 			})
 		}
