@@ -11,7 +11,7 @@ about: You are writing an application with Flutter but the application is
 <!-- Please tell us wich flutter version are you using, we generally try to stay compatible with the beta channel. Run `flutter --version` to get the version -->
 
 ```
-Flutter x.xx.x • channel dev • https://github.com/flutter/flutter.git
+Flutter x.xx.x • channel beta • https://github.com/flutter/flutter.git
 Framework • revision xxxxxxxxxx (x weeks ago) • xxxxxxxxxxxxxxxxxxxxxxxx
 Engine • revision xxxxxxxxxx
 Tools • Dart x.x.x (build xxxxxxxxxx)

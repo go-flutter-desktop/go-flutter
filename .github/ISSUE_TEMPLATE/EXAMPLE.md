@@ -1,9 +1,14 @@
 ---
-name: I have a problem with a plugin.
-about: You are writing an application and a plugin doesn't behave as expected.
+name: I have a problem with an example
+about: You are trying to run an example but the application is crashing, throws an exception or something looks wrong.
 ---
 
 <!-- Thank you for trying go-flutter! -->
+
+<!-- Please tell us which example you're trying to run, and the version of the examples repo that you're using -->
+
+Example name: <!-- e.g.: simple_demo or stocks -->
+Examples repository version: <!-- Run `git rev-parse HEAD` to get the version of the examples repo -->
 
 ## Flutter version
 
@@ -15,14 +20,6 @@ Framework • revision xxxxxxxxxx (x weeks ago) • xxxxxxxxxxxxxxxxxxxxxxxx
 Engine • revision xxxxxxxxxx
 Tools • Dart x.x.x (build xxxxxxxxxx)
 ```
-
-## Plugin version
-
-<!-- Please tell us what version of the plugin package in dart you are using (pubspec.yaml) -->
-
-## Go.mod file
-
-<!-- Please share the contents of your application's go.mod file. Are you not using go.mod? Please give it a try. -->
 
 ## Golang errors (Optional)
 
