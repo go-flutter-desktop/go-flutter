@@ -132,7 +132,6 @@ type PointerPhase int32
 
 // Values representing the mouse phase.
 const (
-	PointerPhaseNone   PointerPhase = C.kCancel - 1
 	PointerPhaseCancel PointerPhase = C.kCancel
 	PointerPhaseUp     PointerPhase = C.kUp
 	PointerPhaseDown   PointerPhase = C.kDown

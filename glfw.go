@@ -27,15 +27,14 @@ type windowManager struct {
 
 func newWindowManager() *windowManager {
 	return &windowManager{
-		pointerPhase: embedder.PointerPhaseNone,
+		pointerPhase: embedder.PointerPhaseHover,
 	}
 }
 
 // GLFW callbacks to the Flutter Engine
 func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64) {
-	if m.pointerPhase != embedder.PointerPhaseNone {
-		m.sendPointerEvent(window, m.pointerPhase, x, y)
-	}
+	fmt.Println(time.Now().String())
+	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
 func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.PointerPhase, x, y float64) {
@@ -60,7 +59,6 @@ func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered boo
 		m.sendPointerEvent(window, embedder.PointerPhaseAdd, x, y)
 		m.pointerPhase = embedder.PointerPhaseHover
 	} else {
-		m.pointerPhase = embedder.PointerPhaseNone
 		m.sendPointerEvent(window, embedder.PointerPhaseRemove, x, y)
 	}
 }
@@ -75,7 +73,6 @@ func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.Mo
 		}
 
 		if action == glfw.Release {
-			m.pointerPhase = embedder.PointerPhaseNone
 			m.sendPointerEvent(window, embedder.PointerPhaseUp, x, y)
 			m.pointerPhase = embedder.PointerPhaseHover
 		}
