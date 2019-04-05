@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -36,8 +37,8 @@ func glfwCursorPositionCallbackAtPhase(
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
-	index := *(*int)(window.GetUserPointer())
-	flutterEngine := embedder.FlutterEngineByIndex(index)
+	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 
 	flutterEngine.SendPointerEvent(event)
 }
@@ -68,9 +69,6 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64) func(*glfw.Window, int, 
 	var oncePrintPixelRatioLimit sync.Once
 
 	return func(window *glfw.Window, widthPx int, heightPx int) {
-		index := *(*int)(window.GetUserPointer())
-		flutterEngine := embedder.FlutterEngineByIndex(index)
-
 		// calculate pixelRatio when it has not been forced.
 		if pixelRatio == 0 {
 
@@ -129,6 +127,10 @@ func newGLFWFramebufferSizeCallback(pixelRatio float64) func(*glfw.Window, int, 
 			Height:     heightPx,
 			PixelRatio: pixelRatio,
 		}
+
+		flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+		flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+
 		flutterEngine.SendWindowMetricsEvent(event)
 	}
 }

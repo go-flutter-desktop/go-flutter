@@ -122,37 +122,41 @@ func (a *Application) Run() error {
 	}
 
 	// Render callbacks
-	a.engine.FMakeCurrent = func(v unsafe.Pointer) bool {
-		w := glfw.GoWindow(v)
-		w.MakeContextCurrent()
+	a.engine.GLMakeCurrent = func() bool {
+		a.window.MakeContextCurrent()
 		return true
 	}
-	a.engine.FClearCurrent = func(v unsafe.Pointer) bool {
+	a.engine.GLClearCurrent = func() bool {
 		glfw.DetachCurrentContext()
 		return true
 	}
-	a.engine.FPresent = func(v unsafe.Pointer) bool {
-		w := glfw.GoWindow(v)
-		w.SwapBuffers()
+	a.engine.GLPresent = func() bool {
+		a.window.SwapBuffers()
 		return true
 	}
-	a.engine.FFboCallback = func(v unsafe.Pointer) int32 {
+	a.engine.GLFboCallback = func() int32 {
 		return 0
 	}
-	a.engine.FMakeResourceCurrent = func(v unsafe.Pointer) bool {
+	a.engine.GLMakeResourceCurrent = func() bool {
 		return false
 	}
+	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
+		return glfw.GetProcAddress(procName)
+	}
 
-	a.engine.FPlatfromMessage = messenger.handlePlatformMessage
+	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
 	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
 
-	flutterEngineIndex := a.engine.Index()
-	a.window.SetUserPointer(unsafe.Pointer(&flutterEngineIndex))
+	flutterEnginePointer := uintptr(unsafe.Pointer(a.engine))
+	defer func() {
+		runtime.KeepAlive(flutterEnginePointer)
+	}()
+	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
-	result := a.engine.Run(a.window.GLFWWindow(), a.config.vmArguments)
+	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
 	if result != embedder.ResultSuccess {
 		switch result {
 		case embedder.ResultInvalidLibraryVersion:
@@ -199,6 +203,8 @@ func (a *Application) Run() error {
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 	}
+
+	fmt.Println("go-flutter: closing application")
 
 	return nil
 }

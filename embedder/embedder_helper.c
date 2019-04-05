@@ -12,7 +12,7 @@ void *proxy_gl_proc_resolver(void *v, const char *procname);
 void proxy_platform_message_callback(const FlutterPlatformMessage *message, void *window);
 
 // C helper
-FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs *Args,
+FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs *Args,
                                const char *const *vmArgs, int nVmAgrs)
 {
         FlutterRendererConfig config = {};
@@ -30,7 +30,7 @@ FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterP
         Args->command_line_argv = vmArgs;
         Args->platform_message_callback = proxy_platform_message_callback;
 
-        return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, (void *)window, engine);
+        return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, user_data, engine);
 }
 
 char **makeCharArray(int size)

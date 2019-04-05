@@ -1,12 +1,14 @@
 package embedder
 
 // #include "flutter_embedder.h"
-// FlutterEngineResult runFlutter(uintptr_t window, FlutterEngine *engine, FlutterProjectArgs * Args,
+// FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
 import "C"
 import (
+	"fmt"
+	"runtime/debug"
 	"sync"
 	"unsafe"
 )
@@ -16,6 +18,7 @@ var flutterEngines []*FlutterEngine
 var flutterEnginesLock sync.RWMutex
 
 // FlutterEngineByIndex returns an existing FlutterEngine by its index in this embedder.
+// Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
 func FlutterEngineByIndex(index int) (engine *FlutterEngine) {
 	flutterEnginesLock.RLock()
 	// TODO(#89): Remove this workarround check on slice length to handle
@@ -25,6 +28,11 @@ func FlutterEngineByIndex(index int) (engine *FlutterEngine) {
 		engine = flutterEngines[index]
 	}
 	flutterEnginesLock.RUnlock()
+	if engine == nil {
+		fmt.Printf("go-flutter: no flutterEngine found for index %d\n", index)
+		debug.PrintStack()
+		return nil
+	}
 	return engine
 }
 
@@ -52,15 +60,16 @@ type FlutterEngine struct {
 	// index of the engine in the global flutterEngines slice
 	index int
 
-	// Necessary callbacks for rendering.
-	FMakeCurrent         func(v unsafe.Pointer) bool
-	FClearCurrent        func(v unsafe.Pointer) bool
-	FPresent             func(v unsafe.Pointer) bool
-	FFboCallback         func(v unsafe.Pointer) int32
-	FMakeResourceCurrent func(v unsafe.Pointer) bool
+	// GL callback functions
+	GLMakeCurrent         func() bool
+	GLClearCurrent        func() bool
+	GLPresent             func() bool
+	GLFboCallback         func() int32
+	GLMakeResourceCurrent func() bool
+	GLProcResolver        func(procName string) unsafe.Pointer
 
-	// platform message callback.
-	FPlatfromMessage func(message *PlatformMessage)
+	// platform message callback function
+	PlatfromMessage func(message *PlatformMessage)
 
 	// Engine arguments
 	AssetsPath  string
@@ -79,12 +88,13 @@ func NewFlutterEngine() *FlutterEngine {
 }
 
 // Index returns the index of the engine in the global flutterEngines slice
+// Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
 func (flu *FlutterEngine) Index() int {
 	return flu.index
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *FlutterEngine) Run(window uintptr, vmArgs []string) Result {
+func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 	// validate this FlutterEngine was created correctly
 	flutterEnginesLock.RLock()
 	if len(flutterEngines) <= flu.index || flutterEngines[flu.index] != flu {
@@ -104,7 +114,7 @@ func (flu *FlutterEngine) Run(window uintptr, vmArgs []string) Result {
 		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
 	}
 
-	res := C.runFlutter(C.uintptr_t(window), &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
+	res := C.runFlutter(userData, &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
 	if flu.Engine == nil {
 		return ResultInvalidArguments
 	}
@@ -138,17 +148,17 @@ type PointerEvent struct {
 }
 
 // SendPointerEvent is used to send an PointerEvent to the Flutter engine.
-func (flu *FlutterEngine) SendPointerEvent(Event PointerEvent) Result {
+func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 
-	cEvents := C.FlutterPointerEvent{
-		phase:     (C.FlutterPointerPhase)(Event.Phase),
-		x:         C.double(Event.X),
-		y:         C.double(Event.Y),
-		timestamp: C.size_t(Event.Timestamp),
+	cPointerEvent := C.FlutterPointerEvent{
+		phase:     (C.FlutterPointerPhase)(event.Phase),
+		x:         C.double(event.X),
+		y:         C.double(event.Y),
+		timestamp: C.size_t(event.Timestamp),
 	}
-	cEvents.struct_size = C.size_t(unsafe.Sizeof(cEvents))
+	cPointerEvent.struct_size = C.size_t(unsafe.Sizeof(cPointerEvent))
 
-	res := C.FlutterEngineSendPointerEvent(flu.Engine, &cEvents, 1)
+	res := C.FlutterEngineSendPointerEvent(flu.Engine, &cPointerEvent, 1)
 
 	return (Result)(res)
 }
@@ -162,15 +172,15 @@ type WindowMetricsEvent struct {
 
 // SendWindowMetricsEvent is used to send a WindowMetricsEvent to the Flutter
 // Engine.
-func (flu *FlutterEngine) SendWindowMetricsEvent(Metric WindowMetricsEvent) Result {
-	cMetric := C.FlutterWindowMetricsEvent{
-		width:       C.size_t(Metric.Width),
-		height:      C.size_t(Metric.Height),
-		pixel_ratio: C.double(Metric.PixelRatio),
+func (flu *FlutterEngine) SendWindowMetricsEvent(event WindowMetricsEvent) Result {
+	cMetricEvent := C.FlutterWindowMetricsEvent{
+		width:       C.size_t(event.Width),
+		height:      C.size_t(event.Height),
+		pixel_ratio: C.double(event.PixelRatio),
 	}
-	cMetric.struct_size = C.size_t(unsafe.Sizeof(cMetric))
+	cMetricEvent.struct_size = C.size_t(unsafe.Sizeof(cMetricEvent))
 
-	res := C.FlutterEngineSendWindowMetricsEvent(flu.Engine, &cMetric)
+	res := C.FlutterEngineSendWindowMetricsEvent(flu.Engine, &cMetricEvent)
 
 	return (Result)(res)
 }
