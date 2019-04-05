@@ -14,26 +14,37 @@ import (
 // dpPerInch defines the amount of display pixels per inch as defined for Flutter.
 const dpPerInch = 160.0
 
-// GLFW callbacks to the Flutter Engine
-func glfwCursorPositionCallbackAtPhase(
-	window *glfw.Window, phase embedder.PointerPhase,
-	x float64, y float64,
-) {
+// TODO (GeertJohan): better name for this, confusing with 'actual' window
+// managers. Renderer interface? implemented by this type for glfw? type
+// glfwRenderer or glfwManager? All the attaching to glfw.Window must be done
+// during manager init in that case. Cannot be done by Application.
+type windowManager struct {
+	forcedPixelRatio          float64
+	oncePrintPixelRatioLimit  sync.Once
+	pointerPhase              embedder.PointerPhase
+	pixelsPerScreenCoordinate float64
+}
 
-	// Pointer events from GLFW are described using screen coordinates.
-	// We need to provide Flutter with the position in pixels.
-	width, _ := window.GetSize()
-	if width == 0 {
-		fmt.Println("go-flutter: Cannot calculate pointer position in zero-width window.")
-		return
+func newWindowManager() *windowManager {
+	return &windowManager{
+		pointerPhase: embedder.PointerPhaseNone,
 	}
-	widthPx, _ := window.GetFramebufferSize()
-	pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
+}
 
+// GLFW callbacks to the Flutter Engine
+func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64) {
+	if m.pointerPhase != embedder.PointerPhaseNone {
+		m.sendPointerEvent(window, m.pointerPhase, x, y)
+	}
+}
+
+func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.PointerPhase, x, y float64) {
+	// TODO(GeertJohan): sometimes the x and/or y given by glfw is negative or over window size, could this cause an issue?
+	// spew.Dump(event)
 	event := embedder.PointerEvent{
 		Phase:     phase,
-		X:         x * pixelsPerScreenCoordinate,
-		Y:         y * pixelsPerScreenCoordinate,
+		X:         x * m.pixelsPerScreenCoordinate,
+		Y:         y * m.pixelsPerScreenCoordinate,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
 	}
 
@@ -43,94 +54,104 @@ func glfwCursorPositionCallbackAtPhase(
 	flutterEngine.SendPointerEvent(event)
 }
 
-func glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered bool) {
+	x, y := window.GetCursorPos()
+	if entered {
+		m.sendPointerEvent(window, embedder.PointerPhaseAdd, x, y)
+		m.pointerPhase = embedder.PointerPhaseHover
+	} else {
+		m.pointerPhase = embedder.PointerPhaseNone
+		m.sendPointerEvent(window, embedder.PointerPhaseRemove, x, y)
+	}
+}
+
+func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
 	if key == glfw.MouseButton1 {
 		x, y := window.GetCursorPos()
 
 		if action == glfw.Press {
-			glfwCursorPositionCallbackAtPhase(window, embedder.PointerPhaseDown, x, y)
-			// TODO(#90): new kHover pointerphase in embedder.h suggests that pos callback is relevant outside "down" as well...
-			window.SetCursorPosCallback(func(window *glfw.Window, x float64, y float64) {
-				glfwCursorPositionCallbackAtPhase(window, embedder.PointerPhaseMove, x, y)
-			})
+			m.sendPointerEvent(window, embedder.PointerPhaseDown, x, y)
+			m.pointerPhase = embedder.PointerPhaseMove
 		}
 
 		if action == glfw.Release {
-			glfwCursorPositionCallbackAtPhase(window, embedder.PointerPhaseUp, x, y)
-			window.SetCursorPosCallback(nil)
+			m.pointerPhase = embedder.PointerPhaseNone
+			m.sendPointerEvent(window, embedder.PointerPhaseUp, x, y)
+			m.pointerPhase = embedder.PointerPhaseHover
 		}
 	}
 }
 
-// newGLFWFramebufferSizeCallback creates a func that is called on framebuffer
-// resizes. When pixelRatio is zero, the pixelRatio communicated to the Flutter
-// embedder is calculated based on physical and logical screen dimensions.
-func newGLFWFramebufferSizeCallback(pixelRatio float64) func(*glfw.Window, int, int) {
-	var oncePrintPixelRatioLimit sync.Once
+// glfwRefreshCallback is called when the window needs a reresh, this
+// can occur when the window is resized, was covered by another window, etc.
+// When forcedPixelratio is zero, the forcedPixelratio communicated to the
+// Flutter embedder is calculated based on physical and logical screen
+// dimensions.
+func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
+	widthPx, heightPx := window.GetFramebufferSize()
+	var pixelRatio float64
+	if m.forcedPixelRatio != 0 {
+		pixelRatio = m.forcedPixelRatio
+	} else {
+		// TODO(#74): multi-monitor support
+		primaryMonitor := glfw.GetPrimaryMonitor()
+		if primaryMonitor == nil {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		primaryMonitorMode := primaryMonitor.GetVideoMode()
+		primaryMonitor.GetVideoModes()
+		if primaryMonitorMode == nil {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
+		if primaryMonitorWidthMM == 0 {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		monitorScreenCoordinatesPerInch := float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
 
-	return func(window *glfw.Window, widthPx int, heightPx int) {
-		// calculate pixelRatio when it has not been forced.
-		if pixelRatio == 0 {
-
-			// TODO(#74): multi-monitor support
-			primaryMonitor := glfw.GetPrimaryMonitor()
-			if primaryMonitor == nil {
-				pixelRatio = 1.0
-				goto SendWindowMetricsEvent
-			}
-			primaryMonitorMode := primaryMonitor.GetVideoMode()
-			primaryMonitor.GetVideoModes()
-			if primaryMonitorMode == nil {
-				pixelRatio = 1.0
-				goto SendWindowMetricsEvent
-			}
-			primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
-			if primaryMonitorWidthMM == 0 {
-				pixelRatio = 1.0
-				goto SendWindowMetricsEvent
-			}
-			monitorScreenCoordinatesPerInch := float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
-
-			width, _ := window.GetSize()
-			if width == 0 {
-				pixelRatio = 1.0
-				goto SendWindowMetricsEvent
-			}
-
-			pixelsPerScreenCoordinate := float64(widthPx) / float64(width)
-			dpi := pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
-			pixelRatio = dpi / dpPerInch
-
-			// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
-			if pixelRatio < 1.0 {
-				metrics := map[string]interface{}{
-					"ppsc":           pixelsPerScreenCoordinate,
-					"windowWidthPx":  widthPx,
-					"windowWidthSc":  width,
-					"mscpi":          monitorScreenCoordinatesPerInch,
-					"dpi":            dpi,
-					"pixelRatio":     pixelRatio,
-					"monitorWidthMm": primaryMonitorWidthMM,
-					"monitorWidthSc": primaryMonitorMode.Width,
-				}
-				pixelRatio = 1.0
-				oncePrintPixelRatioLimit.Do(func() {
-					metricsBytes, _ := json.Marshal(metrics)
-					fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
-				})
-			}
+		width, _ := window.GetSize()
+		if width == 0 {
+			fmt.Println("go-flutter: Cannot calculate pixelsPerScreenCoordinate for zero-width window.")
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
 		}
 
-	SendWindowMetricsEvent:
-		event := embedder.WindowMetricsEvent{
-			Width:      widthPx,
-			Height:     heightPx,
-			PixelRatio: pixelRatio,
+		m.pixelsPerScreenCoordinate = float64(widthPx) / float64(width)
+		dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
+		pixelRatio = dpi / dpPerInch
+
+		// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+		if pixelRatio < 1.0 {
+			metrics := map[string]interface{}{
+				"ppsc":           m.pixelsPerScreenCoordinate,
+				"windowWidthPx":  widthPx,
+				"windowWidthSc":  width,
+				"mscpi":          monitorScreenCoordinatesPerInch,
+				"dpi":            dpi,
+				"pixelRatio":     pixelRatio,
+				"monitorWidthMm": primaryMonitorWidthMM,
+				"monitorWidthSc": primaryMonitorMode.Width,
+			}
+			pixelRatio = 1.0
+			m.oncePrintPixelRatioLimit.Do(func() {
+				metricsBytes, _ := json.Marshal(metrics)
+				fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
+			})
 		}
-
-		flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
-		flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
-
-		flutterEngine.SendWindowMetricsEvent(event)
 	}
+
+SendWindowMetricsEvent:
+	event := embedder.WindowMetricsEvent{
+		Width:      widthPx,
+		Height:     heightPx,
+		PixelRatio: pixelRatio,
+	}
+
+	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+
+	flutterEngine.SendWindowMetricsEvent(event)
 }

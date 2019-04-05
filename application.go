@@ -171,30 +171,18 @@ func (a *Application) Run() error {
 
 	defaultPlatformPlugin.glfwTasker = tasker.New()
 
-	glfwFramebufferSizeCallback := newGLFWFramebufferSizeCallback(a.config.forcePixelRatio)
-	width, height := a.window.GetFramebufferSize()
-	glfwFramebufferSizeCallback(a.window, width, height)
+	m := newWindowManager()
+	m.forcedPixelRatio = a.config.forcePixelRatio
 
-	// TODO: verify this works on all platforms, then rename
-	// glfwFramebufferSizeCallback to something more generic for refreshing
-	// window metrics
-	//
-	// Original callback hook was:
-	//
-	// a.window.SetFramebufferSizeCallback(glfwFramebufferSizeCallback)
-	//
-	// Now hooked on refresh callback, so it also works when the window was
-	// covered by another window (not resized):
-	a.window.SetRefreshCallback(func(w *glfw.Window) {
-		// force a framebuffersize callback to send a message so Flutter redraws
-		width, height := a.window.GetFramebufferSize()
-		glfwFramebufferSizeCallback(a.window, width, height)
-	})
+	m.glfwRefreshCallback(a.window)
+	a.window.SetRefreshCallback(m.glfwRefreshCallback)
 
 	a.window.SetKeyCallback(defaultTextinputPlugin.glfwKeyCallback)
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 
-	a.window.SetMouseButtonCallback(glfwMouseButtonCallback)
+	a.window.SetCursorEnterCallback(m.glfwCursorEnterCallback)
+	a.window.SetMouseButtonCallback(m.glfwMouseButtonCallback)
+	a.window.SetCursorPosCallback(m.glfwCursorPosCallback)
 	defer a.engine.Shutdown()
 
 	for !a.window.ShouldClose() {

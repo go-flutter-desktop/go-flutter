@@ -1,15 +1,16 @@
 
-#include "flutter_embedder.h"
 #include <stdlib.h>
 
-// C proxies def
-bool proxy_make_current(void *v);
-bool proxy_clear_current(void *v);
-bool proxy_present(void *v);
-uint32_t proxy_fbo_callback(void *v);
-bool proxy_make_resource_current(void *v);
-void *proxy_gl_proc_resolver(void *v, const char *procname);
-void proxy_platform_message_callback(const FlutterPlatformMessage *message, void *window);
+#include "flutter_embedder.h"
+
+// C proxy definitions. These are implemented in Go.
+bool proxy_make_current(void *user_data);
+bool proxy_clear_current(void *user_data);
+bool proxy_present(void *user_data);
+uint32_t proxy_fbo_callback(void *user_data);
+bool proxy_make_resource_current(void *user_data);
+void *proxy_gl_proc_resolver(void *user_data, const char *procname);
+void proxy_platform_message_callback(const FlutterPlatformMessage *message, void *user_data);
 
 // C helper
 FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs *Args,

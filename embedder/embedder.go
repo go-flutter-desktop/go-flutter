@@ -132,10 +132,14 @@ type PointerPhase int32
 
 // Values representing the mouse phase.
 const (
+	PointerPhaseNone   PointerPhase = C.kCancel - 1
 	PointerPhaseCancel PointerPhase = C.kCancel
 	PointerPhaseUp     PointerPhase = C.kUp
 	PointerPhaseDown   PointerPhase = C.kDown
 	PointerPhaseMove   PointerPhase = C.kMove
+	PointerPhaseAdd    PointerPhase = C.kAdd
+	PointerPhaseRemove PointerPhase = C.kRemove
+	PointerPhaseHover  PointerPhase = C.kHover
 )
 
 // PointerEvent represents the position and phase of the mouse at a given time.
@@ -148,7 +152,6 @@ type PointerEvent struct {
 
 // SendPointerEvent is used to send an PointerEvent to the Flutter engine.
 func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
-
 	cPointerEvent := C.FlutterPointerEvent{
 		phase:     (C.FlutterPointerPhase)(event.Phase),
 		x:         C.double(event.X),
