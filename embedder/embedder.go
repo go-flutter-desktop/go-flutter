@@ -20,10 +20,8 @@ var flutterEnginesLock sync.RWMutex
 // FlutterEngineByIndex returns an existing FlutterEngine by its index in this embedder.
 // Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
 func FlutterEngineByIndex(index int) (engine *FlutterEngine) {
+	fmt.Println("go-flutter: FlutterEngineByIndex(..) is deprecated")
 	flutterEnginesLock.RLock()
-	// TODO(#89): Remove this workarround check on slice length to handle
-	// for invalid indexes that are sometimes returned by glfw proxies because
-	// they cannot guarantee to execute glfw functions on the main thread.
 	if index <= len(flutterEngines)-1 {
 		engine = flutterEngines[index]
 	}
@@ -90,6 +88,7 @@ func NewFlutterEngine() *FlutterEngine {
 // Index returns the index of the engine in the global flutterEngines slice
 // Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
 func (flu *FlutterEngine) Index() int {
+	fmt.Println("go-flutter: engine.Index() is deprecated")
 	return flu.index
 }
 
