@@ -33,7 +33,6 @@ func newWindowManager() *windowManager {
 
 // GLFW callbacks to the Flutter Engine
 func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64) {
-	fmt.Println(time.Now().String())
 	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
