@@ -23,6 +23,7 @@ type windowManager struct {
 	oncePrintPixelRatioLimit  sync.Once
 	pointerPhase              embedder.PointerPhase
 	pixelsPerScreenCoordinate float64
+	pointerCurrentlyAdded     bool
 }
 
 func newWindowManager() *windowManager {
@@ -37,6 +38,16 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 }
 
 func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.PointerPhase, x, y float64) {
+	// synthesize an PointerPhaseAdd if the pointer isn't already added
+	if !m.pointerCurrentlyAdded && phase != embedder.PointerPhaseAdd {
+		m.sendPointerEvent(window, embedder.PointerPhaseAdd, x, y)
+	}
+
+	// Don't double-add the pointer
+	if m.pointerCurrentlyAdded && phase == embedder.PointerPhaseAdd {
+		return
+	}
+
 	// TODO(GeertJohan): sometimes the x and/or y given by glfw is negative or over window size, could this cause an issue?
 	// spew.Dump(event)
 	event := embedder.PointerEvent{
@@ -50,6 +61,12 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 
 	flutterEngine.SendPointerEvent(event)
+
+	if phase == embedder.PointerPhaseAdd {
+		m.pointerCurrentlyAdded = true
+	} else if phase == embedder.PointerPhaseRemove {
+		m.pointerCurrentlyAdded = false
+	}
 }
 
 func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered bool) {
