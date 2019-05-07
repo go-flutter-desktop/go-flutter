@@ -181,8 +181,9 @@ func (a *Application) Run() error {
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 
 	a.window.SetCursorEnterCallback(m.glfwCursorEnterCallback)
-	a.window.SetMouseButtonCallback(m.glfwMouseButtonCallback)
 	a.window.SetCursorPosCallback(m.glfwCursorPosCallback)
+	a.window.SetMouseButtonCallback(m.glfwMouseButtonCallback)
+	a.window.SetScrollCallback(m.glfwScrollCallback)
 	defer a.engine.Shutdown()
 
 	for !a.window.ShouldClose() {
