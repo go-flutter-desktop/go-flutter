@@ -1,6 +1,6 @@
 package embedder
 
-// #include "flutter_embedder.h"
+// #include "embedder.h"
 import "C"
 import (
 	"unsafe"

@@ -1,10 +1,12 @@
 package embedder
 
-// #include "flutter_embedder.h"
+// #include "embedder.h"
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
+// const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
+// const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
 	"fmt"
