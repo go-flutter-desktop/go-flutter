@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 
-#include "flutter_embedder.h"
+#include "embedder.h"
 
 // C proxy definitions. These are implemented in Go.
 bool proxy_make_current(void *user_data);

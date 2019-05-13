@@ -32,11 +32,6 @@ func newWindowManager() *windowManager {
 	}
 }
 
-// GLFW callbacks to the Flutter Engine
-func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64) {
-	m.sendPointerEvent(window, m.pointerPhase, x, y)
-}
-
 func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.PointerPhase, x, y float64) {
 	// synthesize an PointerPhaseAdd if the pointer isn't already added
 	if !m.pointerCurrentlyAdded && phase != embedder.PointerPhaseAdd {
@@ -69,6 +64,24 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 }
 
+func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDelta float64) {
+	x, y := window.GetCursorPos()
+	event := embedder.PointerEvent{
+		Phase:        m.pointerPhase,
+		X:            x * m.pixelsPerScreenCoordinate,
+		Y:            y * m.pixelsPerScreenCoordinate,
+		Timestamp:    time.Now().UnixNano() / int64(time.Millisecond),
+		SignalKind:   embedder.PointerSignalKindScroll,
+		ScrollDeltaX: xDelta,
+		ScrollDeltaY: yDelta,
+	}
+
+	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+
+	flutterEngine.SendPointerEvent(event)
+}
+
 func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered bool) {
 	x, y := window.GetCursorPos()
 	if entered {
@@ -77,6 +90,10 @@ func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered boo
 	} else {
 		m.sendPointerEvent(window, embedder.PointerPhaseRemove, x, y)
 	}
+}
+
+func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64) {
+	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
 func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
@@ -93,6 +110,11 @@ func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.Mo
 			m.pointerPhase = embedder.PointerPhaseHover
 		}
 	}
+}
+
+func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yoff float64) {
+	const scrollModifier = -50
+	m.sendPointerEventScroll(window, xoff*scrollModifier, yoff*scrollModifier)
 }
 
 // glfwRefreshCallback is called when the window needs a reresh, this

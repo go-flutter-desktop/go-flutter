@@ -1,10 +1,12 @@
 package embedder
 
-// #include "flutter_embedder.h"
+// #include "embedder.h"
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
+// const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
+// const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
 	"fmt"
@@ -141,21 +143,36 @@ const (
 	PointerPhaseHover  PointerPhase = C.kHover
 )
 
+// PointerSignalKind corresponds to the C.enum describing signal kind of the mouse pointer.
+type PointerSignalKind int32
+
+// Values representing the pointer signal kind.
+const (
+	PointerSignalKindNone   PointerSignalKind = C.kFlutterPointerSignalKindNone
+	PointerSignalKindScroll PointerSignalKind = C.kFlutterPointerSignalKindScroll
+)
+
 // PointerEvent represents the position and phase of the mouse at a given time.
 type PointerEvent struct {
-	Phase     PointerPhase
-	Timestamp int64
-	X         float64
-	Y         float64
+	Phase        PointerPhase
+	Timestamp    int64
+	X            float64
+	Y            float64
+	SignalKind   PointerSignalKind
+	ScrollDeltaX float64
+	ScrollDeltaY float64
 }
 
 // SendPointerEvent is used to send an PointerEvent to the Flutter engine.
 func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 	cPointerEvent := C.FlutterPointerEvent{
-		phase:     (C.FlutterPointerPhase)(event.Phase),
-		x:         C.double(event.X),
-		y:         C.double(event.Y),
-		timestamp: C.size_t(event.Timestamp),
+		phase:          (C.FlutterPointerPhase)(event.Phase),
+		x:              C.double(event.X),
+		y:              C.double(event.Y),
+		timestamp:      C.size_t(event.Timestamp),
+		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
+		scroll_delta_x: C.double(event.ScrollDeltaX),
+		scroll_delta_y: C.double(event.ScrollDeltaY),
 	}
 	cPointerEvent.struct_size = C.size_t(unsafe.Sizeof(cPointerEvent))
 
