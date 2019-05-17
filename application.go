@@ -62,6 +62,16 @@ func (a *Application) Run() error {
 	}
 	defer glfw.Terminate()
 
+	a.engine = embedder.NewFlutterEngine()
+
+	messenger := newMessenger(a.engine)
+	for _, p := range a.config.plugins {
+		err = p.InitPlugin(messenger)
+		if err != nil {
+			return errors.Wrap(err, "failed to initialize plugin "+fmt.Sprintf("%T", p))
+		}
+	}
+
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.x, a.config.windowInitialDimensions.y, "Loading..", nil, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
@@ -83,15 +93,7 @@ func (a *Application) Run() error {
 		}
 	}
 
-	a.engine = embedder.NewFlutterEngine()
-
-	messenger := newMessenger(a.engine)
 	for _, p := range a.config.plugins {
-		err = p.InitPlugin(messenger)
-		if err != nil {
-			return errors.Wrap(err, "failed to initialize plugin "+fmt.Sprintf("%T", p))
-		}
-
 		// Extra init call for plugins that satisfy the PluginGLFW interface.
 		if glfwPlugin, ok := p.(PluginGLFW); ok {
 			err = glfwPlugin.InitPluginGLFW(a.window)

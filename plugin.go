@@ -13,9 +13,10 @@ import (
 // The BinaryMessenger is passed to allow the plugin to register channels.
 // A plugin may optionally implement PluginGLFW.
 type Plugin interface {
-	// InitPlugin is called during the startup of the flutter application. The
-	// plugin is responsible for setting up channels using the BinaryMessenger.
-	// If an error is returned it is printend the application is stopped.
+	// InitPlugin is called before creating the GLFW window of the flutter
+	// application. The plugin is responsible for setting up channels using the
+	// BinaryMessenger.
+	// If an error is returned it is printed the application is stopped.
 	InitPlugin(messenger plugin.BinaryMessenger) error
 }
 
@@ -26,14 +27,15 @@ type Plugin interface {
 //
 // PluginGLFW is separated because not all plugins need to know about glfw,
 // Adding glfw.Window to the InitPlugin call would add glfw as dependency to
-// every plugin implementation. Also, this helps in a scenarion where glfw is
+// every plugin implementation. Also, this helps in a scenario where glfw is
 // moved into a separate renderer/glfw package.
 //
 // The PluginGLFW interface is not stable and may change at any time.
 type PluginGLFW interface {
-	// Any type inmplementing PluginGLFW must also implement Plugin.
+	// Any type implementing PluginGLFW must also implement Plugin.
 	Plugin
-	// InitPluginGLFW is called after the call to InitPlugin. When an error is
-	// returned it is printend the application is stopped.
+	// InitPluginGLFW is called after the flutter engine is linked to the GLFW
+	// window. When an error is returned it is printed the application is
+	// stopped.
 	InitPluginGLFW(window *glfw.Window) error
 }
