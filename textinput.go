@@ -13,7 +13,7 @@ import (
 const textinputChannelName = "flutter/textinput"
 
 // textinputPlugin implements flutter.Plugin and handles method calls to the
-// flutter/platform channel.
+// flutter/textinput channel.
 type textinputPlugin struct {
 	messenger plugin.BinaryMessenger
 	window    *glfw.Window
