@@ -13,6 +13,8 @@ import (
 // platformPlugin implements flutter.Plugin and handles method calls to the
 // flutter/platform channel.
 type platformPlugin struct {
+	popBehavior PopBehaviorKind
+
 	messenger  plugin.BinaryMessenger
 	glfwTasker *tasker.Tasker
 	window     *glfw.Window
@@ -20,7 +22,9 @@ type platformPlugin struct {
 }
 
 // hardcoded because there is no swappable renderer interface.
-var defaultPlatformPlugin = &platformPlugin{}
+var defaultPlatformPlugin = &platformPlugin{
+	popBehavior: PopBehaviorNone,
+}
 
 var _ Plugin = &platformPlugin{}     // compile-time type check
 var _ PluginGLFW = &platformPlugin{} // compile-time type check
@@ -37,6 +41,7 @@ func (p *platformPlugin) InitPluginGLFW(window *glfw.Window) (err error) {
 	p.channel.HandleFunc("Clipboard.setData", p.handleClipboardSetData)
 	p.channel.HandleFunc("Clipboard.getData", p.handleClipboardGetData)
 	p.channel.HandleFunc("SystemChrome.setApplicationSwitcherDescription", p.handleWindowSetTitle)
+	p.channel.HandleFunc("SystemNavigator.pop", p.handleSystemNavigatorPop)
 
 	return nil
 }

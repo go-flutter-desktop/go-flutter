@@ -7,7 +7,7 @@ import (
 const navigationChannelName = "flutter/navigation"
 
 // navigationPlugin implements flutter.Plugin and handles method calls to the
-// flutter/platform channel.
+// flutter/navigation channel.
 type navigationPlugin struct {
 	channel *plugin.MethodChannel
 }
