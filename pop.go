@@ -6,13 +6,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PopBehaviorKind defines how an application should handle the navigation pop
+// popBehavior defines how an application should handle the navigation pop
 // event from the flutter side.
-type PopBehaviorKind int
+type popBehavior int
 
 const (
 	// PopBehaviorNone means the system navigation pop event is ignored.
-	PopBehaviorNone PopBehaviorKind = iota
+	PopBehaviorNone popBehavior = iota
 	// PopBehaviorHide hides the application window on a system navigation pop
 	// event.
 	PopBehaviorHide
@@ -24,7 +24,7 @@ const (
 )
 
 // PopBehavior sets the PopBehavior on the application
-func PopBehavior(popBehavior PopBehaviorKind) Option {
+func PopBehavior(p popBehavior) Option {
 	return func(c *config) {
 		// TODO: this is a workarround because there is no renderer interface
 		// yet. We rely on a platform plugin singleton to handle events from the
@@ -33,7 +33,7 @@ func PopBehavior(popBehavior PopBehaviorKind) Option {
 		//
 		// Downside of this workarround is that it will configure the pop
 		// behavior for all Application's within the same Go process.
-		defaultPlatformPlugin.popBehavior = popBehavior
+		defaultPlatformPlugin.popBehavior = p
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 // platformPlugin implements flutter.Plugin and handles method calls to the
 // flutter/platform channel.
 type platformPlugin struct {
-	popBehavior PopBehaviorKind
+	popBehavior popBehavior
 
 	messenger  plugin.BinaryMessenger
 	glfwTasker *tasker.Tasker
