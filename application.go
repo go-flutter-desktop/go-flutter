@@ -36,13 +36,15 @@ func NewApplication(opt ...Option) *Application {
 		config: defaultApplicationConfig,
 	}
 
-	// The platformPlugin and textinputPlugin are currently hardcoded as we have
-	// a hard link with GLFW. The plugins must be singleton and are accessed
-	// directly from the flutter package to wire up with glfw. If there's going
-	// to be a renderer interface, it's init would replace this configuration.
+	// The platformPlugin, textinputPlugin, etc. are currently hardcoded as we
+	// have a hard link with GLFW. The plugins must be singleton and are
+	// accessed directly from the flutter package to wire up with glfw. If
+	// there's going to be a renderer interface, it's init would replace this
+	// configuration.
 	opt = append(opt, AddPlugin(defaultNavigationPlugin))
 	opt = append(opt, AddPlugin(defaultPlatformPlugin))
 	opt = append(opt, AddPlugin(defaultTextinputPlugin))
+	opt = append(opt, AddPlugin(defaultLifecyclePlugin))
 
 	// apply all configs
 	for _, o := range opt {
@@ -179,6 +181,8 @@ func (a *Application) Run() error {
 
 	a.window.SetKeyCallback(defaultTextinputPlugin.glfwKeyCallback)
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
+
+	a.window.SetIconifyCallback(defaultLifecyclePlugin.glfwIconifyCallback)
 
 	a.window.SetCursorEnterCallback(m.glfwCursorEnterCallback)
 	a.window.SetCursorPosCallback(m.glfwCursorPosCallback)
