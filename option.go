@@ -16,6 +16,7 @@ type config struct {
 	windowInitializerDeprecated func(*glfw.Window) error
 	windowIconProvider          func() ([]image.Image, error)
 	windowInitialDimensions     windowDimensions
+	windowMode                  windowMode
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
@@ -36,6 +37,7 @@ var defaultApplicationConfig = config{
 		y: 600,
 	},
 	keyboardLayout: KeyboardQwertyLayout,
+	windowMode:     WindowModeDefault,
 }
 
 // Option for Application

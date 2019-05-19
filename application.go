@@ -64,10 +64,30 @@ func (a *Application) Run() error {
 	}
 	defer glfw.Terminate()
 
-	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.x, a.config.windowInitialDimensions.y, "Loading..", nil, nil)
+	var monitor *glfw.Monitor
+	switch a.config.windowMode {
+	case WindowModeDefault:
+		// nothing
+	case WindowModeBorderless:
+		glfw.WindowHint(glfw.Decorated, glfw.False)
+	case WindowModeBorderlessFullscreen:
+		monitor = glfw.GetPrimaryMonitor()
+		mode := monitor.GetVideoMode()
+		a.config.windowInitialDimensions.x = mode.Width
+		a.config.windowInitialDimensions.y = mode.Height
+		glfw.WindowHint(glfw.RedBits, mode.RedBits)
+		glfw.WindowHint(glfw.GreenBits, mode.GreenBits)
+		glfw.WindowHint(glfw.BlueBits, mode.BlueBits)
+		glfw.WindowHint(glfw.RefreshRate, mode.RefreshRate)
+	default:
+		return errors.Errorf("invalid window mode %T", a.config.windowMode)
+	}
+
+	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.x, a.config.windowInitialDimensions.y, "Loading..", monitor, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
 	}
+	glfw.DefaultWindowHints()
 	defer a.window.Destroy()
 
 	if a.config.windowIconProvider != nil {
