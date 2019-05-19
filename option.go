@@ -16,6 +16,7 @@ type config struct {
 	windowInitializerDeprecated func(*glfw.Window) error
 	windowIconProvider          func() ([]image.Image, error)
 	windowInitialDimensions     windowDimensions
+	windowDimensionLimits       windowDimensionLimits
 	windowMode                  windowMode
 
 	forcePixelRatio float64
@@ -25,16 +26,23 @@ type config struct {
 }
 
 type windowDimensions struct {
-	x int
-	y int
+	width  int
+	height int
+}
+
+type windowDimensionLimits struct {
+	minWidth  int
+	minHeight int
+	maxWidth  int
+	maxHeight int
 }
 
 // defaultApplicationConfig define the default configuration values for a new
 // Application. These values may be changed at any time.
 var defaultApplicationConfig = config{
 	windowInitialDimensions: windowDimensions{
-		x: 800,
-		y: 600,
+		width:  800,
+		height: 600,
 	},
 	keyboardLayout: KeyboardQwertyLayout,
 	windowMode:     WindowModeDefault,
@@ -94,19 +102,47 @@ func ApplicationWindowDimension(x, y int) Option {
 }
 
 // WindowInitialDimensions specify the startup's dimension of the window.
-func WindowInitialDimensions(x, y int) Option {
-	if x < 1 {
+func WindowInitialDimensions(width, height int) Option {
+	if width < 1 {
 		fmt.Println("go-flutter: invalid initial value for width, must be 1 or greater.")
 		os.Exit(1)
 	}
-	if y < 1 {
+	if height < 1 {
 		fmt.Println("go-flutter: invalid initial value for height, must be 1 or greater.")
 		os.Exit(1)
 	}
 
 	return func(c *config) {
-		c.windowInitialDimensions.x = x
-		c.windowInitialDimensions.y = y
+		c.windowInitialDimensions.width = width
+		c.windowInitialDimensions.height = height
+	}
+}
+
+// WindowDimensionLimits specify the dimension limits of the window.
+// Does not work when the window is fullscreen or not resizable.
+func WindowDimensionLimits(minWidth, minHeight, maxWidth, maxHeight int) Option {
+	if minWidth < 1 {
+		fmt.Println("go-flutter: invalid initial value for minWidth, must be 1 or greater.")
+		os.Exit(1)
+	}
+	if minHeight < 1 {
+		fmt.Println("go-flutter: invalid initial value for minHeight, must be 1 or greater.")
+		os.Exit(1)
+	}
+	if maxWidth < minWidth {
+		fmt.Println("go-flutter: invalid initial value for maxWidth, must be greater or equal to minWidth.")
+		os.Exit(1)
+	}
+	if maxHeight < minHeight {
+		fmt.Println("go-flutter: invalid initial value for maxHeight, must be greater or equal to minHeight.")
+		os.Exit(1)
+	}
+
+	return func(c *config) {
+		c.windowDimensionLimits.minWidth = minWidth
+		c.windowDimensionLimits.minHeight = minHeight
+		c.windowDimensionLimits.maxWidth = maxWidth
+		c.windowDimensionLimits.maxHeight = maxHeight
 	}
 }
 

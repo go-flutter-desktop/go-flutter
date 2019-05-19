@@ -73,8 +73,8 @@ func (a *Application) Run() error {
 	case WindowModeBorderlessFullscreen:
 		monitor = glfw.GetPrimaryMonitor()
 		mode := monitor.GetVideoMode()
-		a.config.windowInitialDimensions.x = mode.Width
-		a.config.windowInitialDimensions.y = mode.Height
+		a.config.windowInitialDimensions.width = mode.Width
+		a.config.windowInitialDimensions.height = mode.Height
 		glfw.WindowHint(glfw.RedBits, mode.RedBits)
 		glfw.WindowHint(glfw.GreenBits, mode.GreenBits)
 		glfw.WindowHint(glfw.BlueBits, mode.BlueBits)
@@ -83,7 +83,7 @@ func (a *Application) Run() error {
 		return errors.Errorf("invalid window mode %T", a.config.windowMode)
 	}
 
-	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.x, a.config.windowInitialDimensions.y, "Loading..", monitor, nil)
+	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
 	}
@@ -103,6 +103,15 @@ func (a *Application) Run() error {
 		if err != nil {
 			return errors.Wrap(err, "executing window initializer")
 		}
+	}
+
+	if a.config.windowDimensionLimits.minWidth != 0 {
+		a.window.SetSizeLimits(
+			a.config.windowDimensionLimits.minWidth,
+			a.config.windowDimensionLimits.minHeight,
+			a.config.windowDimensionLimits.maxWidth,
+			a.config.windowDimensionLimits.maxHeight,
+		)
 	}
 
 	a.engine = embedder.NewFlutterEngine()
