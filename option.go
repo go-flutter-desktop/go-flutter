@@ -20,7 +20,6 @@ type config struct {
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
 
-	// PlatformMessageReceivers    map[string][]PluginReceivers // The Key is the Channel name.
 	plugins []Plugin
 }
 
