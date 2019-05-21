@@ -46,6 +46,8 @@ func NewApplication(opt ...Option) *Application {
 	opt = append(opt, AddPlugin(defaultTextinputPlugin))
 	opt = append(opt, AddPlugin(defaultLifecyclePlugin))
 
+	opt = append(opt, AddPlugin(defaultKeyeventsPlugin))
+
 	// apply all configs
 	for _, o := range opt {
 		o(&app.config)
@@ -208,7 +210,11 @@ func (a *Application) Run() error {
 	m.glfwRefreshCallback(a.window)
 	a.window.SetRefreshCallback(m.glfwRefreshCallback)
 
-	a.window.SetKeyCallback(defaultTextinputPlugin.glfwKeyCallback)
+	a.window.SetKeyCallback(
+		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
+			defaultKeyeventsPlugin.sendKeyEvent(window, key, scancode, action, mods)
+		})
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 
 	a.window.SetIconifyCallback(defaultLifecyclePlugin.glfwIconifyCallback)

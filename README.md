@@ -49,6 +49,7 @@ It's also possible to [manually install](https://github.com/go-flutter-desktop/g
   - <kbd>Right</kbd>  <kbd>ctrl-Right</kbd>  <kbd>ctrl-shift-Right</kbd>
   - <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
 - Mouse-over/hovering
+- RawKeyboard events (`RawKeyEventDataLinux`)
 
 Are you missing a feature? [Open an issue!](https://github.com/go-flutter-desktop/go-flutter/issues/new)
 
