@@ -53,12 +53,19 @@ type keyEventMessage struct {
 // Flutter only support keydown & keyup events type.
 // 2019-05-19, LOC of the flutter keyevent handler:
 // https://github.com/flutter/flutter/blob/7a4c33425ddd78c54aba07d86f3f9a4a0051769b/packages/flutter/lib/src/services/raw_keyboard.dart#L291-L298
+// On GLFW we are receiving a glfw.Repeat events unknown from the Flutter
+// Framework. To stay consistent with other embedder, glfw.Repeat is seen as a
+// keydown event.
+// Comment about RawKeyEvent on others embedders:
+// https://github.com/go-flutter-desktop/go-flutter#issuecomment-494998771
 func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
 	var typeKey string
 	if action == glfw.Release {
 		typeKey = "keyup"
 	} else if action == glfw.Press {
+		typeKey = "keydown"
+	} else if action == glfw.Repeat {
 		typeKey = "keydown"
 	} else {
 		fmt.Printf("go-flutter: Unknown key event type: %v\n", action)
