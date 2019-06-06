@@ -166,5 +166,6 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				p.addChar([]rune(clpString))
 			}
 		}
+		p.updateEditingState()
 	}
 }

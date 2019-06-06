@@ -30,40 +30,33 @@ func (p *textinputPlugin) addChar(char []rune) {
 
 	p.selectionBase += len(char)
 	p.selectionExtent = p.selectionBase
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorHomeSimple() {
 	p.selectionBase = 0
 	p.selectionExtent = p.selectionBase
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorHomeSelect() {
 	p.selectionBase = 0
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorEndSimple() {
 	p.selectionBase = len(p.word)
 	p.selectionExtent = p.selectionBase
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorEndSelect() {
 	p.selectionBase = len(p.word)
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorLeftSimple() {
 	p.selectionExtent--
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorLeftWord() {
 	p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
-	p.updateEditingState()
 
 }
 
@@ -73,7 +66,6 @@ func (p *textinputPlugin) MoveCursorLeftLine() {
 	} else {
 		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionBase)
 	}
-	p.updateEditingState()
 
 }
 
@@ -86,18 +78,15 @@ func (p *textinputPlugin) MoveCursorLeftReset() {
 	} else {
 		p.selectionBase = p.selectionExtent
 	}
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorRightSimple() {
 	p.selectionExtent++
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorRightWord() {
 	p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
-	p.updateEditingState()
 
 }
 
@@ -107,7 +96,6 @@ func (p *textinputPlugin) MoveCursorRightLine() {
 	} else {
 		p.selectionExtent = indexEndForwardWord(p.word, p.selectionBase)
 	}
-	p.updateEditingState()
 
 }
 
@@ -120,31 +108,27 @@ func (p *textinputPlugin) MoveCursorRightReset() {
 	} else {
 		p.selectionBase = p.selectionExtent
 	}
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) SelectAll() {
 	p.selectionBase = 0
 	p.selectionExtent = len(p.word)
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) DeleteSimple() {
 	if p.selectionBase < len(p.word) {
 		p.word = append(p.word[:p.selectionBase], p.word[p.selectionBase+1:]...)
-		p.updateEditingState()
+
 	}
 }
 
 func (p *textinputPlugin) DeleteWord() {
 	UpTo := indexEndForwardWord(p.word, p.selectionBase)
 	p.word = append(p.word[:p.selectionBase], p.word[UpTo:]...)
-	p.updateEditingState()
 }
 
 func (p *textinputPlugin) DeleteLine() {
 	p.word = p.word[:p.selectionBase]
-	p.updateEditingState()
 }
 
 
@@ -153,7 +137,7 @@ func (p *textinputPlugin) BackspaceSimple(){
 		p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
 		p.selectionBase--
 		p.selectionExtent = p.selectionBase
-		p.updateEditingState()
+
 	}
 }
 
@@ -163,7 +147,7 @@ func (p *textinputPlugin) BackspaceWord(){
 		p.word = append(p.word[:deleteUpTo], p.word[p.selectionBase:]...)
 		p.selectionBase = deleteUpTo
 		p.selectionExtent = deleteUpTo
-		p.updateEditingState()
+
 	}
 }
 
@@ -171,7 +155,6 @@ func (p *textinputPlugin) BackspaceLine(){
 	p.word = p.word[:0]
 	p.selectionBase = 0
 	p.selectionExtent = 0
-	p.updateEditingState()
 }
 
 // RemoveSelectedText do nothing if no text is selected
@@ -183,7 +166,7 @@ func (p *textinputPlugin) RemoveSelectedText() bool {
 		p.selectionBase = selectionIndexStart
 		p.selectionExtent = selectionIndexStart
 		p.selectionExtent = p.selectionBase
-		p.updateEditingState()
+
 		return true
 	}
 	return false
