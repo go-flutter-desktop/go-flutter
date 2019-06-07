@@ -36,25 +36,25 @@ func (p *textinputPlugin) MoveCursorEnd(mods keyboardShortcutsGLFW) {
 
 func (p *textinputPlugin) MoveCursorLeft(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
-		p.MoveCursorLeftLine()
+		p.extentSelectionLineLeft()
 	} else if mods.isWordTravel() {
-		p.MoveCursorLeftWord()
+		p.extentSelectionWordLeft()
 	} else if mods.isShift() {
-		p.MoveCursorLeftSimple()
+		p.extentSelectionCharLeft()
 	} else {
-		p.MoveCursorLeftReset()
+		p.extentSelectionResetLeft()
 	}
 }
 
 func (p *textinputPlugin) MoveCursorRight(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
-		p.MoveCursorRightLine()
+		p.extentSelectionLineRight()
 	} else if mods.isWordTravel() {
-		p.MoveCursorRightWord()
+		p.extentSelectionWordRight()
 	} else if mods.isShift() {
-		p.MoveCursorRightSimple()
+		p.extentSelectionCharRight()
 	} else {
-		p.MoveCursorRightReset()
+		p.extentSelectionResetRight()
 	}
 }
 
@@ -69,7 +69,7 @@ func (p *textinputPlugin) Backspace(mods keyboardShortcutsGLFW) {
 	} else if mods.isWordTravel() {
 		p.BackspaceWord()
 	} else {
-		p.BackspaceSimple()
+		p.backspaceChar()
 	}
 }
 
@@ -84,6 +84,6 @@ func (p *textinputPlugin) Delete(mods keyboardShortcutsGLFW) {
 	} else if mods.isWordTravel() {
 		p.DeleteWord()
 	} else {
-		p.DeleteSimple()
+		p.deleteChar()
 	}
 }

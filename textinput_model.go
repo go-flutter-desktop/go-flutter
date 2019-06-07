@@ -33,35 +33,37 @@ func (p *textinputPlugin) addChar(char []rune) {
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) MoveCursorHomeSimple() {
+func (p *textinputPlugin) moveCursorHomeSimple() {
 	p.selectionBase = 0
 	p.selectionExtent = p.selectionBase
 }
 
-func (p *textinputPlugin) MoveCursorHomeSelect() {
+func (p *textinputPlugin) moveCursorHomeSelect() {
 	p.selectionBase = 0
 }
 
-func (p *textinputPlugin) MoveCursorEndSimple() {
+func (p *textinputPlugin) moveCursorEndSimple() {
 	p.selectionBase = len(p.word)
 	p.selectionExtent = p.selectionBase
 }
 
-func (p *textinputPlugin) MoveCursorEndSelect() {
+func (p *textinputPlugin) moveCursorEndSelect() {
 	p.selectionBase = len(p.word)
 }
 
-func (p *textinputPlugin) MoveCursorLeftSimple() {
-	p.selectionExtent--
+func (p *textinputPlugin) extentSelectionCharLeft() {
+	if p.selectionExtent > 0 {
+		p.selectionExtent--
+	}
 }
 
-func (p *textinputPlugin) MoveCursorLeftWord() {
+func (p *textinputPlugin) extentSelectionWordLeft() {
 	p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) MoveCursorLeftLine() {
+func (p *textinputPlugin) extentSelectionLineLeft() {
 	if p.isSelected() {
 		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionExtent)
 	} else {
@@ -70,7 +72,7 @@ func (p *textinputPlugin) MoveCursorLeftLine() {
 
 }
 
-func (p *textinputPlugin) MoveCursorLeftReset() {
+func (p *textinputPlugin) extentSelectionResetLeft() {
 	if !p.isSelected() {
 		if p.selectionBase > 0 {
 			p.selectionBase--
@@ -81,17 +83,19 @@ func (p *textinputPlugin) MoveCursorLeftReset() {
 	}
 }
 
-func (p *textinputPlugin) MoveCursorRightSimple() {
-	p.selectionExtent++
+func (p *textinputPlugin) extentSelectionCharRight() {
+	if p.selectionExtent < len(p.word) {
+		p.selectionExtent++
+	}
 }
 
-func (p *textinputPlugin) MoveCursorRightWord() {
+func (p *textinputPlugin) extentSelectionWordRight() {
 	p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) MoveCursorRightLine() {
+func (p *textinputPlugin) extentSelectionLineRight() {
 	if p.isSelected() {
 		p.selectionExtent = indexEndForwardWord(p.word, p.selectionExtent)
 	} else {
@@ -100,7 +104,7 @@ func (p *textinputPlugin) MoveCursorRightLine() {
 
 }
 
-func (p *textinputPlugin) MoveCursorRightReset() {
+func (p *textinputPlugin) extentSelectionResetRight() {
 	if !p.isSelected() {
 		if p.selectionBase < len(p.word) {
 			p.selectionBase++
@@ -116,24 +120,23 @@ func (p *textinputPlugin) SelectAll() {
 	p.selectionExtent = len(p.word)
 }
 
-func (p *textinputPlugin) DeleteSimple() {
+func (p *textinputPlugin) deleteChar() {
 	if p.selectionBase < len(p.word) {
 		p.word = append(p.word[:p.selectionBase], p.word[p.selectionBase+1:]...)
 
 	}
 }
 
-func (p *textinputPlugin) DeleteWord() {
+func (p *textinputPlugin) deleteWord() {
 	UpTo := indexEndForwardWord(p.word, p.selectionBase)
 	p.word = append(p.word[:p.selectionBase], p.word[UpTo:]...)
 }
 
-func (p *textinputPlugin) DeleteLine() {
+func (p *textinputPlugin) deleteLine() {
 	p.word = p.word[:p.selectionBase]
 }
 
-
-func (p *textinputPlugin) BackspaceSimple(){
+func (p *textinputPlugin) backspaceChar() {
 	if len(p.word) > 0 && p.selectionBase > 0 {
 		p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
 		p.selectionBase--
@@ -142,7 +145,7 @@ func (p *textinputPlugin) BackspaceSimple(){
 	}
 }
 
-func (p *textinputPlugin) BackspaceWord(){
+func (p *textinputPlugin) backspaceWord() {
 	if len(p.word) > 0 && p.selectionBase > 0 {
 		deleteUpTo := indexStartLeadingWord(p.word, p.selectionBase)
 		p.word = append(p.word[:deleteUpTo], p.word[p.selectionBase:]...)
@@ -152,7 +155,7 @@ func (p *textinputPlugin) BackspaceWord(){
 	}
 }
 
-func (p *textinputPlugin) BackspaceLine(){
+func (p *textinputPlugin) backspaceLine() {
 	p.word = p.word[:0]
 	p.selectionBase = 0
 	p.selectionExtent = 0
