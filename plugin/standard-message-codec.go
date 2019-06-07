@@ -534,7 +534,7 @@ func (s StandardMessageCodec) readMap(buf *bytes.Buffer, originalSize int) (map[
 }
 
 func (s StandardMessageCodec) readValue(buf *bytes.Buffer) (value interface{}, err error) {
-	originalSize := len(buf.Bytes())
+	originalSize := buf.Len()
 	return s.readValueAligned(buf, originalSize)
 }
 
