@@ -45,6 +45,7 @@ func (s StandardMethodCodec) EncodeMethodCall(methodCall MethodCall) (data []byt
 // DecodeMethodCall fulfils the MethodCodec interface.
 func (s StandardMethodCodec) DecodeMethodCall(data []byte) (methodCall MethodCall, err error) {
 	buf := bytes.NewBuffer(data)
+	originalSize := buf.Len()
 	method, err := s.codec.readValue(buf)
 	if err != nil {
 		return methodCall, errors.Wrap(err, "failed to decode method name")
@@ -54,7 +55,7 @@ func (s StandardMethodCodec) DecodeMethodCall(data []byte) (methodCall MethodCal
 	if !ok {
 		return methodCall, errors.New("decoded method name is not a string")
 	}
-	methodCall.Arguments, err = s.codec.readValue(buf)
+	methodCall.Arguments, err = s.codec.readValueAligned(buf, originalSize)
 	if err != nil {
 		return methodCall, errors.Wrap(err, "failed decoding method arguments")
 	}
