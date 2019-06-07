@@ -30,6 +30,7 @@ func (p *textinputPlugin) addChar(char []rune) {
 
 	p.selectionBase += len(char)
 	p.selectionExtent = p.selectionBase
+	p.updateEditingState()
 }
 
 func (p *textinputPlugin) MoveCursorHomeSimple() {
