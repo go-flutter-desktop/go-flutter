@@ -51,19 +51,19 @@ func (p *textinputPlugin) moveCursorEndSelect() {
 	p.selectionBase = len(p.word)
 }
 
-func (p *textinputPlugin) extentSelectionCharLeft() {
+func (p *textinputPlugin) extentSelectionLeftChar() {
 	if p.selectionExtent > 0 {
 		p.selectionExtent--
 	}
 }
 
-func (p *textinputPlugin) extentSelectionWordLeft() {
+func (p *textinputPlugin) extentSelectionLeftWord() {
 	p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) extentSelectionLineLeft() {
+func (p *textinputPlugin) extentSelectionLeftLine() {
 	if p.isSelected() {
 		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionExtent)
 	} else {
@@ -72,7 +72,7 @@ func (p *textinputPlugin) extentSelectionLineLeft() {
 
 }
 
-func (p *textinputPlugin) extentSelectionResetLeft() {
+func (p *textinputPlugin) extentSelectionLeftReset() {
 	if !p.isSelected() {
 		if p.selectionBase > 0 {
 			p.selectionBase--
@@ -83,19 +83,19 @@ func (p *textinputPlugin) extentSelectionResetLeft() {
 	}
 }
 
-func (p *textinputPlugin) extentSelectionCharRight() {
+func (p *textinputPlugin) extentSelectionRightChar() {
 	if p.selectionExtent < len(p.word) {
 		p.selectionExtent++
 	}
 }
 
-func (p *textinputPlugin) extentSelectionWordRight() {
+func (p *textinputPlugin) extentSelectionRightWord() {
 	p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) extentSelectionLineRight() {
+func (p *textinputPlugin) extentSelectionRightLine() {
 	if p.isSelected() {
 		p.selectionExtent = indexEndForwardWord(p.word, p.selectionExtent)
 	} else {
@@ -104,7 +104,7 @@ func (p *textinputPlugin) extentSelectionLineRight() {
 
 }
 
-func (p *textinputPlugin) extentSelectionResetRight() {
+func (p *textinputPlugin) extentSelectionRightReset() {
 	if !p.isSelected() {
 		if p.selectionBase < len(p.word) {
 			p.selectionBase++
@@ -120,23 +120,23 @@ func (p *textinputPlugin) SelectAll() {
 	p.selectionExtent = len(p.word)
 }
 
-func (p *textinputPlugin) deleteChar() {
+func (p *textinputPlugin) sliceRightChar() {
 	if p.selectionBase < len(p.word) {
 		p.word = append(p.word[:p.selectionBase], p.word[p.selectionBase+1:]...)
 
 	}
 }
 
-func (p *textinputPlugin) deleteWord() {
+func (p *textinputPlugin) sliceRightWord() {
 	UpTo := indexEndForwardWord(p.word, p.selectionBase)
 	p.word = append(p.word[:p.selectionBase], p.word[UpTo:]...)
 }
 
-func (p *textinputPlugin) deleteLine() {
+func (p *textinputPlugin) sliceRightLine() {
 	p.word = p.word[:p.selectionBase]
 }
 
-func (p *textinputPlugin) backspaceChar() {
+func (p *textinputPlugin) sliceLeftChar() {
 	if len(p.word) > 0 && p.selectionBase > 0 {
 		p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
 		p.selectionBase--
@@ -145,7 +145,7 @@ func (p *textinputPlugin) backspaceChar() {
 	}
 }
 
-func (p *textinputPlugin) backspaceWord() {
+func (p *textinputPlugin) sliceLeftWord() {
 	if len(p.word) > 0 && p.selectionBase > 0 {
 		deleteUpTo := indexStartLeadingWord(p.word, p.selectionBase)
 		p.word = append(p.word[:deleteUpTo], p.word[p.selectionBase:]...)
@@ -155,7 +155,7 @@ func (p *textinputPlugin) backspaceWord() {
 	}
 }
 
-func (p *textinputPlugin) backspaceLine() {
+func (p *textinputPlugin) sliceLeftLine() {
 	p.word = p.word[:0]
 	p.selectionBase = 0
 	p.selectionExtent = 0
