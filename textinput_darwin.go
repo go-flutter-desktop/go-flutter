@@ -1,28 +1,26 @@
 package flutter
 
-import (
-	"github.com/go-gl/glfw/v3.2/glfw"
-)
+import "github.com/go-gl/glfw/v3.2/glfw"
 
 func (p *keyboardShortcutsGLFW) isModifier() bool {
-	return p.mod & glfw.ModSuper != 0
+	return p.mod&glfw.ModSuper != 0
 }
 
 func (p *keyboardShortcutsGLFW) isShift() bool {
-	return p.mod & glfw.ModShift != 0
+	return p.mod&glfw.ModShift != 0
 }
 
 func (p *keyboardShortcutsGLFW) isWordTravel() bool {
-	return p.mod & glfw.ModAlt != 0
+	return p.mod&glfw.ModAlt != 0
 }
 
 func (p *keyboardShortcutsGLFW) isWordTravelShift() bool {
-	return p.mod & glfw.ModAlt != 0 && p.mod & glfw.ModShift != 0
+	return p.mod&glfw.ModAlt != 0 && p.mod&glfw.ModShift != 0
 }
 
 func (p *textinputPlugin) MoveCursorHome(mods keyboardShortcutsGLFW) {
 
-	if mods.isShift(){
+	if mods.isShift() {
 		p.MoveCursorHomeSelect()
 	} else {
 		p.MoveCursorHomeSimple()
@@ -41,7 +39,7 @@ func (p *textinputPlugin) MoveCursorLeft(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
 		p.MoveCursorLeftLine()
 	} else if mods.isWordTravel() {
-		p.MoveCursorLeftWord()		
+		p.MoveCursorLeftWord()
 	} else if mods.isShift() {
 		p.MoveCursorLeftSimple()
 	} else {
@@ -53,7 +51,7 @@ func (p *textinputPlugin) MoveCursorRight(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
 		p.MoveCursorRightLine()
 	} else if mods.isWordTravel() {
-		p.MoveCursorRightWord()		
+		p.MoveCursorRightWord()
 	} else if mods.isShift() {
 		p.MoveCursorRightSimple()
 	} else {
