@@ -64,7 +64,7 @@ func (p *textinputPlugin) Backspace(mods keyboardShortcutsGLFW) {
 		return
 	}
 
-	if mods.isModifier() {
+	if mods.isWordTravelShift() {
 		p.sliceLeftLine()
 	} else if mods.isWordTravel() {
 		p.sliceLeftWord()
