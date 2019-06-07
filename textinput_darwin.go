@@ -60,7 +60,7 @@ func (p *textinputPlugin) MoveCursorRight(mods keyboardShortcutsGLFW) {
 }
 
 func (p *textinputPlugin) Backspace(mods keyboardShortcutsGLFW) {
-	if p.RemoveSelectedText() {
+	if p.removeSelectedText() {
 		p.updateEditingState()
 		return
 	}
@@ -75,7 +75,7 @@ func (p *textinputPlugin) Backspace(mods keyboardShortcutsGLFW) {
 }
 
 func (p *textinputPlugin) Delete(mods keyboardShortcutsGLFW) {
-	if p.RemoveSelectedText() {
+	if p.removeSelectedText() {
 		p.updateEditingState()
 		return
 	}

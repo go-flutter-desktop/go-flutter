@@ -20,7 +20,7 @@ func (p *textinputPlugin) isSelected() bool {
 }
 
 func (p *textinputPlugin) addChar(char []rune) {
-	p.RemoveSelectedText()
+	p.removeSelectedText()
 	newWord := make([]rune, 0, len(char)+len(p.word))
 	newWord = append(newWord, p.word[:p.selectionBase]...)
 	newWord = append(newWord, char...)
@@ -115,7 +115,7 @@ func (p *textinputPlugin) extentSelectionRightReset() {
 	}
 }
 
-func (p *textinputPlugin) SelectAll() {
+func (p *textinputPlugin) selectAll() {
 	p.selectionBase = 0
 	p.selectionExtent = len(p.word)
 }
@@ -161,11 +161,11 @@ func (p *textinputPlugin) sliceLeftLine() {
 	p.selectionExtent = 0
 }
 
-// RemoveSelectedText do nothing if no text is selected
+// removeSelectedText do nothing if no text is selected
 // return true if the state has been updated
-func (p *textinputPlugin) RemoveSelectedText() bool {
+func (p *textinputPlugin) removeSelectedText() bool {
 	if p.isSelected() {
-		selectionIndexStart, selectionIndexEnd, _ := p.GetSelectedText()
+		selectionIndexStart, selectionIndexEnd, _ := p.getSelectedText()
 		p.word = append(p.word[:selectionIndexStart], p.word[selectionIndexEnd:]...)
 		p.selectionBase = selectionIndexStart
 		p.selectionExtent = selectionIndexStart
@@ -177,10 +177,10 @@ func (p *textinputPlugin) RemoveSelectedText() bool {
 
 }
 
-// GetSelectedText return
+// getSelectedText return
 // (left index of the selection, right index of the selection,
 // the content of the selection)
-func (p *textinputPlugin) GetSelectedText() (int, int, string) {
+func (p *textinputPlugin) getSelectedText() (int, int, string) {
 	selectionIndex := []int{p.selectionBase, p.selectionExtent}
 	sort.Ints(selectionIndex)
 	return selectionIndex[0],

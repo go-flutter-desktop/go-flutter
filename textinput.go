@@ -31,7 +31,7 @@ type textinputPlugin struct {
 }
 
 type keyboardShortcutsGLFW struct {
-    mod    glfw.ModifierKey
+	mod glfw.ModifierKey
 }
 
 // all hardcoded because theres not pluggable renderer system.
@@ -140,20 +140,20 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 		case p.keyboardLayout.SelectAll:
 			if keyboardShortcutBind.isModifier() {
-				p.SelectAll()
+				p.selectAll()
 			}
 
 		case p.keyboardLayout.Copy:
 			if keyboardShortcutBind.isModifier() && p.isSelected() {
-				_, _, selectedContent := p.GetSelectedText()
+				_, _, selectedContent := p.getSelectedText()
 				window.SetClipboardString(selectedContent)
 			}
 
 		case p.keyboardLayout.Cut:
 			if keyboardShortcutBind.isModifier() && p.isSelected() {
-				_, _, selectedContent := p.GetSelectedText()
+				_, _, selectedContent := p.getSelectedText()
 				window.SetClipboardString(selectedContent)
-				p.RemoveSelectedText()
+				p.removeSelectedText()
 			}
 
 		case p.keyboardLayout.Paste:
