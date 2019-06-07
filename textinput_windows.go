@@ -20,17 +20,17 @@ func (p *keyboardShortcutsGLFW) isWordTravelShift() bool {
 
 func (p *textinputPlugin) MoveCursorHome(mods keyboardShortcutsGLFW) {
 	if mods.isShift() {
-		p.MoveCursorHomeSelect()
+		p.moveCursorHomeSelect()
 	} else {
-		p.MoveCursorHomeSimple()
+		p.moveCursorHomeSimple()
 	}
 }
 
 func (p *textinputPlugin) MoveCursorEnd(mods keyboardShortcutsGLFW) {
 	if mods.isShift() {
-		p.MoveCursorEndSelect()
+		p.moveCursorEndSelect()
 	} else {
-		p.MoveCursorEndSimple()
+		p.moveCursorEndSimple()
 	}
 }
 
@@ -65,9 +65,9 @@ func (p *textinputPlugin) Backspace(mods keyboardShortcutsGLFW) {
 	}
 
 	if mods.isModifier() {
-		p.BackspaceLine()
+		p.backspaceLine()
 	} else if mods.isWordTravel() {
-		p.BackspaceWord()
+		p.backspaceWord()
 	} else {
 		p.backspaceChar()
 	}
@@ -80,9 +80,9 @@ func (p *textinputPlugin) Delete(mods keyboardShortcutsGLFW) {
 	}
 
 	if mods.isWordTravelShift() {
-		p.DeleteLine()
+		p.deleteLine()
 	} else if mods.isWordTravel() {
-		p.DeleteWord()
+		p.deleteWord()
 	} else {
 		p.deleteChar()
 	}
