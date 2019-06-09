@@ -64,6 +64,23 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 }
 
+func (m *windowManager) sendButtonPointerEvent(window *glfw.Window, phase embedder.PointerPhase, buttons embedder.PointerButtonMouse) {
+	x, y := window.GetCursorPos()
+	event := embedder.PointerEvent{
+		Phase:      m.pointerPhase,
+		X:          x * m.pixelsPerScreenCoordinate,
+		Y:          y * m.pixelsPerScreenCoordinate,
+		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
+		SignalKind: embedder.PointerSignalKindScroll,
+		Buttons:    buttons,
+	}
+
+	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+
+	flutterEngine.SendPointerEvent(event)
+}
+
 func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDelta float64) {
 	x, y := window.GetCursorPos()
 	event := embedder.PointerEvent{
@@ -96,19 +113,28 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
+func (m *windowManager) sendButtonEvent(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
+	if action == glfw.Press {
+		m.sendButtonPointerEvent(window, embedder.PointerPhaseDown, buttons)
+		m.pointerPhase = embedder.PointerPhaseMove
+	}
+
+	if action == glfw.Release {
+		m.sendButtonPointerEvent(window, embedder.PointerPhaseUp, buttons)
+		m.pointerPhase = embedder.PointerPhaseHover
+	}
+}
+
 func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-	if key == glfw.MouseButton1 {
-		x, y := window.GetCursorPos()
-
-		if action == glfw.Press {
-			m.sendPointerEvent(window, embedder.PointerPhaseDown, x, y)
-			m.pointerPhase = embedder.PointerPhaseMove
-		}
-
-		if action == glfw.Release {
-			m.sendPointerEvent(window, embedder.PointerPhaseUp, x, y)
-			m.pointerPhase = embedder.PointerPhaseHover
-		}
+	switch key {
+	case glfw.MouseButtonLeft:
+		m.sendButtonEvent(window, action, embedder.PointerButtonMousePrimary)
+	case glfw.MouseButtonRight:
+		m.sendButtonEvent(window, action, embedder.PointerButtonMouseSecondary)
+	case glfw.MouseButtonMiddle:
+		m.sendButtonEvent(window, action, embedder.PointerButtonMouseMiddle)
+	default:
+		m.sendButtonEvent(window, action, 1<<uint(key))
 	}
 }
 

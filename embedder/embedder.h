@@ -288,6 +288,19 @@ typedef enum {
   kHover,
 } FlutterPointerPhase;
 
+// Flags for the |buttons| field of |FlutterPointerEvent| when |device_kind|
+// is |kFlutterPointerDeviceKindMouse|.
+typedef enum {
+  kFlutterPointerButtonMousePrimary = 1 << 0,
+  kFlutterPointerButtonMouseSecondary = 1 << 1,
+  kFlutterPointerButtonMouseMiddle = 1 << 2,
+  kFlutterPointerButtonMouseBack = 1 << 3,
+  kFlutterPointerButtonMouseForward = 1 << 4,
+  // If a mouse has more than five buttons, send higher bit shifted values
+  // corresponding to the button number: 1 << 5 for the 6th, etc.
+} FlutterPointerMouseButtons;
+
+
 // The type of a pointer signal.
 typedef enum {
   kFlutterPointerSignalKindNone,
@@ -307,6 +320,7 @@ typedef struct {
   FlutterPointerSignalKind signal_kind;
   double scroll_delta_x;
   double scroll_delta_y;
+  int64_t buttons;
 } FlutterPointerEvent;
 
 struct _FlutterPlatformMessageResponseHandle;

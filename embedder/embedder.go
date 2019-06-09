@@ -143,6 +143,18 @@ const (
 	PointerPhaseHover  PointerPhase = C.kHover
 )
 
+// PointerPhase corresponds to the C.enum describing phase of the mouse pointer.
+type PointerButtonMouse int64
+
+// Values representing the mouse buttons.
+const (
+	PointerButtonMousePrimary   PointerButtonMouse = C.kFlutterPointerButtonMousePrimary
+	PointerButtonMouseSecondary PointerButtonMouse = C.kFlutterPointerButtonMouseSecondary
+	PointerButtonMouseMiddle    PointerButtonMouse = C.kFlutterPointerButtonMouseMiddle
+	PointerButtonMouseBack      PointerButtonMouse = C.kFlutterPointerButtonMouseBack
+	PointerButtonMouseForward   PointerButtonMouse = C.kFlutterPointerButtonMouseForward
+)
+
 // PointerSignalKind corresponds to the C.enum describing signal kind of the mouse pointer.
 type PointerSignalKind int32
 
@@ -161,6 +173,7 @@ type PointerEvent struct {
 	SignalKind   PointerSignalKind
 	ScrollDeltaX float64
 	ScrollDeltaY float64
+	Buttons      PointerButtonMouse
 }
 
 // SendPointerEvent is used to send an PointerEvent to the Flutter engine.
@@ -173,6 +186,7 @@ func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
 		scroll_delta_x: C.double(event.ScrollDeltaX),
 		scroll_delta_y: C.double(event.ScrollDeltaY),
+		buttons:        C.int64_t(event.Buttons),
 	}
 	cPointerEvent.struct_size = C.size_t(unsafe.Sizeof(cPointerEvent))
 
