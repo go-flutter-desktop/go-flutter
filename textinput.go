@@ -3,6 +3,7 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
+	"unicode"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -99,6 +100,13 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
 	if p.clientID == 0 {
 		return
+	}
+	// Opinionated: If a flutter dev uses TextCapitalization.characters
+	//              in a TextField, that means he wants only to receive
+	//              uppercase characters.
+	// TODO(Drakirus): Handle language-specific case mappings such as Turkish.
+	if p.clientConf.TextCapitalization == "TextCapitalization.characters" {
+		char = unicode.ToUpper(char)
 	}
 	p.addChar([]rune{char})
 }
