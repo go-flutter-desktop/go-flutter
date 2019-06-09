@@ -30,6 +30,7 @@ type textinputPlugin struct {
 	selectionExtent int
 }
 
+// keyboardShortcutsGLFW handle glfw.ModifierKey from glfwKeyCallback.
 type keyboardShortcutsGLFW struct {
 	mod glfw.ModifierKey
 }
