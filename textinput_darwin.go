@@ -23,7 +23,7 @@ func (p *textinputPlugin) MoveCursorHome(mods keyboardShortcutsGLFW) {
 	if mods.isShift() {
 		p.moveCursorHomeSelect()
 	} else {
-		p.moveCursorHomeSimple()
+		p.moveCursorHomeNoSelect()
 	}
 }
 
@@ -31,7 +31,7 @@ func (p *textinputPlugin) MoveCursorEnd(mods keyboardShortcutsGLFW) {
 	if mods.isShift() {
 		p.moveCursorEndSelect()
 	} else {
-		p.moveCursorEndSimple()
+		p.moveCursorEndNoSelect()
 	}
 }
 

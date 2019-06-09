@@ -33,7 +33,7 @@ func (p *textinputPlugin) addChar(char []rune) {
 	p.updateEditingState()
 }
 
-func (p *textinputPlugin) moveCursorHomeSimple() {
+func (p *textinputPlugin) moveCursorHomeNoSelect() {
 	p.selectionBase = 0
 	p.selectionExtent = p.selectionBase
 }
@@ -42,7 +42,7 @@ func (p *textinputPlugin) moveCursorHomeSelect() {
 	p.selectionBase = 0
 }
 
-func (p *textinputPlugin) moveCursorEndSimple() {
+func (p *textinputPlugin) moveCursorEndNoSelect() {
 	p.selectionBase = len(p.word)
 	p.selectionExtent = p.selectionBase
 }
