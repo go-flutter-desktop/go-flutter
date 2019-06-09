@@ -51,19 +51,19 @@ func (p *textinputPlugin) moveCursorEndSelect() {
 	p.selectionBase = len(p.word)
 }
 
-func (p *textinputPlugin) extentSelectionLeftChar() {
+func (p *textinputPlugin) extendSelectionLeftChar() {
 	if p.selectionExtent > 0 {
 		p.selectionExtent--
 	}
 }
 
-func (p *textinputPlugin) extentSelectionLeftWord() {
+func (p *textinputPlugin) extendSelectionLeftWord() {
 	p.selectionBase = indexStartLeadingWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) extentSelectionLeftLine() {
+func (p *textinputPlugin) extendSelectionLeftLine() {
 	if p.isSelected() {
 		p.selectionExtent = indexStartLeadingWord(p.word, p.selectionExtent)
 	} else {
@@ -72,7 +72,7 @@ func (p *textinputPlugin) extentSelectionLeftLine() {
 
 }
 
-func (p *textinputPlugin) extentSelectionLeftReset() {
+func (p *textinputPlugin) extendSelectionLeftReset() {
 	if !p.isSelected() {
 		if p.selectionBase > 0 {
 			p.selectionBase--
@@ -83,19 +83,19 @@ func (p *textinputPlugin) extentSelectionLeftReset() {
 	}
 }
 
-func (p *textinputPlugin) extentSelectionRightChar() {
+func (p *textinputPlugin) extendSelectionRightChar() {
 	if p.selectionExtent < len(p.word) {
 		p.selectionExtent++
 	}
 }
 
-func (p *textinputPlugin) extentSelectionRightWord() {
+func (p *textinputPlugin) extendSelectionRightWord() {
 	p.selectionBase = indexEndForwardWord(p.word, p.selectionBase)
 	p.selectionExtent = p.selectionBase
 
 }
 
-func (p *textinputPlugin) extentSelectionRightLine() {
+func (p *textinputPlugin) extendSelectionRightLine() {
 	if p.isSelected() {
 		p.selectionExtent = indexEndForwardWord(p.word, p.selectionExtent)
 	} else {
@@ -104,7 +104,7 @@ func (p *textinputPlugin) extentSelectionRightLine() {
 
 }
 
-func (p *textinputPlugin) extentSelectionRightReset() {
+func (p *textinputPlugin) extendSelectionRightReset() {
 	if !p.isSelected() {
 		if p.selectionBase < len(p.word) {
 			p.selectionBase++

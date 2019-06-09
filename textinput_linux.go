@@ -36,25 +36,25 @@ func (p *textinputPlugin) MoveCursorEnd(mods keyboardShortcutsGLFW) {
 
 func (p *textinputPlugin) MoveCursorLeft(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
-		p.extentSelectionLeftLine()
+		p.extendSelectionLeftLine()
 	} else if mods.isWordTravel() {
-		p.extentSelectionLeftWord()
+		p.extendSelectionLeftWord()
 	} else if mods.isShift() {
-		p.extentSelectionLeftChar()
+		p.extendSelectionLeftChar()
 	} else {
-		p.extentSelectionLeftReset()
+		p.extendSelectionLeftReset()
 	}
 }
 
 func (p *textinputPlugin) MoveCursorRight(mods keyboardShortcutsGLFW) {
 	if mods.isWordTravelShift() {
-		p.extentSelectionRightLine()
+		p.extendSelectionRightLine()
 	} else if mods.isWordTravel() {
-		p.extentSelectionRightWord()
+		p.extendSelectionRightWord()
 	} else if mods.isShift() {
-		p.extentSelectionRightChar()
+		p.extendSelectionRightChar()
 	} else {
-		p.extentSelectionRightReset()
+		p.extendSelectionRightReset()
 	}
 }
 
