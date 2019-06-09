@@ -3,7 +3,6 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
-	"runtime"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -26,9 +25,15 @@ type textinputPlugin struct {
 	wordTravellerKeyShift glfw.ModifierKey
 
 	clientID        float64
+	clientConf      argSetClientConf
 	word            []rune
 	selectionBase   int
 	selectionExtent int
+}
+
+// keyboardShortcutsGLFW handle glfw.ModifierKey from glfwKeyCallback.
+type keyboardShortcutsGLFW struct {
+	mod glfw.ModifierKey
 }
 
 // all hardcoded because theres not pluggable renderer system.
@@ -39,18 +44,6 @@ var _ PluginGLFW = &textinputPlugin{} // compile-time type check
 
 func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.messenger = messenger
-
-	// set modifier keys based on OS
-	switch runtime.GOOS {
-	case "darwin":
-		p.modifierKey = glfw.ModSuper
-		p.wordTravellerKey = glfw.ModAlt
-		p.wordTravellerKeyShift = glfw.ModAlt | glfw.ModShift
-	default:
-		p.modifierKey = glfw.ModControl
-		p.wordTravellerKey = glfw.ModControl
-		p.wordTravellerKeyShift = glfw.ModControl | glfw.ModShift
-	}
 
 	return nil
 }
@@ -66,12 +59,22 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 }
 
 func (p *textinputPlugin) handleSetClient(arguments interface{}) (reply interface{}, err error) {
-	var args []interface{}
+	args := []json.RawMessage{}
 	err = json.Unmarshal(arguments.(json.RawMessage), &args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetClient")
 	}
-	p.clientID = args[0].(float64)
+
+	err = json.Unmarshal(args[0], &p.clientID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode clientID for handleSetClient")
+	}
+
+	err = json.Unmarshal(args[1], &p.clientConf)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode clientConf for handleSetClient")
+	}
+
 	return nil, nil
 }
 
@@ -105,22 +108,8 @@ func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
 }
 
 func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-	var modsIsModfifier = false
-	var modsIsShift = false
-	var modsIsWordModifierShift = false
-	var modsIsWordModifier = false
 
-	switch {
-	case mods == p.wordTravellerKeyShift:
-		modsIsWordModifierShift = true
-	case mods == p.wordTravellerKey:
-		modsIsWordModifier = true
-	case mods == p.modifierKey:
-		modsIsModfifier = true
-	case mods == glfw.ModShift:
-		modsIsShift = true
-	}
-
+	keyboardShortcutBind := keyboardShortcutsGLFW{mod: mods}
 	if key == glfw.KeyEscape && action == glfw.Press {
 		_, err := defaultNavigationPlugin.channel.InvokeMethod("popRoute", nil)
 		if err != nil {
@@ -136,51 +125,53 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 		switch key {
 		case glfw.KeyEnter:
-			if mods == p.modifierKey {
-				p.performAction("done")
-			} else {
+			if keyboardShortcutBind.isModifier() {
+				// Indicates that they are done typing in the TextInput
+				p.performAction("TextInputAction.done")
+				return
+			} else if p.clientConf.InputType.Name == "TextInputType.multiline" {
 				p.addChar([]rune{'\n'})
-				p.performAction("newline")
 			}
+			p.performTextInputAction()
 
 		case glfw.KeyHome:
-			p.MoveCursorHome(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.MoveCursorHome(keyboardShortcutBind)
 
 		case glfw.KeyEnd:
-			p.MoveCursorEnd(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.MoveCursorEnd(keyboardShortcutBind)
 
 		case glfw.KeyLeft:
-			p.MoveCursorLeft(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.MoveCursorLeft(keyboardShortcutBind)
 
 		case glfw.KeyRight:
-			p.MoveCursorRight(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.MoveCursorRight(keyboardShortcutBind)
 
 		case glfw.KeyDelete:
-			p.Delete(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.Delete(keyboardShortcutBind)
 
 		case glfw.KeyBackspace:
-			p.Backspace(modsIsModfifier, modsIsShift, modsIsWordModifierShift, modsIsWordModifier)
+			p.Backspace(keyboardShortcutBind)
 
 		case p.keyboardLayout.SelectAll:
-			if mods == p.modifierKey {
-				p.SelectAll()
+			if keyboardShortcutBind.isModifier() {
+				p.selectAll()
 			}
 
 		case p.keyboardLayout.Copy:
-			if mods == p.modifierKey && p.isSelected() {
-				_, _, selectedContent := p.GetSelectedText()
+			if keyboardShortcutBind.isModifier() && p.isSelected() {
+				_, _, selectedContent := p.getSelectedText()
 				window.SetClipboardString(selectedContent)
 			}
 
 		case p.keyboardLayout.Cut:
-			if mods == p.modifierKey && p.isSelected() {
-				_, _, selectedContent := p.GetSelectedText()
+			if keyboardShortcutBind.isModifier() && p.isSelected() {
+				_, _, selectedContent := p.getSelectedText()
 				window.SetClipboardString(selectedContent)
-				p.RemoveSelectedText()
+				p.removeSelectedText()
 			}
 
 		case p.keyboardLayout.Paste:
-			if mods == p.modifierKey {
+			if keyboardShortcutBind.isModifier() {
 				var clpString, err = window.GetClipboardString()
 				if err != nil {
 					fmt.Printf("go-flutter: unable to get the clipboard content: %v\n", err)
@@ -189,5 +180,6 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				p.addChar([]rune(clpString))
 			}
 		}
+		p.updateEditingState()
 	}
 }
