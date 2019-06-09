@@ -20,10 +20,6 @@ type textinputPlugin struct {
 
 	keyboardLayout KeyboardShortcuts
 
-	modifierKey           glfw.ModifierKey
-	wordTravellerKey      glfw.ModifierKey
-	wordTravellerKeyShift glfw.ModifierKey
-
 	clientID        float64
 	clientConf      argSetClientConf
 	word            []rune
