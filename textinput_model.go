@@ -250,6 +250,32 @@ func (p *textinputPlugin) updateEditingState() {
 func (p *textinputPlugin) performAction(action string) {
 	p.channel.InvokeMethod("TextInputClient.performAction", []interface{}{
 		p.clientID,
-		"TextInputAction." + action,
+		action,
 	})
+}
+
+// performClientAction invokes the TextInputClient performAction of the
+// TextInputAction. The action is described by argSetClientConf.
+func (p *textinputPlugin) performTextInputAction() {
+	p.channel.InvokeMethod("TextInputClient.performAction", []interface{}{
+		p.clientID,
+		p.clientConf.InputAction,
+	})
+}
+
+// argSetClientConf is used to define the config of the TextInput. Options used:
+//   The type of information for which to optimize the text input control.
+//   https://docs.flutter.io/flutter/services/TextInputType-class.html
+
+//   An action the user has requested the text input control to perform.
+//   https://docs.flutter.io/flutter/services/TextInputAction-class.html
+
+//   Configures how the platform keyboard will select an uppercase or lowercase keyboard.
+//   https://api.flutter.dev/flutter/services/TextCapitalization-class.html
+type argSetClientConf struct {
+	InputType struct {
+		Name string `json:"name"`
+	} `json:"inputType"`
+	InputAction        string `json:"inputAction"`
+	TextCapitalization string `json:"textCapitalization"`
 }

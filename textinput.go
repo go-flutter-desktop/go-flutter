@@ -20,11 +20,8 @@ type textinputPlugin struct {
 
 	keyboardLayout KeyboardShortcuts
 
-	modifierKey           glfw.ModifierKey
-	wordTravellerKey      glfw.ModifierKey
-	wordTravellerKeyShift glfw.ModifierKey
-
 	clientID        float64
+	clientConf      argSetClientConf
 	word            []rune
 	selectionBase   int
 	selectionExtent int
@@ -58,12 +55,22 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 }
 
 func (p *textinputPlugin) handleSetClient(arguments interface{}) (reply interface{}, err error) {
-	var args []interface{}
+	args := []json.RawMessage{}
 	err = json.Unmarshal(arguments.(json.RawMessage), &args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetClient")
 	}
-	p.clientID = args[0].(float64)
+
+	err = json.Unmarshal(args[0], &p.clientID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode clientID for handleSetClient")
+	}
+
+	err = json.Unmarshal(args[1], &p.clientConf)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to decode clientConf for handleSetClient")
+	}
+
 	return nil, nil
 }
 
@@ -114,12 +121,14 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 		switch key {
 		case glfw.KeyEnter:
-			if mods == p.modifierKey {
-				p.performAction("done")
-			} else {
+			if keyboardShortcutBind.isModifier() {
+				// Indicates that they are done typing in the TextInput
+				p.performAction("TextInputAction.done")
+				return
+			} else if p.clientConf.InputType.Name == "TextInputType.multiline" {
 				p.addChar([]rune{'\n'})
-				p.performAction("newline")
 			}
+			p.performTextInputAction()
 
 		case glfw.KeyHome:
 			p.MoveCursorHome(keyboardShortcutBind)
