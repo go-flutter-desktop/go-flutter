@@ -113,7 +113,7 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
-func (m *windowManager) sendButtonEvent(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
+func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
 	if action == glfw.Press {
 		m.sendPointerEventButton(window, embedder.PointerPhaseDown, buttons)
 		m.pointerPhase = embedder.PointerPhaseMove
@@ -128,13 +128,13 @@ func (m *windowManager) sendButtonEvent(window *glfw.Window, action glfw.Action,
 func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
 	switch key {
 	case glfw.MouseButtonLeft:
-		m.sendButtonEvent(window, action, embedder.PointerButtonMousePrimary)
+		m.handleButtonPhase(window, action, embedder.PointerButtonMousePrimary)
 	case glfw.MouseButtonRight:
-		m.sendButtonEvent(window, action, embedder.PointerButtonMouseSecondary)
+		m.handleButtonPhase(window, action, embedder.PointerButtonMouseSecondary)
 	case glfw.MouseButtonMiddle:
-		m.sendButtonEvent(window, action, embedder.PointerButtonMouseMiddle)
+		m.handleButtonPhase(window, action, embedder.PointerButtonMouseMiddle)
 	default:
-		m.sendButtonEvent(window, action, 1<<uint(key))
+		m.handleButtonPhase(window, action, 1<<uint(key))
 	}
 }
 
