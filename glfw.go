@@ -67,11 +67,11 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 func (m *windowManager) sendButtonPointerEvent(window *glfw.Window, phase embedder.PointerPhase, buttons embedder.PointerButtonMouse) {
 	x, y := window.GetCursorPos()
 	event := embedder.PointerEvent{
-		Phase:      m.pointerPhase,
+		Phase:      phase,
 		X:          x * m.pixelsPerScreenCoordinate,
 		Y:          y * m.pixelsPerScreenCoordinate,
 		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
-		SignalKind: embedder.PointerSignalKindScroll,
+		SignalKind: embedder.PointerSignalKindNone,
 		Buttons:    buttons,
 	}
 
