@@ -180,7 +180,6 @@ type PointerEvent struct {
 	X            float64
 	Y            float64
 	SignalKind   PointerSignalKind
-	DeviceKind   PointerDeviceKind
 	ScrollDeltaX float64
 	ScrollDeltaY float64
 	Buttons      PointerButtonMouse
@@ -194,7 +193,7 @@ func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 		y:              C.double(event.Y),
 		timestamp:      C.size_t(event.Timestamp),
 		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
-		device_kind:    (C.FlutterPointerDeviceKind)(event.DeviceKind),
+		device_kind:    (C.FlutterPointerDeviceKind)(PointerDeviceKindMouse),
 		scroll_delta_x: C.double(event.ScrollDeltaX),
 		scroll_delta_y: C.double(event.ScrollDeltaY),
 		buttons:        C.int64_t(event.Buttons),
