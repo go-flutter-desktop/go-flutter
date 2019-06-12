@@ -307,6 +307,12 @@ typedef enum {
   kFlutterPointerSignalKindScroll,
 } FlutterPointerSignalKind;
 
+// The device type that created a pointer event.
+typedef enum {
+  kFlutterPointerDeviceKindMouse = 1,
+  kFlutterPointerDeviceKindTouch,
+} FlutterPointerDeviceKind;
+
 typedef struct {
   // The size of this struct. Must be sizeof(FlutterPointerEvent).
   size_t struct_size;
@@ -318,6 +324,7 @@ typedef struct {
   // the embedder has no multitouch capability.
   int32_t device;
   FlutterPointerSignalKind signal_kind;
+  FlutterPointerDeviceKind device_kind;
   double scroll_delta_x;
   double scroll_delta_y;
   int64_t buttons;

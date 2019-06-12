@@ -72,6 +72,7 @@ func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedd
 		Y:          y * m.pixelsPerScreenCoordinate,
 		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
 		SignalKind: embedder.PointerSignalKindNone,
+		DeviceKind: embedder.PointerDeviceKindMouse,
 		Buttons:    buttons,
 	}
 

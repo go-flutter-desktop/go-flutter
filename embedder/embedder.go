@@ -164,6 +164,15 @@ const (
 	PointerSignalKindScroll PointerSignalKind = C.kFlutterPointerSignalKindScroll
 )
 
+// PointerDeviceKind corresponds to the C.enum describing device kind of the mouse pointer.
+type PointerDeviceKind int32
+
+// Values representing the pointer signal kind.
+const (
+	PointerDeviceKindMouse PointerDeviceKind = C.kFlutterPointerDeviceKindMouse
+	PointerDeviceKindTouch PointerDeviceKind = C.kFlutterPointerDeviceKindTouch
+)
+
 // PointerEvent represents the position and phase of the mouse at a given time.
 type PointerEvent struct {
 	Phase        PointerPhase
@@ -171,6 +180,7 @@ type PointerEvent struct {
 	X            float64
 	Y            float64
 	SignalKind   PointerSignalKind
+	DeviceKind   PointerDeviceKind
 	ScrollDeltaX float64
 	ScrollDeltaY float64
 	Buttons      PointerButtonMouse
@@ -184,6 +194,7 @@ func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 		y:              C.double(event.Y),
 		timestamp:      C.size_t(event.Timestamp),
 		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
+		device_kind:    (C.FlutterPointerDeviceKind)(event.DeviceKind),
 		scroll_delta_x: C.double(event.ScrollDeltaX),
 		scroll_delta_y: C.double(event.ScrollDeltaY),
 		buttons:        C.int64_t(event.Buttons),
