@@ -64,7 +64,7 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 }
 
-func (m *windowManager) sendButtonPointerEvent(window *glfw.Window, phase embedder.PointerPhase, buttons embedder.PointerButtonMouse) {
+func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedder.PointerPhase, buttons embedder.PointerButtonMouse) {
 	x, y := window.GetCursorPos()
 	event := embedder.PointerEvent{
 		Phase:      phase,
@@ -115,12 +115,12 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 
 func (m *windowManager) sendButtonEvent(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
 	if action == glfw.Press {
-		m.sendButtonPointerEvent(window, embedder.PointerPhaseDown, buttons)
+		m.sendPointerEventButton(window, embedder.PointerPhaseDown, buttons)
 		m.pointerPhase = embedder.PointerPhaseMove
 	}
 
 	if action == glfw.Release {
-		m.sendButtonPointerEvent(window, embedder.PointerPhaseUp, buttons)
+		m.sendPointerEventButton(window, embedder.PointerPhaseUp, buttons)
 		m.pointerPhase = embedder.PointerPhaseHover
 	}
 }
