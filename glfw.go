@@ -116,14 +116,27 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 
 func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
 	if action == glfw.Press {
-		m.pointerButton = buttons
-		m.sendPointerEventButton(window, embedder.PointerPhaseDown)
+		if m.pointerButton != 0 {
+			fmt.Printf("More button pressed")
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
+		} else {
+			fmt.Printf("First button pressed")
+			m.sendPointerEventButton(window, embedder.PointerPhaseDown)
+
+		}
+		m.pointerButton |= buttons
 		m.pointerPhase = embedder.PointerPhaseMove
 	}
 
 	if action == glfw.Release {
-		m.pointerButton = 0
-		m.sendPointerEventButton(window, embedder.PointerPhaseUp)
+		m.pointerButton ^= buttons
+		if m.pointerButton == 0 {
+			fmt.Printf("Last button released")
+			m.sendPointerEventButton(window, embedder.PointerPhaseUp)
+		} else {
+			fmt.Printf("More button released")
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
+		}
 		m.pointerPhase = embedder.PointerPhaseHover
 	}
 }
