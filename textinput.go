@@ -51,7 +51,8 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 	p.channel.HandleFuncSync("TextInput.setClient", p.handleSetClient)
 	p.channel.HandleFuncSync("TextInput.clearClient", p.handleClearClient)
 	p.channel.HandleFuncSync("TextInput.setEditingState", p.handleSetEditingState)
-
+	// Desktop's don't have a virtual keyboard, so there is no need to show or hide it
+	p.channel.HandleFuncSync("TextInput.show", p.channel.HandleIgnore)
 	return nil
 }
 

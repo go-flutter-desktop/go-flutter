@@ -123,6 +123,11 @@ func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments inter
 	m.HandleSync(methodName, MethodHandlerFunc(f))
 }
 
+// HandleIgnore is used to ignore method call
+func (m *MethodChannel) HandleIgnore(arguments interface{}) (reply interface{}, err error) {
+	return nil, nil
+}
+
 // handleChannelMessage decodes incoming binary message to a method call, calls the
 // handler, and encodes the outgoing reply.
 func (m *MethodChannel) handleChannelMessage(binaryMessage []byte, responseSender ResponseSender) (err error) {
