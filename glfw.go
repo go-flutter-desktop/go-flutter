@@ -24,6 +24,7 @@ type windowManager struct {
 	pointerPhase              embedder.PointerPhase
 	pixelsPerScreenCoordinate float64
 	pointerCurrentlyAdded     bool
+	pointerButton             embedder.PointerButtonMouse
 }
 
 func newWindowManager() *windowManager {
@@ -50,6 +51,7 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 		X:         x * m.pixelsPerScreenCoordinate,
 		Y:         y * m.pixelsPerScreenCoordinate,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
+		Buttons:   m.pointerButton,
 	}
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
@@ -64,7 +66,7 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 }
 
-func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedder.PointerPhase, buttons embedder.PointerButtonMouse) {
+func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedder.PointerPhase) {
 	x, y := window.GetCursorPos()
 	event := embedder.PointerEvent{
 		Phase:      phase,
@@ -72,12 +74,10 @@ func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedd
 		Y:          y * m.pixelsPerScreenCoordinate,
 		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
 		SignalKind: embedder.PointerSignalKindNone,
-		Buttons:    buttons,
+		Buttons:    m.pointerButton,
 	}
-
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
 	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
-
 	flutterEngine.SendPointerEvent(event)
 }
 
@@ -91,6 +91,7 @@ func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDel
 		SignalKind:   embedder.PointerSignalKindScroll,
 		ScrollDeltaX: xDelta,
 		ScrollDeltaY: yDelta,
+		Buttons:      m.pointerButton,
 	}
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
@@ -114,13 +115,14 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 }
 
 func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
+	m.pointerButton = buttons
 	if action == glfw.Press {
-		m.sendPointerEventButton(window, embedder.PointerPhaseDown, buttons)
+		m.sendPointerEventButton(window, embedder.PointerPhaseDown)
 		m.pointerPhase = embedder.PointerPhaseMove
 	}
 
 	if action == glfw.Release {
-		m.sendPointerEventButton(window, embedder.PointerPhaseUp, buttons)
+		m.sendPointerEventButton(window, embedder.PointerPhaseUp)
 		m.pointerPhase = embedder.PointerPhaseHover
 	}
 }
