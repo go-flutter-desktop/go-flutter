@@ -103,22 +103,26 @@ func (s StandardMessageCodec) writeSize(buf *bytes.Buffer, value int) error {
 			return err
 		}
 	} else if value <= 0xffff {
-		// write as int16
+		// write as uint16
 		err = buf.WriteByte(254)
 		if err != nil {
 			return err
 		}
-		err = s.writeInt16(buf, int16(value))
+		num := make([]byte, 2)
+		endian.PutUint16(num, uint16(value))
+		_, err = buf.Write(num)
 		if err != nil {
 			return err
 		}
 	} else {
-		// write as int32
+		// write as uint32
 		err = buf.WriteByte(255)
 		if err != nil {
 			return err
 		}
-		err = s.writeInt32(buf, int32(value))
+		num := make([]byte, 4)
+		endian.PutUint32(num, uint32(value))
+		_, err = buf.Write(num)
 		if err != nil {
 			return err
 		}
@@ -382,11 +386,11 @@ func (s StandardMessageCodec) readSize(buf *bytes.Buffer) (size int, err error) 
 	if b < 254 {
 		return int(b), nil
 	} else if b == 254 {
-		v, err := s.readInt16(buf)
-		return int(v), err
+		v := endian.Uint16(buf.Next(2))
+		return int(v), nil
 	}
-	v, err := s.readInt32(buf)
-	return int(v), err
+	v := endian.Uint32(buf.Next(4))
+	return int(v), nil
 }
 
 // readAlignment reads empty alignment bytes from the buffer. Because
