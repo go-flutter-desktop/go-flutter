@@ -116,25 +116,26 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 
 func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
 	if action == glfw.Press {
-		if m.pointerButton != 0 {
-			fmt.Printf("More button pressed")
-			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
-		} else {
-			fmt.Printf("First button pressed")
-			m.sendPointerEventButton(window, embedder.PointerPhaseDown)
-
-		}
 		m.pointerButton |= buttons
+		// If only one button is pressed then each bits of buttons will be equals to m.pointerButton
+		// 2019-06-18, FlutterPointerPhase with mouse
+		// Refer to (https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h#L280-L314)
+		if m.pointerButton == buttons {
+			m.sendPointerEventButton(window, embedder.PointerPhaseDown)
+		} else {
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
+		}
 		m.pointerPhase = embedder.PointerPhaseMove
 	}
 
 	if action == glfw.Release {
 		m.pointerButton ^= buttons
+		// If all button are released then m.pointerButton will be equals to 0
+		// 2019-06-18, FlutterPointerPhase with mouse
+		// Refer to (https://github.com/flutter/engine/blob/master/shell/platform/embedder/embedder.h#L280-L314)
 		if m.pointerButton == 0 {
-			fmt.Printf("Last button released")
 			m.sendPointerEventButton(window, embedder.PointerPhaseUp)
 		} else {
-			fmt.Printf("More button released")
 			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
 		}
 		m.pointerPhase = embedder.PointerPhaseHover
