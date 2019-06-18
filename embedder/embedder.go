@@ -143,7 +143,7 @@ const (
 	PointerPhaseHover  PointerPhase = C.kHover
 )
 
-// PointerPhase corresponds to the C.enum describing phase of the mouse pointer.
+// PointerButtonMouse corresponds to the C.enum describing the mouse buttons.
 type PointerButtonMouse int64
 
 // Values representing the mouse buttons.
@@ -151,8 +151,6 @@ const (
 	PointerButtonMousePrimary   PointerButtonMouse = C.kFlutterPointerButtonMousePrimary
 	PointerButtonMouseSecondary PointerButtonMouse = C.kFlutterPointerButtonMouseSecondary
 	PointerButtonMouseMiddle    PointerButtonMouse = C.kFlutterPointerButtonMouseMiddle
-	PointerButtonMouseBack      PointerButtonMouse = C.kFlutterPointerButtonMouseBack
-	PointerButtonMouseForward   PointerButtonMouse = C.kFlutterPointerButtonMouseForward
 )
 
 // PointerSignalKind corresponds to the C.enum describing signal kind of the mouse pointer.
