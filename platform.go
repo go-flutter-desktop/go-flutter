@@ -42,7 +42,8 @@ func (p *platformPlugin) InitPluginGLFW(window *glfw.Window) (err error) {
 	p.channel.HandleFunc("Clipboard.getData", p.handleClipboardGetData)
 	p.channel.HandleFunc("SystemChrome.setApplicationSwitcherDescription", p.handleWindowSetTitle)
 	p.channel.HandleFunc("SystemNavigator.pop", p.handleSystemNavigatorPop)
-
+	// Ignored: Desktop's don't have system overlays
+	p.channel.HandleFuncSync("SystemChrome.setSystemUIOverlayStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
 	return nil
 }
 
