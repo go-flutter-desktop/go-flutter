@@ -28,7 +28,8 @@ type windowManager struct {
 
 func newWindowManager() *windowManager {
 	return &windowManager{
-		pointerPhase: embedder.PointerPhaseHover,
+		pixelsPerScreenCoordinate: 1.0,
+		pointerPhase:              embedder.PointerPhaseHover,
 	}
 }
 
@@ -124,6 +125,13 @@ func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yo
 // dimensions.
 func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	widthPx, heightPx := window.GetFramebufferSize()
+	width, _ := window.GetSize()
+	if width == 0 {
+		fmt.Println("go-flutter: Cannot calculate pixelsPerScreenCoordinate for zero-width window.")
+	} else {
+		m.pixelsPerScreenCoordinate = float64(widthPx) / float64(width)
+	}
+
 	var pixelRatio float64
 	if m.forcedPixelRatio != 0 {
 		pixelRatio = m.forcedPixelRatio
@@ -147,14 +155,6 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 		}
 		monitorScreenCoordinatesPerInch := float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
 
-		width, _ := window.GetSize()
-		if width == 0 {
-			fmt.Println("go-flutter: Cannot calculate pixelsPerScreenCoordinate for zero-width window.")
-			pixelRatio = 1.0
-			goto SendWindowMetricsEvent
-		}
-
-		m.pixelsPerScreenCoordinate = float64(widthPx) / float64(width)
 		dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 		pixelRatio = dpi / dpPerInch
 
