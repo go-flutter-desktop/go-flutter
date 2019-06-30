@@ -167,8 +167,8 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodCall Metho
 			fmt.Printf("go-flutter: failed to encode error envelope for method '%s' on channel '%s', error: %v\n", methodCall.Method, m.channelName, err)
 		}
 		responseSender.Send(binaryReply)
+		return
 	}
-
 	binaryReply, err := m.methodCodec.EncodeSuccessEnvelope(reply)
 	if err != nil {
 		fmt.Printf("go-flutter: failed to encode success envelope for method '%s' on channel '%s', error: %v\n", methodCall.Method, m.channelName, err)
