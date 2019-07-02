@@ -143,6 +143,16 @@ const (
 	PointerPhaseHover  PointerPhase = C.kHover
 )
 
+// PointerButtonMouse corresponds to the C.enum describing the mouse buttons.
+type PointerButtonMouse int64
+
+// Values representing the mouse buttons.
+const (
+	PointerButtonMousePrimary   PointerButtonMouse = C.kFlutterPointerButtonMousePrimary
+	PointerButtonMouseSecondary PointerButtonMouse = C.kFlutterPointerButtonMouseSecondary
+	PointerButtonMouseMiddle    PointerButtonMouse = C.kFlutterPointerButtonMouseMiddle
+)
+
 // PointerSignalKind corresponds to the C.enum describing signal kind of the mouse pointer.
 type PointerSignalKind int32
 
@@ -150,6 +160,15 @@ type PointerSignalKind int32
 const (
 	PointerSignalKindNone   PointerSignalKind = C.kFlutterPointerSignalKindNone
 	PointerSignalKindScroll PointerSignalKind = C.kFlutterPointerSignalKindScroll
+)
+
+// PointerDeviceKind corresponds to the C.enum describing device kind of the mouse pointer.
+type PointerDeviceKind int32
+
+// Values representing the pointer signal kind.
+const (
+	PointerDeviceKindMouse PointerDeviceKind = C.kFlutterPointerDeviceKindMouse
+	PointerDeviceKindTouch PointerDeviceKind = C.kFlutterPointerDeviceKindTouch
 )
 
 // PointerEvent represents the position and phase of the mouse at a given time.
@@ -161,6 +180,7 @@ type PointerEvent struct {
 	SignalKind   PointerSignalKind
 	ScrollDeltaX float64
 	ScrollDeltaY float64
+	Buttons      PointerButtonMouse
 }
 
 // SendPointerEvent is used to send an PointerEvent to the Flutter engine.
@@ -171,8 +191,10 @@ func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 		y:              C.double(event.Y),
 		timestamp:      C.size_t(event.Timestamp),
 		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
+		device_kind:    (C.FlutterPointerDeviceKind)(PointerDeviceKindMouse),
 		scroll_delta_x: C.double(event.ScrollDeltaX),
 		scroll_delta_y: C.double(event.ScrollDeltaY),
+		buttons:        C.int64_t(event.Buttons),
 	}
 	cPointerEvent.struct_size = C.size_t(unsafe.Sizeof(cPointerEvent))
 

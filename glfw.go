@@ -24,6 +24,7 @@ type windowManager struct {
 	pointerPhase              embedder.PointerPhase
 	pixelsPerScreenCoordinate float64
 	pointerCurrentlyAdded     bool
+	pointerButton             embedder.PointerButtonMouse
 }
 
 func newWindowManager() *windowManager {
@@ -51,6 +52,7 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 		X:         x * m.pixelsPerScreenCoordinate,
 		Y:         y * m.pixelsPerScreenCoordinate,
 		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
+		Buttons:   m.pointerButton,
 	}
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
@@ -65,6 +67,21 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 }
 
+func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedder.PointerPhase) {
+	x, y := window.GetCursorPos()
+	event := embedder.PointerEvent{
+		Phase:      phase,
+		X:          x * m.pixelsPerScreenCoordinate,
+		Y:          y * m.pixelsPerScreenCoordinate,
+		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
+		SignalKind: embedder.PointerSignalKindNone,
+		Buttons:    m.pointerButton,
+	}
+	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
+	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+	flutterEngine.SendPointerEvent(event)
+}
+
 func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDelta float64) {
 	x, y := window.GetCursorPos()
 	event := embedder.PointerEvent{
@@ -75,6 +92,7 @@ func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDel
 		SignalKind:   embedder.PointerSignalKindScroll,
 		ScrollDeltaX: xDelta,
 		ScrollDeltaY: yDelta,
+		Buttons:      m.pointerButton,
 	}
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
@@ -97,19 +115,45 @@ func (m *windowManager) glfwCursorPosCallback(window *glfw.Window, x, y float64)
 	m.sendPointerEvent(window, m.pointerPhase, x, y)
 }
 
-func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-	if key == glfw.MouseButton1 {
-		x, y := window.GetCursorPos()
-
-		if action == glfw.Press {
-			m.sendPointerEvent(window, embedder.PointerPhaseDown, x, y)
-			m.pointerPhase = embedder.PointerPhaseMove
+func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Action, buttons embedder.PointerButtonMouse) {
+	if action == glfw.Press {
+		m.pointerButton |= buttons
+		// If only one button is pressed then each bits of buttons will be equals
+		// to m.pointerButton.
+		if m.pointerButton == buttons {
+			m.sendPointerEventButton(window, embedder.PointerPhaseDown)
+		} else {
+			// if any other buttons are already pressed when a new button is pressed,
+			// the engine is expecting a Move phase instead of a Down phase.
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
 		}
+		m.pointerPhase = embedder.PointerPhaseMove
+	}
 
-		if action == glfw.Release {
-			m.sendPointerEvent(window, embedder.PointerPhaseUp, x, y)
+	if action == glfw.Release {
+		m.pointerButton ^= buttons
+		// If all button are released then m.pointerButton is cleared
+		if m.pointerButton == 0 {
+			m.sendPointerEventButton(window, embedder.PointerPhaseUp)
 			m.pointerPhase = embedder.PointerPhaseHover
+		} else {
+			// if any other buttons are still pressed when one button is released
+			// the engine is expecting a Move phase instead of a Up phase.
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
 		}
+	}
+}
+
+func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+	switch key {
+	case glfw.MouseButtonLeft:
+		m.handleButtonPhase(window, action, embedder.PointerButtonMousePrimary)
+	case glfw.MouseButtonRight:
+		m.handleButtonPhase(window, action, embedder.PointerButtonMouseSecondary)
+	case glfw.MouseButtonMiddle:
+		m.handleButtonPhase(window, action, embedder.PointerButtonMouseMiddle)
+	default:
+		m.handleButtonPhase(window, action, 1<<uint(key))
 	}
 }
 
