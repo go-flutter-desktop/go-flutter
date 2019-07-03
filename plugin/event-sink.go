@@ -1,53 +1,70 @@
 package plugin
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
-// StreamHandler defines the interface for a stream handler.
+// StreamHandler defines the interface for a stream handler setup and tear-down
+// requests.
 type StreamHandler interface {
+	// OnListen handles a request to set up an event stream.
 	OnListen(arguments interface{}, sink *EventSink)
+	// OnCancel handles a request to tear down the most recently created event
+	// stream.
 	OnCancel(arguments interface{})
 }
 
-// The StreamHandlerFunc type is an adapter to allow the use of
-// ordinary functions as Stream handlers.
-type StreamHandlerFunc struct {
-	onListen func(arguments interface{}, sink *EventSink)
-	onCancel func(arguments interface{})
-}
-
-// OnListen calls f(arguments, sink).
-func (f StreamHandlerFunc) OnListen(arguments interface{}, sink *EventSink) {
-	f.onListen(arguments, sink)
-}
-
-// OnCancel calls f(arguments).
-func (f StreamHandlerFunc) OnCancel(arguments interface{}) {
-	f.onCancel(arguments)
-}
-
-// EventSink defines the interface to handle asynchronous events from Stream.
+// EventSink defines the interface for producers of events to send message to
+// Flutter. StreamHandler act as a clients of EventSink for sending events.
 type EventSink struct {
-	messenger   BinaryMessenger
-	methodCodec MethodCodec
-	channelName string
+	eventChannel *EventChannel
+
+	hasEnded bool
+	sync.Mutex
 }
 
+// Success consumes a successful event.
 func (es *EventSink) Success(event interface{}) {
-	binaryMsg, err := es.methodCodec.EncodeSuccessEnvelope(event)
-	if err != nil {
-		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.channelName, err)
+
+	es.Lock()
+	defer es.Unlock()
+	if es.hasEnded || es != es.eventChannel.activeSink {
+		return
 	}
-	es.messenger.Send(es.channelName, binaryMsg)
+
+	binaryMsg, err := es.eventChannel.methodCodec.EncodeSuccessEnvelope(event)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.eventChannel.channelName, err)
+	}
+	es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
 }
 
+// Error consumes an error event.
 func (es *EventSink) Error(errorCode string, errorMessage string, errorDetails interface{}) {
-	binaryMsg, err := es.methodCodec.EncodeErrorEnvelope(errorCode, errorMessage, errorDetails)
-	if err != nil {
-		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.channelName, err)
+
+	es.Lock()
+	defer es.Unlock()
+	if es.hasEnded || es != es.eventChannel.activeSink {
+		return
 	}
-	es.messenger.Send(es.channelName, binaryMsg)
+
+	binaryMsg, err := es.eventChannel.methodCodec.EncodeErrorEnvelope(errorCode, errorMessage, errorDetails)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.eventChannel.channelName, err)
+	}
+	es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
 }
 
+// EndOfStream consumes end of stream.
 func (es *EventSink) EndOfStream() {
-	es.messenger.Send(es.channelName, nil)
+
+	es.Lock()
+	defer es.Unlock()
+	if es.hasEnded || es != es.eventChannel.activeSink {
+		return
+	}
+	es.hasEnded = true
+
+	es.eventChannel.messenger.Send(es.eventChannel.channelName, nil)
 }
