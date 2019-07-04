@@ -144,6 +144,10 @@ func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Actio
 		if m.pointerButton == 0 {
 			m.sendPointerEventButton(window, embedder.PointerPhaseUp)
 			m.pointerPhase = embedder.PointerPhaseHover
+		} else {
+			// if any other buttons are still pressed when one button is released
+			// the engine is expecting a Move phase instead of a Up phase.
+			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
 		}
 	}
 }
