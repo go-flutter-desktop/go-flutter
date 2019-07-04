@@ -131,15 +131,19 @@ func (m *windowManager) handleButtonPhase(window *glfw.Window, action glfw.Actio
 	}
 
 	if action == glfw.Release {
+		// Always send a pointer event with PhaseMove before an eventual
+		// PhaseUp. Even if the last button was released. If x/y on the last
+		// move doesn't equal x/y on the PhaseUp, the click is canceled in
+		// Flutter. On MacOS, the Release event always has y-1 of the last move
+		// event. By sending a PhaseMove here (after the release) we avoid a
+		// difference in x/y.
+		m.sendPointerEventButton(window, embedder.PointerPhaseMove)
+
 		m.pointerButton ^= buttons
 		// If all button are released then m.pointerButton is cleared
 		if m.pointerButton == 0 {
 			m.sendPointerEventButton(window, embedder.PointerPhaseUp)
 			m.pointerPhase = embedder.PointerPhaseHover
-		} else {
-			// if any other buttons are still pressed when one button is released
-			// the engine is expecting a Move phase instead of a Up phase.
-			m.sendPointerEventButton(window, embedder.PointerPhaseMove)
 		}
 	}
 }
