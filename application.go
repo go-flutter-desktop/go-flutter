@@ -64,7 +64,7 @@ func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	resourceWindow, err := glfw.CreateWindow(1, 1, "", nil, window)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating glfw resource window")
+		return nil, errors.Wrap(err, "error creating the resource window")
 	}
 	glfw.DefaultWindowHints()
 	return resourceWindow, nil
@@ -107,7 +107,9 @@ func (a *Application) Run() error {
 	defer a.window.Destroy()
 
 	a.resourceWindow, err = createResourceWindow(a.window)
-	if a.resourceWindow != nil {
+	if err != nil {
+		fmt.Printf("go-flutter: WARNING %v\n", err)
+	} else {
 		defer a.resourceWindow.Destroy()
 	}
 
