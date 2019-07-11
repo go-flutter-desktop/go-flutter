@@ -50,6 +50,7 @@ const (
 	ResultSuccess               Result = C.kSuccess
 	ResultInvalidLibraryVersion Result = C.kInvalidLibraryVersion
 	ResultInvalidArguments      Result = C.kInvalidArguments
+	ResultEngineNotRunning      Result = -1
 )
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
@@ -235,7 +236,7 @@ func (flu *FlutterEngine) SendPlatformMessage(msg *PlatformMessage) Result {
 	flu.sync.Lock()
 	defer flu.sync.Unlock()
 	if flu.closed {
-		return ResultSuccess
+		return ResultEngineNotRunning
 	}
 
 	cPlatformMessage := C.FlutterPlatformMessage{
