@@ -25,9 +25,10 @@ func Run(opt ...Option) (err error) {
 
 // Application provides the flutter engine in a user friendly matter.
 type Application struct {
-	config config
-	engine *embedder.FlutterEngine
-	window *glfw.Window
+	config         config
+	engine         *embedder.FlutterEngine
+	window         *glfw.Window
+	resourceWindow *glfw.Window
 }
 
 // NewApplication creates a new application with provided options.
@@ -45,7 +46,6 @@ func NewApplication(opt ...Option) *Application {
 	opt = append(opt, AddPlugin(defaultPlatformPlugin))
 	opt = append(opt, AddPlugin(defaultTextinputPlugin))
 	opt = append(opt, AddPlugin(defaultLifecyclePlugin))
-
 	opt = append(opt, AddPlugin(defaultKeyeventsPlugin))
 
 	// apply all configs
@@ -54,6 +54,20 @@ func NewApplication(opt ...Option) *Application {
 	}
 
 	return app
+}
+
+// createResourceWindow creates an invisible GLFW window that shares the 'view'
+// window's resource context. This window is used to upload resources in the
+// background. Must be call after the 'view' window is created.
+func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
+	glfw.WindowHint(glfw.Decorated, glfw.False)
+	glfw.WindowHint(glfw.Visible, glfw.False)
+	resourceWindow, err := glfw.CreateWindow(1, 1, "", nil, window)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating the resource window")
+	}
+	glfw.DefaultWindowHints()
+	return resourceWindow, nil
 }
 
 // Run starts the application and waits for it to finish.
@@ -91,6 +105,13 @@ func (a *Application) Run() error {
 	}
 	glfw.DefaultWindowHints()
 	defer a.window.Destroy()
+
+	a.resourceWindow, err = createResourceWindow(a.window)
+	if err != nil {
+		fmt.Printf("go-flutter: WARNING %v\n", err)
+	} else {
+		defer a.resourceWindow.Destroy()
+	}
 
 	if a.config.windowIconProvider != nil {
 		images, err := a.config.windowIconProvider()
@@ -171,7 +192,11 @@ func (a *Application) Run() error {
 		return 0
 	}
 	a.engine.GLMakeResourceCurrent = func() bool {
-		return false
+		if a.resourceWindow == nil {
+			return false
+		}
+		a.resourceWindow.MakeContextCurrent()
+		return true
 	}
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
