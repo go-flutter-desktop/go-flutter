@@ -52,6 +52,9 @@ const (
 	ResultInvalidArguments      Result = C.kInvalidArguments
 )
 
+// FlutterOpenGLTexture corresponds to the C.FlutterOpenGLTexture struct.
+type FlutterOpenGLTexture C.FlutterOpenGLTexture
+
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
 type FlutterEngine struct {
 	// Flutter Engine.
@@ -61,12 +64,13 @@ type FlutterEngine struct {
 	index int
 
 	// GL callback functions
-	GLMakeCurrent         func() bool
-	GLClearCurrent        func() bool
-	GLPresent             func() bool
-	GLFboCallback         func() int32
-	GLMakeResourceCurrent func() bool
-	GLProcResolver        func(procName string) unsafe.Pointer
+	GLMakeCurrent                  func() bool
+	GLClearCurrent                 func() bool
+	GLPresent                      func() bool
+	GLFboCallback                  func() int32
+	GLMakeResourceCurrent          func() bool
+	GLProcResolver                 func(procName string) unsafe.Pointer
+	GLExternalTextureFrameCallback func(textureID int64, width int, height int, texture *FlutterOpenGLTexture) bool
 
 	// platform message callback function
 	PlatfromMessage func(message *PlatformMessage)
@@ -283,6 +287,25 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 		(C.size_t)(len(encodedMessage)),
 	)
 
+	return (Result)(res)
+}
+
+// RegisterExternalTexture registers an external texture with a unique identifier.
+func (flu *FlutterEngine) RegisterExternalTexture(textureID int64) Result {
+	res := C.FlutterEngineRegisterExternalTexture(flu.Engine, C.int64_t(textureID))
+	return (Result)(res)
+}
+
+// UnregisterExternalTexture unregisters a previous texture registration.
+func (flu *FlutterEngine) UnregisterExternalTexture(textureID int64) Result {
+	res := C.FlutterEngineUnregisterExternalTexture(flu.Engine, C.int64_t(textureID))
+	return (Result)(res)
+}
+
+// MarkExternalTextureFrameAvailable marks that a new texture frame is
+// available for a given texture identifier.
+func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Result {
+	res := C.FlutterEngineMarkExternalTextureFrameAvailable(flu.Engine, C.int64_t(textureID))
 	return (Result)(res)
 }
 

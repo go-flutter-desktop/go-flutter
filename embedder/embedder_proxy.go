@@ -59,3 +59,10 @@ func proxy_gl_proc_resolver(userData unsafe.Pointer, procname *C.char) unsafe.Po
 	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 	return flutterEngine.GLProcResolver(C.GoString(procname))
 }
+
+//export proxy_gl_external_texture_frame_callback
+func proxy_gl_external_texture_frame_callback(userData unsafe.Pointer, textureID int64, width int, height int, texture *FlutterOpenGLTexture) C.bool {
+	flutterEnginePointer := *(*uintptr)(userData)
+	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+	return C.bool(flutterEngine.GLExternalTextureFrameCallback(textureID, width, height, texture))
+}
