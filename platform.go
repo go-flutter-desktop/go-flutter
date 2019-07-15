@@ -44,6 +44,10 @@ func (p *platformPlugin) InitPluginGLFW(window *glfw.Window) (err error) {
 	p.channel.HandleFunc("SystemNavigator.pop", p.handleSystemNavigatorPop)
 	// Ignored: Desktop's don't have system overlays
 	p.channel.HandleFuncSync("SystemChrome.setSystemUIOverlayStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
+	// Ignored: Desktop's don't have haptic feedback
+	p.channel.HandleFuncSync("HapticFeedback.vibrate", func(_ interface{}) (interface{}, error) { return nil, nil })
+	// Ignored: Desktop's don't play sound on every clicks
+	p.channel.HandleFuncSync("SystemSound.play", func(_ interface{}) (interface{}, error) { return nil, nil })
 	return nil
 }
 
