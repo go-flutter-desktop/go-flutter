@@ -202,6 +202,13 @@ func (a *Application) Run() error {
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
 	}
+	a.engine.GLExternalTextureFrameCallback = func(textureID int64,
+		width int,
+		height int,
+		texture *embedder.FlutterOpenGLTexture) bool {
+		fmt.Println("\nFlutterOpenGLTexture\n")
+		return true
+	}
 
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
@@ -257,8 +264,18 @@ func (a *Application) Run() error {
 	a.window.SetScrollCallback(m.glfwScrollCallback)
 	defer a.engine.Shutdown()
 
+	frameI := int64(0)
 	for !a.window.ShouldClose() {
+		frameI++
 		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
+		if frameI == 400 {
+			print("REGISTER: ")
+			print(a.engine.RegisterExternalTexture(frameI))
+		}
+		if frameI == 600 {
+			print("New Frame: ")
+			print(a.engine.MarkExternalTextureFrameAvailable(frameI))
+		}
 		embedder.FlutterEngineFlushPendingTasksNow()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
