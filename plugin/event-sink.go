@@ -26,7 +26,6 @@ type EventSink struct {
 
 // Success consumes a successful event.
 func (es *EventSink) Success(event interface{}) {
-
 	es.Lock()
 	defer es.Unlock()
 	if es.hasEnded || es != es.eventChannel.activeSink {
@@ -42,7 +41,6 @@ func (es *EventSink) Success(event interface{}) {
 
 // Error consumes an error event.
 func (es *EventSink) Error(errorCode string, errorMessage string, errorDetails interface{}) {
-
 	es.Lock()
 	defer es.Unlock()
 	if es.hasEnded || es != es.eventChannel.activeSink {
@@ -58,7 +56,6 @@ func (es *EventSink) Error(errorCode string, errorMessage string, errorDetails i
 
 // EndOfStream consumes end of stream.
 func (es *EventSink) EndOfStream() {
-
 	es.Lock()
 	defer es.Unlock()
 	if es.hasEnded || es != es.eventChannel.activeSink {

@@ -90,7 +90,7 @@ func (e *EventChannel) handleChannelMessage(binaryMessage []byte, responseSender
 			binaryReply, _ := e.methodCodec.EncodeSuccessEnvelope(nil)
 			responseSender.Send(binaryReply)
 		} else {
-			fmt.Printf("go-flutter: No active strean to cancel onEventChannel '%s'\n", e.channelName)
+			fmt.Printf("go-flutter: No active stream to cancel onEventChannel '%s'\n", e.channelName)
 			binaryReply, _ := e.methodCodec.EncodeErrorEnvelope("error", "No active stream to cancel", nil)
 			responseSender.Send(binaryReply)
 		}
@@ -101,5 +101,4 @@ func (e *EventChannel) handleChannelMessage(binaryMessage []byte, responseSender
 	}
 
 	return nil
-
 }
