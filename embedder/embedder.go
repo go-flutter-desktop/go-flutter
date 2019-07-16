@@ -50,6 +50,7 @@ const (
 	ResultSuccess               Result = C.kSuccess
 	ResultInvalidLibraryVersion Result = C.kInvalidLibraryVersion
 	ResultInvalidArguments      Result = C.kInvalidArguments
+	ResultEngineNotRunning      Result = -1
 )
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
@@ -57,6 +58,9 @@ type FlutterEngine struct {
 	// Flutter Engine.
 	Engine C.FlutterEngine
 
+	// closed indicates if the engine has Shutdown
+	closed bool
+	sync   sync.Mutex
 	// index of the engine in the global flutterEngines slice
 	index int
 
@@ -125,6 +129,9 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 
 // Shutdown stops the Flutter engine.
 func (flu *FlutterEngine) Shutdown() Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	flu.closed = true
 	res := C.FlutterEngineShutdown(flu.Engine)
 	return (Result)(res)
 }
@@ -248,6 +255,12 @@ func (p PlatformMessage) ExpectsResponse() bool {
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
 func (flu *FlutterEngine) SendPlatformMessage(msg *PlatformMessage) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
+
 	cPlatformMessage := C.FlutterPlatformMessage{
 		channel: C.CString(msg.Channel),
 		// TODO: who is responsible for free-ing this C alloc? And can they be
