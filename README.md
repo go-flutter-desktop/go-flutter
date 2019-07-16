@@ -26,7 +26,7 @@ The best way to get started is to install [hover](https://github.com/go-flutter-
 
 Read the [hover tutorial](https://github.com/go-flutter-desktop/hover) to run your app on desktop, or start with [one of our example apps](https://github.com/go-flutter-desktop/examples).
 
-If you want more in-depth information about go-flutter, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki)
+If you want more in-depth information about go-flutter, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki).
 
 ## Supported features
 
@@ -62,7 +62,8 @@ A separate repository contains example Flutter apps that also run on the desktop
 
 Some popular plugins are already implemented over at [github.com/go-flutter-desktop/plugins](https://github.com/go-flutter-desktop/plugins).
 If you have implemented a plugin that you would like to share, feel free to open a PR on the plugins repository!  
-For a detailed tutorial on how to create a plugin, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki)
+
+For a detailed tutorial on how to create a plugin, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki/Implement-a-plugin).
 
 ## Version compatibility
 
