@@ -61,7 +61,7 @@ A separate repository contains example Flutter apps that also run on the desktop
 ## Plugins
 
 Some popular plugins are already implemented over at [github.com/go-flutter-desktop/plugins](https://github.com/go-flutter-desktop/plugins).
-If you have implemented a plugin that you would like to share, feel free to open a PR on the plugins repository!
+If you have implemented a plugin that you would like to share, feel free to open a PR on the plugins repository!  
 For a detailed tutorial on how to create a plugin, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki)
 
 ## Version compatibility
