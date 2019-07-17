@@ -56,8 +56,8 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 		return nil, errors.Wrap(err, "failed to send methodcall")
 	}
 	// TODO(GeertJohan): InvokeMethod may not return any JSON. In Java this is
-	// handled by not having a callback handler, which means no reponse is
-	// expected and reponse is never unmarshalled. We should perhaps define
+	// handled by not having a callback handler, which means no response is
+	// expected and response is never unmarshalled. We should perhaps define
 	// InvokeMethod(..) and InovkeMethodNoResponse(..) to avoid errors when no
 	// response is given.
 	// https://github.com/go-flutter-desktop/go-flutter/issues/141
