@@ -42,7 +42,7 @@ type BasicMessageChannel struct {
 // NewBasicMessageChannel creates a BasicMessageChannel.
 //
 // Call Handle or HandleFunc on the returned BasicMessageChannel to provide the
-// channel with a handler for incomming messages.
+// channel with a handler for incoming messages.
 func NewBasicMessageChannel(messenger BinaryMessenger, channelName string, codec MessageCodec) *BasicMessageChannel {
 	b := &BasicMessageChannel{
 		messenger:   messenger,
@@ -68,7 +68,7 @@ func (b *BasicMessageChannel) Send(message interface{}) (reply interface{}, err 
 	}
 	reply, err = b.codec.DecodeMessage(encodedReply)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode incomming reply")
+		return nil, errors.Wrap(err, "failed to decode incoming reply")
 	}
 	return reply, nil
 }
@@ -104,7 +104,7 @@ func (b *BasicMessageChannel) handleChannelMessage(binaryMessage []byte, r Respo
 	}
 	message, err := b.codec.DecodeMessage(binaryMessage)
 	if err != nil {
-		return errors.Wrap(err, "failed to decode incomming message")
+		return errors.Wrap(err, "failed to decode incoming message")
 	}
 	reply, err := b.handler.HandleMessage(message)
 	if err != nil {
