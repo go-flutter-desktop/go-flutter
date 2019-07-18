@@ -170,6 +170,12 @@ func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yo
 	m.sendPointerEventScroll(window, xoff*scrollModifier, yoff*scrollModifier)
 }
 
+// glfwPosCallback is called when the window is moved, this directly calls
+// glfwRefreshCallback in order to recalculate DPI.
+func (m *windowManager) glfwPosCallback(window *glfw.Window, xpos int, ypos int) {
+	m.glfwRefreshCallback(window)
+}
+
 // glfwRefreshCallback is called when the window needs a reresh, this
 // can occur when the window is resized, was covered by another window, etc.
 // When forcedPixelratio is zero, the forcedPixelratio communicated to the
@@ -188,45 +194,66 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	if m.forcedPixelRatio != 0 {
 		pixelRatio = m.forcedPixelRatio
 	} else {
-		// TODO(#74): multi-monitor support
-		primaryMonitor := glfw.GetPrimaryMonitor()
-		if primaryMonitor == nil {
+		var selectedMonitor *glfw.Monitor
+		winX, winY := window.GetPos()
+		winCenterX, winCenterY := winX+widthPx/2, winY+heightPx/2
+
+		monitors := glfw.GetMonitors()
+		for _, monitor := range monitors {
+			monX1, monY1 := monitor.GetPos()
+			monMode := monitor.GetVideoMode()
+			if monMode == nil {
+				continue
+			}
+			monX2, monY2 := monX1+monMode.Width, monY1+monMode.Height
+			if (monX1 <= winCenterX && winCenterX <= monX2) &&
+				(monY1 <= winCenterY && winCenterY <= monY2) {
+				selectedMonitor = monitor
+				break
+			}
+		}
+
+		if selectedMonitor == nil {
+			// when no monitor was selected, try fallback to primary monitor
+			// TODO: ? perhaps select monitor that is "closest" to the window ?
+			selectedMonitor = glfw.GetPrimaryMonitor()
+		}
+		if selectedMonitor == nil {
 			pixelRatio = 1.0
 			goto SendWindowMetricsEvent
 		}
-		primaryMonitorMode := primaryMonitor.GetVideoMode()
-		primaryMonitor.GetVideoModes()
-		if primaryMonitorMode == nil {
+		selectedMonitorMode := selectedMonitor.GetVideoMode()
+		if selectedMonitorMode == nil {
 			pixelRatio = 1.0
 			goto SendWindowMetricsEvent
 		}
-		primaryMonitorWidthMM, _ := primaryMonitor.GetPhysicalSize()
-		if primaryMonitorWidthMM == 0 {
+		selectedMonitorWidthMM, _ := selectedMonitor.GetPhysicalSize()
+		if selectedMonitorWidthMM == 0 {
 			pixelRatio = 1.0
 			goto SendWindowMetricsEvent
 		}
-		monitorScreenCoordinatesPerInch := float64(primaryMonitorMode.Width) / (float64(primaryMonitorWidthMM) / 25.4)
+		monitorScreenCoordinatesPerInch := float64(selectedMonitorMode.Width) / (float64(selectedMonitorWidthMM) / 25.4)
 
 		dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 		pixelRatio = dpi / dpPerInch
 
 		// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
 		if pixelRatio < 1.0 {
-			metrics := map[string]interface{}{
-				"ppsc":           m.pixelsPerScreenCoordinate,
-				"windowWidthPx":  widthPx,
-				"windowWidthSc":  width,
-				"mscpi":          monitorScreenCoordinatesPerInch,
-				"dpi":            dpi,
-				"pixelRatio":     pixelRatio,
-				"monitorWidthMm": primaryMonitorWidthMM,
-				"monitorWidthSc": primaryMonitorMode.Width,
-			}
-			pixelRatio = 1.0
 			m.oncePrintPixelRatioLimit.Do(func() {
+				metrics := map[string]interface{}{
+					"ppsc":           m.pixelsPerScreenCoordinate,
+					"windowWidthPx":  widthPx,
+					"windowWidthSc":  width,
+					"mscpi":          monitorScreenCoordinatesPerInch,
+					"dpi":            dpi,
+					"pixelRatio":     pixelRatio,
+					"monitorWidthMm": selectedMonitorWidthMM,
+					"monitorWidthSc": selectedMonitorMode.Width,
+				}
 				metricsBytes, _ := json.Marshal(metrics)
 				fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
 			})
+			pixelRatio = 1.0
 		}
 	}
 
