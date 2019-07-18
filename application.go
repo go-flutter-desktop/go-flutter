@@ -235,6 +235,7 @@ func (a *Application) Run() error {
 
 	m.glfwRefreshCallback(a.window)
 	a.window.SetRefreshCallback(m.glfwRefreshCallback)
+	a.window.SetPosCallback(m.glfwPosCallback)
 
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
