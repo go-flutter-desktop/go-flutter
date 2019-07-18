@@ -41,7 +41,7 @@ func NewMethodChannel(messenger BinaryMessenger, channelName string, methodCodec
 
 // InvokeMethod sends a methodcall to the binary messenger and waits for a
 // result. Results from the Flutter side are not yet implemented in the
-// embedder. Until then, InvokeMethod will always return nil as reult.
+// embedder. Until then, InvokeMethod will always return nil as result.
 // https://github.com/flutter/flutter/issues/18852
 func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result interface{}, err error) {
 	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
@@ -72,7 +72,7 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 //
 // Consecutive calls override any existing handler registration for (the name
 // of) this method. When given nil as handler, the previously registered
-// handler for a method is unregistrered.
+// handler for a method is unregistered.
 //
 // When no handler is registered for a method, it will be handled silently by
 // sending a nil reply which triggers the dart MissingPluginException exception.
@@ -128,7 +128,7 @@ func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments inter
 func (m *MethodChannel) handleChannelMessage(binaryMessage []byte, responseSender ResponseSender) (err error) {
 	methodCall, err := m.methodCodec.DecodeMethodCall(binaryMessage)
 	if err != nil {
-		return errors.Wrap(err, "failed to decode incomming message")
+		return errors.Wrap(err, "failed to decode incoming message")
 	}
 
 	m.methodsLock.RLock()

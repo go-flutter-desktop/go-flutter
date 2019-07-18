@@ -47,7 +47,7 @@ func (e *EventChannel) Handle(handler StreamHandler) {
 func (e *EventChannel) handleChannelMessage(binaryMessage []byte, responseSender ResponseSender) (err error) {
 	methodCall, err := e.methodCodec.DecodeMethodCall(binaryMessage)
 	if err != nil {
-		return errors.Wrap(err, "failed to decode incomming message")
+		return errors.Wrap(err, "failed to decode incoming message")
 	}
 
 	if e.handler == nil {
