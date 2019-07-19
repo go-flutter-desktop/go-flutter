@@ -105,9 +105,17 @@ func (m *windowManager) glfwCursorEnterCallback(window *glfw.Window, entered boo
 	x, y := window.GetCursorPos()
 	if entered {
 		m.sendPointerEvent(window, embedder.PointerPhaseAdd, x, y)
-		m.pointerPhase = embedder.PointerPhaseHover
+		// the mouse can enter the windows while having button pressed.
+		// if so, don't overwrite the phase.
+		if m.pointerButton == 0 {
+			m.pointerPhase = embedder.PointerPhaseHover
+		}
 	} else {
-		m.sendPointerEvent(window, embedder.PointerPhaseRemove, x, y)
+		// if the mouse is still in 'phaseMove' outside the window (click-drag
+		// outside). Don't remove the cursor.
+		if m.pointerButton == 0 {
+			m.sendPointerEvent(window, embedder.PointerPhaseRemove, x, y)
+		}
 	}
 }
 

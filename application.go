@@ -237,6 +237,11 @@ func (a *Application) Run() error {
 	a.window.SetRefreshCallback(m.glfwRefreshCallback)
 	a.window.SetPosCallback(m.glfwPosCallback)
 
+	// flutter's PlatformMessage handler is registered through the dart:ui.Window
+	// interface. ui.Window must have at least paint one frame, before any
+	// platfrom message can be corectly handled by ui.Window.onPlatformMessage.
+	glfw.WaitEvents()
+
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
