@@ -2,11 +2,14 @@ package flutter
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
 	"os"
 	"path/filepath"
 	"runtime"
 	"unsafe"
 
+	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 
@@ -203,11 +206,59 @@ func (a *Application) Run() error {
 		return glfw.GetProcAddress(procName)
 	}
 	a.engine.GLExternalTextureFrameCallback = func(textureID int64,
-		width int,
-		height int,
-		texture *embedder.FlutterOpenGLTexture) bool {
-		fmt.Println("\nFlutterOpenGLTexture\n")
-		return true
+		width int, height int,
+	) (bool, embedder.FlutterOpenGLTexture) {
+		fmt.Printf("\nFlutterOpenGLTexture: %v, %v\n", width, height)
+
+		a.window.MakeContextCurrent()
+
+		file := "/tmp/square.png"
+		imgFile, err := os.Open(file)
+		if err != nil {
+			fmt.Printf("texture %q not found on disk: %v", file, err)
+		}
+
+		img, _, err := image.Decode(imgFile)
+		if err != nil {
+			fmt.Printf("error decoding file %s:%v", file, err)
+		}
+
+		rgba := image.NewRGBA(img.Bounds())
+		if rgba.Stride != rgba.Rect.Size().X*4 {
+			fmt.Printf("unsupported stride")
+		}
+
+		draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+
+		var texture uint32
+		gl.GenTextures(1, &texture)
+		EF := embedder.FlutterOpenGLTexture{
+			Target: gl.TEXTURE_2D,
+			Name:   texture,
+			Format: gl.RGBA8,
+		}
+		return true, EF
+
+		// set the texture wrapping parameters
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
+		// set texture filtering parameters
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+		gl.BindTexture(gl.TEXTURE_2D, texture)
+		gl.TexImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			int32(width),
+			int32(height),
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(rgba.Pix))
+
+		return true, EF
 	}
 
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
@@ -266,11 +317,11 @@ func (a *Application) Run() error {
 
 	frameI := int64(0)
 	textureID := int64(1)
-	fmt.Printf("Texture: register result: %v\n", a.engine.RegisterExternalTexture(textureID) == embedder.ResultSuccess)
 	for !a.window.ShouldClose() {
 		frameI++
 		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
-		if frameI%40 == 0 {
+		if frameI == 100 {
+			fmt.Printf("Texture: register result: %v\n", a.engine.RegisterExternalTexture(textureID) == embedder.ResultSuccess)
 			fmt.Printf("Texture: New Frame result: %v\n", a.engine.MarkExternalTextureFrameAvailable(textureID) == embedder.ResultSuccess)
 		}
 		embedder.FlutterEngineFlushPendingTasksNow()

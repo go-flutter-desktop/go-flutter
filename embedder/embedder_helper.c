@@ -18,13 +18,6 @@ bool proxy_gl_external_texture_frame_callback(void *user_data,
                                               size_t height,
                                               FlutterOpenGLTexture *texture);
 
-static bool OnAcquireExternalTexture(void *user_data, int64_t texture_id,
-                                     size_t width, size_t height,
-                                     FlutterOpenGLTexture *texture) {
-  printf("=== OnAcquireExternalTexture: %ld\n", texture_id);
-  return 1;
-}
-
 // C helper
 FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
                                FlutterProjectArgs *Args,
@@ -39,7 +32,8 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
   config.open_gl.fbo_callback = proxy_fbo_callback;
   config.open_gl.make_resource_current = proxy_make_resource_current;
   config.open_gl.gl_proc_resolver = proxy_gl_proc_resolver;
-  config.open_gl.gl_external_texture_frame_callback = OnAcquireExternalTexture;
+  config.open_gl.gl_external_texture_frame_callback =
+      proxy_gl_external_texture_frame_callback;
 
   Args->command_line_argc = nVmAgrs;
   Args->command_line_argv = vmArgs;
