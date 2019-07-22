@@ -265,16 +265,13 @@ func (a *Application) Run() error {
 	defer a.engine.Shutdown()
 
 	frameI := int64(0)
+	textureID := int64(1)
+	fmt.Printf("Texture: register result: %v\n", a.engine.RegisterExternalTexture(textureID) == embedder.ResultSuccess)
 	for !a.window.ShouldClose() {
 		frameI++
 		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
-		if frameI == 400 {
-			print("REGISTER: ")
-			print(a.engine.RegisterExternalTexture(frameI))
-		}
-		if frameI == 600 {
-			print("New Frame: ")
-			print(a.engine.MarkExternalTextureFrameAvailable(frameI))
+		if frameI%40 == 0 {
+			fmt.Printf("Texture: New Frame result: %v\n", a.engine.MarkExternalTextureFrameAvailable(textureID) == embedder.ResultSuccess)
 		}
 		embedder.FlutterEngineFlushPendingTasksNow()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
