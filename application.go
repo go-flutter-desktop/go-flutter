@@ -2,8 +2,6 @@ package flutter
 
 import (
 	"fmt"
-	"image"
-	"image/draw"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -148,7 +146,7 @@ func (a *Application) Run() error {
 	a.engine = embedder.NewFlutterEngine()
 
 	messenger := newMessenger(a.engine)
-	texturer := newTexturer(a.window)
+	texturer := newRegistry(a.engine, a.window)
 
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
@@ -163,6 +161,15 @@ func (a *Application) Run() error {
 				return errors.Wrap(err, "failed to initialize glfw plugin"+fmt.Sprintf("%T", p))
 			}
 		}
+
+		// Extra init call for plugins that satisfy the PluginTexture interface.
+		if glfwPlugin, ok := p.(PluginTexture); ok {
+			err = glfwPlugin.InitPluginTexture(texturer)
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
+			}
+		}
+
 	}
 
 	if a.config.flutterAssetsPath != "" {
@@ -214,28 +221,6 @@ func (a *Application) Run() error {
 
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
-
-	texturer.SetTextureHandler(1, func(width, height int) (bool, *PixelBuffer) {
-
-		file := "/home/drakirus/Images/test.png"
-		imgFile, err := os.Open(file)
-		if err != nil {
-			fmt.Printf("texture %q not found on disk: %v", file, err)
-		}
-
-		img, _, err := image.Decode(imgFile)
-		if err != nil {
-			fmt.Printf("error decoding file %s:%v", file, err)
-		}
-
-		rgba := image.NewRGBA(img.Bounds())
-		if rgba.Stride != rgba.Rect.Size().X*4 {
-			fmt.Printf("unsupported stride")
-		}
-
-		draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-		return true, &PixelBuffer{Pix: rgba.Pix, Width: width, Height: height}
-	})
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.

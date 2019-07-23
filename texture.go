@@ -11,25 +11,28 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 )
 
-type texturer struct {
+// TextureRegistry is a registry entry for a managed SurfaceTexture.
+type TextureRegistry struct {
 	window       *glfw.Window
-	channels     map[int64]externalTextureHanlder
+	engine       *embedder.FlutterEngine
+	channels     map[int64]*externalTextureHanlder
 	channelsLock sync.RWMutex
 }
 
-func newTexturer(window *glfw.Window) *texturer {
-	return &texturer{
+func newRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *TextureRegistry {
+	return &TextureRegistry{
 		window:   window,
-		channels: make(map[int64]externalTextureHanlder),
+		engine:   engine,
+		channels: make(map[int64]*externalTextureHanlder),
 	}
 }
 
-func (t *texturer) init() error {
+func (t *TextureRegistry) init() error {
 	t.window.MakeContextCurrent()
 	// Important! Call gl.Init only under the presence of an active OpenGL context,
 	// i.e., after MakeContextCurrent.
 	if err := gl.Init(); err != nil {
-		return errors.Wrap(err, "texturer gl init")
+		return errors.Wrap(err, "TextureRegistry gl init")
 	}
 	return nil
 }
@@ -39,12 +42,12 @@ func (t *texturer) init() error {
 //
 // Registration overwrites any previous registration for the same textureID
 // name. Use nil as handler to deregister.
-func (t *texturer) SetTextureHandler(textureID int64, handler ExternalTextureHanlderFunc) {
+func (t *TextureRegistry) SetTextureHandler(textureID int64, handler ExternalTextureHanlderFunc) {
 	t.channelsLock.Lock()
 	if handler == nil {
 		delete(t.channels, textureID)
 	} else {
-		t.channels[textureID] = externalTextureHanlder{
+		t.channels[textureID] = &externalTextureHanlder{
 			handle: handler,
 		}
 	}
@@ -70,7 +73,7 @@ type PixelBuffer struct {
 	Width, Height int
 }
 
-func (t *texturer) handleExternalTexture(textureID int64,
+func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	width int, height int) (bool, *embedder.FlutterOpenGLTexture) {
 
 	t.channelsLock.RLock()
