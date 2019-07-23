@@ -55,8 +55,11 @@ const (
 
 // FlutterOpenGLTexture corresponds to the C.FlutterOpenGLTexture struct.
 type FlutterOpenGLTexture struct {
+	// Target texture of the active texture unit (example GL_TEXTURE_2D).
 	Target uint32
-	Name   uint32
+	// The name of the texture.
+	Name uint32
+	// The texture format (example GL_RGBA8).
 	Format uint32
 }
 

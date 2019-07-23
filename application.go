@@ -146,8 +146,6 @@ func (a *Application) Run() error {
 	a.engine = embedder.NewFlutterEngine()
 
 	messenger := newMessenger(a.engine)
-	texturer := newRegistry(a.engine, a.window)
-
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
 		if err != nil {
@@ -161,15 +159,6 @@ func (a *Application) Run() error {
 				return errors.Wrap(err, "failed to initialize glfw plugin"+fmt.Sprintf("%T", p))
 			}
 		}
-
-		// Extra init call for plugins that satisfy the PluginTexture interface.
-		if glfwPlugin, ok := p.(PluginTexture); ok {
-			err = glfwPlugin.InitPluginTexture(texturer)
-			if err != nil {
-				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
-			}
-		}
-
 	}
 
 	if a.config.flutterAssetsPath != "" {
@@ -220,7 +209,11 @@ func (a *Application) Run() error {
 	}
 
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
+
+	texturer := newRegistry(a.engine, a.window)
 	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
+
+	texturer.init()
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
@@ -245,8 +238,6 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
-	texturer.init()
-
 	defaultPlatformPlugin.glfwTasker = tasker.New()
 
 	m := newWindowManager()
@@ -260,6 +251,16 @@ func (a *Application) Run() error {
 	// interface. ui.Window must have at least paint one frame, before any
 	// platfrom message can be corectly handled by ui.Window.onPlatformMessage.
 	glfw.WaitEvents()
+
+	for _, p := range a.config.plugins {
+		// Extra init call for plugins that satisfy the PluginTexture interface.
+		if glfwPlugin, ok := p.(PluginTexture); ok {
+			err = glfwPlugin.InitPluginTexture(texturer)
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
+			}
+		}
+	}
 
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -276,15 +277,8 @@ func (a *Application) Run() error {
 	a.window.SetScrollCallback(m.glfwScrollCallback)
 	defer a.engine.Shutdown()
 
-	frameI := int64(0)
-	textureID := int64(1)
 	for !a.window.ShouldClose() {
-		frameI++
 		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
-		if frameI == 100 {
-			fmt.Printf("Texture: register result: %v\n", a.engine.RegisterExternalTexture(textureID) == embedder.ResultSuccess)
-			fmt.Printf("Texture: New Frame result: %v\n", a.engine.MarkExternalTextureFrameAvailable(textureID) == embedder.ResultSuccess)
-		}
 		embedder.FlutterEngineFlushPendingTasksNow()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
