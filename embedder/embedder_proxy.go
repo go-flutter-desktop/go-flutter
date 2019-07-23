@@ -69,6 +69,9 @@ func proxy_gl_external_texture_frame_callback(userData unsafe.Pointer,
 	flutterEnginePointer := *(*uintptr)(userData)
 	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 	res, embedderGLTexture := flutterEngine.GLExternalTextureFrameCallback(textureID, int(width), int(height))
+	if embedderGLTexture == nil {
+		return C.bool(res)
+	}
 	texture.target = C.uint32_t(embedderGLTexture.Target)
 	texture.name = C.uint32_t(embedderGLTexture.Name)
 	texture.format = C.uint32_t(embedderGLTexture.Format)

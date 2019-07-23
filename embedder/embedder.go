@@ -78,7 +78,7 @@ type FlutterEngine struct {
 	GLFboCallback                  func() int32
 	GLMakeResourceCurrent          func() bool
 	GLProcResolver                 func(procName string) unsafe.Pointer
-	GLExternalTextureFrameCallback func(textureID int64, width int, height int) (bool, FlutterOpenGLTexture)
+	GLExternalTextureFrameCallback func(textureID int64, width int, height int) (bool, *FlutterOpenGLTexture)
 
 	// platform message callback function
 	PlatfromMessage func(message *PlatformMessage)

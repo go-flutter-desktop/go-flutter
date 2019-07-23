@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"unsafe"
 
-	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 
@@ -103,6 +102,11 @@ func (a *Application) Run() error {
 		return errors.Errorf("invalid window mode %T", a.config.windowMode)
 	}
 
+	glfw.WindowHint(glfw.ContextVersionMajor, 4) // OR 2
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
@@ -144,6 +148,8 @@ func (a *Application) Run() error {
 	a.engine = embedder.NewFlutterEngine()
 
 	messenger := newMessenger(a.engine)
+	texturer := newTexturer(a.window)
+
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
 		if err != nil {
@@ -205,14 +211,13 @@ func (a *Application) Run() error {
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
 	}
-	a.engine.GLExternalTextureFrameCallback = func(textureID int64,
-		width int, height int,
-	) (bool, embedder.FlutterOpenGLTexture) {
-		fmt.Printf("\nFlutterOpenGLTexture: %v, %v\n", width, height)
 
-		a.window.MakeContextCurrent()
+	a.engine.PlatfromMessage = messenger.handlePlatformMessage
+	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
-		file := "/tmp/square.png"
+	texturer.SetTextureHandler(1, func(width, height int) (bool, *PixelBuffer) {
+
+		file := "/home/drakirus/Images/test.png"
 		imgFile, err := os.Open(file)
 		if err != nil {
 			fmt.Printf("texture %q not found on disk: %v", file, err)
@@ -229,39 +234,8 @@ func (a *Application) Run() error {
 		}
 
 		draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-
-		var texture uint32
-		gl.GenTextures(1, &texture)
-		EF := embedder.FlutterOpenGLTexture{
-			Target: gl.TEXTURE_2D,
-			Name:   texture,
-			Format: gl.RGBA8,
-		}
-		return true, EF
-
-		// set the texture wrapping parameters
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
-		// set texture filtering parameters
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-		gl.BindTexture(gl.TEXTURE_2D, texture)
-		gl.TexImage2D(
-			gl.TEXTURE_2D,
-			0,
-			gl.RGBA,
-			int32(width),
-			int32(height),
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			gl.Ptr(rgba.Pix))
-
-		return true, EF
-	}
-
-	a.engine.PlatfromMessage = messenger.handlePlatformMessage
+		return true, &PixelBuffer{Pix: rgba.Pix, Width: width, Height: height}
+	})
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
@@ -285,6 +259,8 @@ func (a *Application) Run() error {
 		}
 		os.Exit(1)
 	}
+
+	texturer.init()
 
 	defaultPlatformPlugin.glfwTasker = tasker.New()
 
