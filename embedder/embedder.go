@@ -55,12 +55,14 @@ const (
 
 // FlutterOpenGLTexture corresponds to the C.FlutterOpenGLTexture struct.
 type FlutterOpenGLTexture struct {
-	// Target texture of the active texture unit (example GL_TEXTURE_2D).
+	// Target texture of the active texture unit (example GL_TEXTURE_2D)
 	Target uint32
-	// The name of the texture.
+	// The name of the texture
 	Name uint32
-	// The texture format (example GL_RGBA8).
+	// The texture format (example GL_RGBA8)
 	Format uint32
+	// Callback invoked to collect the texture
+	Collect func()
 }
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
@@ -81,7 +83,7 @@ type FlutterEngine struct {
 	GLFboCallback                  func() int32
 	GLMakeResourceCurrent          func() bool
 	GLProcResolver                 func(procName string) unsafe.Pointer
-	GLExternalTextureFrameCallback func(textureID int64, width int, height int) (bool, *FlutterOpenGLTexture)
+	GLExternalTextureFrameCallback func(textureID int64, width int, height int) *FlutterOpenGLTexture
 
 	// platform message callback function
 	PlatfromMessage func(message *PlatformMessage)

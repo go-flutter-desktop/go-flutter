@@ -13,7 +13,7 @@ type Texture struct {
 	registry *TextureRegistry
 }
 
-// Register registers a textureID
+// Register registers a textureID with his associated handler
 func (t *Texture) Register(handler ExternalTextureHanlderFunc) error {
 	t.registry.setTextureHandler(t.ID, handler)
 	result := t.registry.engine.RegisterExternalTexture(t.ID)

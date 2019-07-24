@@ -21,6 +21,13 @@ type TextureRegistry struct {
 	texturesLock sync.Mutex
 }
 
+type externalTextureHanlder struct {
+	// handle is called when flutter needs the PixelBuffer
+	handle ExternalTextureHanlderFunc
+	// gl texture to refer to for this handler
+	texture uint32
+}
+
 func newRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *TextureRegistry {
 	return &TextureRegistry{
 		window:   window,
@@ -59,13 +66,6 @@ type PixelBuffer struct {
 	Width, Height int
 }
 
-type externalTextureHanlder struct {
-	// handle is called when flutter needs the PixelBuffer
-	handle ExternalTextureHanlderFunc
-	// gl texture to refer to for this handler
-	texture uint32
-}
-
 // setTextureHandler registers a handler to be invoked when the Flutter
 // application want to get a PixelBuffer to draw into the scene.
 //
@@ -84,7 +84,7 @@ func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTex
 }
 
 func (t *TextureRegistry) handleExternalTexture(textureID int64,
-	width int, height int) (bool, *embedder.FlutterOpenGLTexture) {
+	width int, height int) *embedder.FlutterOpenGLTexture {
 
 	t.channelsLock.RLock()
 	registration, registrationExists := t.channels[textureID]
@@ -92,15 +92,15 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 
 	if !registrationExists {
 		fmt.Printf("go-flutter: no texture handler found for Texture ID: %v\n", textureID)
-		return false, nil
+		return nil
 	}
 	res, pixelBuffer := registration.handle(width, height)
 	if !res || pixelBuffer == nil {
-		return false, nil
+		return nil
 	}
 
 	if len(pixelBuffer.Pix) == 0 {
-		return false, nil
+		return nil
 	}
 
 	t.window.MakeContextCurrent()
@@ -131,10 +131,14 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(pixelBuffer.Pix))
 
-	return true, &embedder.FlutterOpenGLTexture{
+	return &embedder.FlutterOpenGLTexture{
 		Target: gl.TEXTURE_2D,
 		Name:   registration.texture,
 		Format: gl.RGBA8,
+		Collect: func() {
+			// runtime delete the pixelBuffer.Pix, (should be done by the GC)
+			// gl.DeleteTextures(1, &registration.texture) // not this, this is for destroy not collect!!
+		},
 	}
 
 }

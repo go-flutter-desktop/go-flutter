@@ -1,8 +1,10 @@
 package embedder
 
 // #include "embedder.h"
+// void proxy_texture_destruction_callback(void* user_data);
 import "C"
 import (
+	"runtime"
 	"unsafe"
 )
 
@@ -68,12 +70,28 @@ func proxy_gl_external_texture_frame_callback(userData unsafe.Pointer,
 	texture *C.FlutterOpenGLTexture) C.bool {
 	flutterEnginePointer := *(*uintptr)(userData)
 	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
-	res, embedderGLTexture := flutterEngine.GLExternalTextureFrameCallback(textureID, int(width), int(height))
+	embedderGLTexture := flutterEngine.GLExternalTextureFrameCallback(textureID, int(width), int(height))
 	if embedderGLTexture == nil {
-		return C.bool(res)
+		return C.bool(false)
 	}
 	texture.target = C.uint32_t(embedderGLTexture.Target)
 	texture.name = C.uint32_t(embedderGLTexture.Name)
 	texture.format = C.uint32_t(embedderGLTexture.Format)
-	return C.bool(res)
+	collectPointer := (unsafe.Pointer(&embedderGLTexture.Collect))
+	texture.user_data = collectPointer
+	texture.destruction_callback = (C.VoidCallback)(C.proxy_texture_destruction_callback)
+	defer func() {
+		runtime.KeepAlive(collectPointer)
+	}()
+	return C.bool(true)
+}
+
+//export proxy_texture_destruction_callback
+func proxy_texture_destruction_callback(userData unsafe.Pointer) {
+	defer recover()
+	destroyCB := (*func())(userData)
+	if destroyCB != nil {
+		destroyCB := *destroyCB
+		destroyCB()
+	}
 }
