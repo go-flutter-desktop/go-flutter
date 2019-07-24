@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TextureRegistry is a registry entry for a managed SurfaceTexture.
+// TextureRegistry is a registry entry for a managed Texture.
 type TextureRegistry struct {
 	window       *glfw.Window
 	engine       *embedder.FlutterEngine
@@ -74,6 +74,10 @@ type PixelBuffer struct {
 func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTextureHanlderFunc) {
 	t.channelsLock.Lock()
 	if handler == nil {
+		texture := t.channels[textureID]
+		if texture != nil {
+			gl.DeleteTextures(1, &texture.texture)
+		}
 		delete(t.channels, textureID)
 	} else {
 		t.channels[textureID] = &externalTextureHanlder{

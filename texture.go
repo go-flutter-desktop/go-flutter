@@ -18,6 +18,7 @@ func (t *Texture) Register(handler ExternalTextureHanlderFunc) error {
 	t.registry.setTextureHandler(t.ID, handler)
 	result := t.registry.engine.RegisterExternalTexture(t.ID)
 	if result != embedder.ResultSuccess {
+		t.registry.setTextureHandler(t.ID, nil)
 		return errors.New("'go-flutter' couldn't register texture with id: " + fmt.Sprint(t.ID))
 	}
 	return nil

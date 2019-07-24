@@ -312,12 +312,22 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 
 // RegisterExternalTexture registers an external texture with a unique identifier.
 func (flu *FlutterEngine) RegisterExternalTexture(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
 	res := C.FlutterEngineRegisterExternalTexture(flu.Engine, C.int64_t(textureID))
 	return (Result)(res)
 }
 
 // UnregisterExternalTexture unregisters a previous texture registration.
 func (flu *FlutterEngine) UnregisterExternalTexture(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
 	res := C.FlutterEngineUnregisterExternalTexture(flu.Engine, C.int64_t(textureID))
 	return (Result)(res)
 }
@@ -325,6 +335,11 @@ func (flu *FlutterEngine) UnregisterExternalTexture(textureID int64) Result {
 // MarkExternalTextureFrameAvailable marks that a new texture frame is
 // available for a given texture identifier.
 func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
 	res := C.FlutterEngineMarkExternalTextureFrameAvailable(flu.Engine, C.int64_t(textureID))
 	return (Result)(res)
 }
