@@ -61,8 +61,6 @@ type FlutterOpenGLTexture struct {
 	Name uint32
 	// The texture format (example GL_RGBA8)
 	Format uint32
-	// Callback invoked to collect the texture
-	Collect func()
 }
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.

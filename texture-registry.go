@@ -135,10 +135,6 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 		Target: gl.TEXTURE_2D,
 		Name:   registration.texture,
 		Format: gl.RGBA8,
-		Collect: func() {
-			// runtime delete the pixelBuffer.Pix, (should be done by the GC)
-			// gl.DeleteTextures(1, &registration.texture) // not this, this is for destroy not collect!!
-		},
 	}
 
 }
