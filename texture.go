@@ -33,12 +33,12 @@ func (t *Texture) FrameAvailable() error {
 	return nil
 }
 
-// UnRegister mark a texture buffer is ready to be draw in the flutter scene
+// UnRegister unregisters a textureID with his associated handler
 func (t *Texture) UnRegister() error {
-	t.registry.setTextureHandler(t.ID, nil)
 	result := t.registry.engine.UnregisterExternalTexture(t.ID)
 	if result != embedder.ResultSuccess {
 		return errors.New("'go-flutter' couldn't unregisters texture with id: " + fmt.Sprint(t.ID))
 	}
+	t.registry.setTextureHandler(t.ID, nil)
 	return nil
 }
