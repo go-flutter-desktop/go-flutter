@@ -121,9 +121,7 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	}
 
 	gl.BindTexture(gl.TEXTURE_2D, registration.texture)
-	// TODO(Drakirus) handle multiple format of the pixel data (RGB, Gray) and
-	// Texture format (GL_RGBA8).
-	// https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml
+	// It seems that current flutter/engine can only support RGBA texture.
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
