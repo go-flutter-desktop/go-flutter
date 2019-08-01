@@ -2,6 +2,7 @@
 
 # go-flutter - A package that brings Flutter to the desktop
 
+[![Awesome Flutter](https://img.shields.io/badge/Awesome-Flutter-blue.svg?longCache=true&style=flat-square)](https://github.com/Solido/awesome-flutter)
 [![Documentation](https://godoc.org/github.com/go-flutter-desktop/go-flutter?status.svg)](http://godoc.org/github.com/go-flutter-desktop/go-flutter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-flutter-desktop/go-flutter)](https://goreportcard.com/report/github.com/go-flutter-desktop/go-flutter)
 [![Join the chat at https://gitter.im/go-flutter-desktop/go-flutter](https://badges.gitter.im/go-flutter-desktop/go-flutter.svg)](https://gitter.im/go-flutter-desktop/go-flutter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
