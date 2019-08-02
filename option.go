@@ -16,6 +16,7 @@ type config struct {
 	windowInitializerDeprecated func(*glfw.Window) error
 	windowIconProvider          func() ([]image.Image, error)
 	windowInitialDimensions     windowDimensions
+	windowInitialLocations      windowLocations
 	windowDimensionLimits       windowDimensionLimits
 	windowMode                  windowMode
 
@@ -28,6 +29,11 @@ type config struct {
 type windowDimensions struct {
 	width  int
 	height int
+}
+
+type windowLocations struct {
+	xpos int
+	ypos int
 }
 
 type windowDimensionLimits struct {
@@ -115,6 +121,25 @@ func WindowInitialDimensions(width, height int) Option {
 	return func(c *config) {
 		c.windowInitialDimensions.width = width
 		c.windowInitialDimensions.height = height
+	}
+}
+
+// WindowInitialLocations specify the startup's position of the window.
+// Location, in screen coordinates, of the upper-left corner of the client area
+// of the window.
+func WindowInitialLocations(xpos, ypos int) Option {
+	if xpos < 1 {
+		fmt.Println("go-flutter: invalid initial value for xpos location, must be 1 or greater.")
+		os.Exit(1)
+	}
+	if ypos < 1 {
+		fmt.Println("go-flutter: invalid initial value for ypos location, must be 1 or greater.")
+		os.Exit(1)
+	}
+
+	return func(c *config) {
+		c.windowInitialLocations.xpos = xpos
+		c.windowInitialLocations.ypos = ypos
 	}
 }
 

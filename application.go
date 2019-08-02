@@ -100,10 +100,16 @@ func (a *Application) Run() error {
 		return errors.Errorf("invalid window mode %T", a.config.windowMode)
 	}
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 4) // OR 2
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+  
+	if a.config.windowInitialLocations.xpos != 0 {
+		// To create the window at a specific position, make it initially invisible
+		// using the Visible window hint, set its position and then show it.
+		glfw.WindowHint(glfw.Visible, glfw.False)
+	}
 
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
 	if err != nil {
@@ -111,6 +117,12 @@ func (a *Application) Run() error {
 	}
 	glfw.DefaultWindowHints()
 	defer a.window.Destroy()
+
+	if a.config.windowInitialLocations.xpos != 0 {
+		a.window.SetPos(a.config.windowInitialLocations.xpos,
+			a.config.windowInitialLocations.ypos)
+		a.window.Show()
+	}
 
 	a.resourceWindow, err = createResourceWindow(a.window)
 	if err != nil {
