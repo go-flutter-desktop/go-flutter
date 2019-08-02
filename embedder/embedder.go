@@ -317,6 +317,12 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 	return (Result)(res)
 }
 
+// RunTask inform the engine to run the specified task.
+func (flu *FlutterEngine) RunTask(task *FlutterTask) Result {
+	res := C.FlutterEngineRunTask(flu.Engine, task)
+	return (Result)(res)
+}
+
 // RegisterExternalTexture registers an external texture with a unique identifier.
 func (flu *FlutterEngine) RegisterExternalTexture(textureID int64) Result {
 	flu.sync.Lock()
@@ -355,10 +361,4 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 // engine.
 func FlutterEngineGetCurrentTime() uint64 {
   return uint64(C.FlutterEngineGetCurrentTime())
-}
-
-// RunTask inform the engine to run the specified task.
-func (flu *FlutterEngine) RunTask(task *FlutterTask) Result {
-	res := C.FlutterEngineRunTask(flu.Engine, task)
-	return (Result)(res)
 }
