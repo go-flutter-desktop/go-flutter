@@ -100,6 +100,11 @@ func (a *Application) Run() error {
 		return errors.Errorf("invalid window mode %T", a.config.windowMode)
 	}
 
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+  
 	if a.config.windowInitialLocations.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
 		// using the Visible window hint, set its position and then show it.
@@ -217,6 +222,11 @@ func (a *Application) Run() error {
 
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
+	texturer := newRegistry(a.engine, a.window)
+	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
+
+	texturer.init()
+
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
 	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
@@ -253,6 +263,16 @@ func (a *Application) Run() error {
 	// interface. ui.Window must have at least paint one frame, before any
 	// platfrom message can be corectly handled by ui.Window.onPlatformMessage.
 	glfw.WaitEvents()
+
+	for _, p := range a.config.plugins {
+		// Extra init call for plugins that satisfy the PluginTexture interface.
+		if glfwPlugin, ok := p.(PluginTexture); ok {
+			err = glfwPlugin.InitPluginTexture(texturer)
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
+			}
+		}
+	}
 
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
