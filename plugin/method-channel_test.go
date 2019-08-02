@@ -29,11 +29,11 @@ func TestMethodChannelJSONInvoke(t *testing.T) {
 		r.Send(binaryReply)
 		return nil
 	})
-	result, err := channel.InvokeMethod("sayHello", "hello")
+	result, err := channel.InvokeMethodWithReply("sayHello", "hello")
 	Nil(t, err)
 	Equal(t, json.RawMessage(`"hello world"`), result)
 
-	result, err = channel.InvokeMethod("invalidMethod", "")
+	result, err = channel.InvokeMethodWithReply("invalidMethod", "")
 	Nil(t, result)
 	expectedError := FlutterError{
 		Code:    "unknown",

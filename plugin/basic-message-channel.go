@@ -69,9 +69,11 @@ func (b *BasicMessageChannel) Send(message interface{}) error {
 
 // SendWithReply encodes and sends the specified message to the Flutter
 // application and returns the reply, or an error.
+//
 // NOTE: If no value are returned by the handler setted in the
 // setMessageHandler flutter method, the function will wait forever. In case
-// you don't want to wait for reply, use Send.
+// you don't want to wait for reply, use Send or launch the
+// function in a goroutine.
 func (b *BasicMessageChannel) SendWithReply(message interface{}) (reply interface{}, err error) {
 	encodedMessage, err := b.codec.EncodeMessage(message)
 	if err != nil {

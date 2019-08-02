@@ -59,9 +59,11 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) error {
 
 // InvokeMethodWithReply sends a methodcall to the binary messenger and wait
 // for a reply.
+//
 // NOTE: If no value are returned by the handler setted in the
 // setMethodCallHandler flutter method, the function will wait forever. In case
-// you don't want to wait for reply, use InvokeMethod.
+// you don't want to wait for reply, use InvokeMethod or launch the
+// function in a goroutine.
 func (m *MethodChannel) InvokeMethodWithReply(name string, arguments interface{}) (result interface{}, err error) {
 	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
 		Method:    name,
@@ -76,7 +78,7 @@ func (m *MethodChannel) InvokeMethodWithReply(name string, arguments interface{}
 	}
 	result, err = m.methodCodec.DecodeEnvelope(encodedReply)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode incoming reply")
+		return nil, err
 	}
 	return result, nil
 }
