@@ -20,6 +20,7 @@ bool proxy_gl_external_texture_frame_callback(void *user_data,
 bool proxy_runs_task_on_current_thread_callback(void *user_data);
 void proxy_post_task_callback(FlutterTask task, uint64_t target_time_nanos,
                               void *user_data);
+
 void proxy_desktop_binary_reply(const uint8_t *data, size_t data_size,
                                 void *user_data);
 

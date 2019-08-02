@@ -393,7 +393,7 @@ func (flu *FlutterEngine) ReleasePlatformMessageResponseHandle(responseHandle Pl
 	}
 }
 
-// FlutterEngineGetCurrentTime Get the current time in nanoseconds from the clock used by the flutter
+// FlutterEngineGetCurrentTime gets the current time in nanoseconds from the clock used by the flutter
 // engine.
 func FlutterEngineGetCurrentTime() uint64 {
 	return uint64(C.FlutterEngineGetCurrentTime())
