@@ -29,6 +29,11 @@ func NewTestingBinaryMessenger() *TestingBinaryMessenger {
 
 var _ BinaryMessenger = &TestingBinaryMessenger{} // compile-time type check
 
+func (t *TestingBinaryMessenger) SendNoReply(channel string, message []byte) (err error) {
+	_, err = t.Send(channel, message)
+	return err
+}
+
 // Send sends the bytes onto the given channel.
 // In this testing implementation of a BinaryMessenger, the handler for the
 // channel may be set using MockSetMessageHandler

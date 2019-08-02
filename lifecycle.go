@@ -33,7 +33,7 @@ func (p *lifecyclePlugin) glfwIconifyCallback(w *glfw.Window, iconified bool) {
 	case false:
 		state = "AppLifecycleState.resumed"
 	}
-	_, err := p.channel.Send(state)
+	err := p.channel.Send(state)
 	if err != nil {
 		fmt.Printf("go-flutter: Failed to send lifecycle event %s: %v\n", state, err)
 	}

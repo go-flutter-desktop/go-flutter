@@ -91,3 +91,10 @@ func proxy_post_task_callback(task C.FlutterTask, targetTimeNanos C.uint64_t, us
 	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 	flutterEngine.TaskRunnerPostTask(task, uint64(targetTimeNanos))
 }
+
+//export proxy_desktop_binary_reply
+func proxy_desktop_binary_reply(data *C.uint8_t, dataSize C.size_t, userData unsafe.Pointer) {
+	callbackPointer := *(*uintptr)(userData)
+	handler := *(*DataCallback)(unsafe.Pointer(callbackPointer))
+	handler(C.GoBytes(unsafe.Pointer(data), C.int(dataSize)))
+}

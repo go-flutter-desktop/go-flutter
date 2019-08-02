@@ -3,13 +3,18 @@ package embedder
 // #include "embedder.h"
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
+// FlutterEngineResult
+// createMessageResponseHandle(FlutterEngine engine, void *user_data,
+//                             FlutterPlatformMessageResponseHandle **reply);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
+	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"unsafe"
@@ -257,7 +262,6 @@ type PlatformMessage struct {
 	Message []byte
 
 	// ResponseHandle is only set when receiving a platform message.
-	// https://github.com/flutter/flutter/issues/18852
 	ResponseHandle PlatformMessageResponseHandle
 }
 
@@ -357,8 +361,40 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 	return (Result)(res)
 }
 
-// Get the current time in nanoseconds from the clock used by the flutter
+// DataCallback is a function called when a PlatformMessage response send back
+// to the embedder.
+type DataCallback func(binaryReply []byte)
+
+// CreatePlatformMessageResponseHandle creates a platform message response
+// handle that allows the embedder to set a native callback for a response to a
+// message.
+func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback DataCallback) (PlatformMessageResponseHandle, error) {
+	var responseHandle *C.FlutterPlatformMessageResponseHandle
+
+	callbackPointer := uintptr(unsafe.Pointer(&callback))
+	defer func() {
+		runtime.KeepAlive(callbackPointer)
+	}()
+
+	res := C.createMessageResponseHandle(flu.Engine, unsafe.Pointer(&callbackPointer), &responseHandle)
+	if (Result)(res) != ResultSuccess {
+		return 0, errors.New("failed to create a response handle")
+	}
+	return PlatformMessageResponseHandle(unsafe.Pointer(responseHandle)), nil
+}
+
+// ReleasePlatformMessageResponseHandle collects a platform message response
+// handle.
+func (flu *FlutterEngine) ReleasePlatformMessageResponseHandle(responseHandle PlatformMessageResponseHandle) {
+	cResponseHandle := (*C.FlutterPlatformMessageResponseHandle)(unsafe.Pointer(responseHandle))
+	res := C.FlutterPlatformMessageReleaseResponseHandle(flu.Engine, cResponseHandle)
+	if (Result)(res) != ResultSuccess {
+		fmt.Printf("go-flutter: failed to collect platform response message handle")
+	}
+}
+
+// FlutterEngineGetCurrentTime Get the current time in nanoseconds from the clock used by the flutter
 // engine.
 func FlutterEngineGetCurrentTime() uint64 {
-  return uint64(C.FlutterEngineGetCurrentTime())
+	return uint64(C.FlutterEngineGetCurrentTime())
 }

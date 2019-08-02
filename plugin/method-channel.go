@@ -40,11 +40,29 @@ func NewMethodChannel(messenger BinaryMessenger, channelName string, methodCodec
 	return mc
 }
 
-// InvokeMethod sends a methodcall to the binary messenger and waits for a
-// result. Results from the Flutter side are not yet implemented in the
-// embedder. Until then, InvokeMethod will always return nil as result.
-// https://github.com/flutter/flutter/issues/18852
-func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result interface{}, err error) {
+// InvokeMethod sends a methodcall to the binary messenger without waiting for
+// a reply. and waits for a result.
+func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) error {
+	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
+		Method:    name,
+		Arguments: arguments,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode methodcall")
+	}
+	err = m.messenger.SendNoReply(m.channelName, encodedMessage)
+	if err != nil {
+		return errors.Wrap(err, "failed to send methodcall")
+	}
+	return nil
+}
+
+// InvokeMethodWithReply sends a methodcall to the binary messenger and wait
+// for a reply.
+// NOTE: If no value are returned by the handler setted in the
+// setMethodCallHandler flutter method, the function will wait forever. In case
+// you don't want to wait for reply, use InvokeMethod.
+func (m *MethodChannel) InvokeMethodWithReply(name string, arguments interface{}) (result interface{}, err error) {
 	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
 		Method:    name,
 		Arguments: arguments,
@@ -56,15 +74,9 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send methodcall")
 	}
-	// TODO(GeertJohan): InvokeMethod may not return any JSON. In Java this is
-	// handled by not having a callback handler, which means no response is
-	// expected and response is never unmarshalled. We should perhaps define
-	// InvokeMethod(..) and InovkeMethodNoResponse(..) to avoid errors when no
-	// response is given.
-	// https://github.com/go-flutter-desktop/go-flutter/issues/141
 	result, err = m.methodCodec.DecodeEnvelope(encodedReply)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to decode incoming reply")
 	}
 	return result, nil
 }
