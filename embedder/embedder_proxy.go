@@ -77,3 +77,17 @@ func proxy_gl_external_texture_frame_callback(userData unsafe.Pointer,
 	texture.format = C.uint32_t(embedderGLTexture.Format)
 	return C.bool(true)
 }
+
+//export proxy_runs_task_on_current_thread_callback
+func proxy_runs_task_on_current_thread_callback(userData unsafe.Pointer) C.bool {
+	flutterEnginePointer := *(*uintptr)(userData)
+	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+	return C.bool(flutterEngine.TaskRunnerRunOnCurrentThread())
+}
+
+//export proxy_post_task_callback
+func proxy_post_task_callback(task C.FlutterTask, targetTimeNanos C.uint64_t, userData unsafe.Pointer) {
+	flutterEnginePointer := *(*uintptr)(userData)
+	flutterEngine := (*FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+	flutterEngine.TaskRunnerPostTask(task, uint64(targetTimeNanos))
+}
