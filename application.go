@@ -220,6 +220,13 @@ func (a *Application) Run() error {
 		return glfw.GetProcAddress(procName)
 	}
 
+	eventLoop := newEventLoop(
+		glfw.PostEmptyEvent, // Wakeup GLFW
+		a.engine.RunTask,    // Flush tasks
+	)
+	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
+	a.engine.TaskRunnerPostTask = eventLoop.PostTask
+
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
 	texturer := newRegistry(a.engine, a.window)
@@ -290,8 +297,9 @@ func (a *Application) Run() error {
 	defer a.engine.Shutdown()
 
 	for !a.window.ShouldClose() {
-		glfw.WaitEventsTimeout(0.016) // timeout to get 60fps-ish iterations
-		embedder.FlutterEngineFlushPendingTasksNow()
+		eventLoop.WaitForEvents(func(duration float64) {
+			glfw.WaitEventsTimeout(duration)
+		})
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 	}

@@ -63,6 +63,9 @@ type FlutterOpenGLTexture struct {
 	Format uint32
 }
 
+// FlutterTask is a type alias to C.FlutterTask
+type FlutterTask = C.FlutterTask
+
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
 type FlutterEngine struct {
 	// Flutter Engine.
@@ -82,6 +85,10 @@ type FlutterEngine struct {
 	GLMakeResourceCurrent          func() bool
 	GLProcResolver                 func(procName string) unsafe.Pointer
 	GLExternalTextureFrameCallback func(textureID int64, width int, height int) *FlutterOpenGLTexture
+
+	// task runner interop
+	TaskRunnerRunOnCurrentThread func() bool
+	TaskRunnerPostTask           func(trask FlutterTask, targetTimeNanos uint64)
 
 	// platform message callback function
 	PlatfromMessage func(message *PlatformMessage)
@@ -310,6 +317,12 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 	return (Result)(res)
 }
 
+// RunTask inform the engine to run the specified task.
+func (flu *FlutterEngine) RunTask(task *FlutterTask) Result {
+	res := C.FlutterEngineRunTask(flu.Engine, task)
+	return (Result)(res)
+}
+
 // RegisterExternalTexture registers an external texture with a unique identifier.
 func (flu *FlutterEngine) RegisterExternalTexture(textureID int64) Result {
 	flu.sync.Lock()
@@ -344,10 +357,8 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 	return (Result)(res)
 }
 
-// FlutterEngineFlushPendingTasksNow flush tasks on a  message loop not
-// controlled by the Flutter engine.
-//
-// deprecated soon.
-func FlutterEngineFlushPendingTasksNow() {
-	C.__FlutterEngineFlushPendingTasksNow()
+// FlutterEngineGetCurrentTime gets the current time in nanoseconds from the
+// clock used by the flutter engine.
+func FlutterEngineGetCurrentTime() uint64 {
+	return uint64(C.FlutterEngineGetCurrentTime())
 }

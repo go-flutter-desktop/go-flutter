@@ -17,6 +17,10 @@ bool proxy_gl_external_texture_frame_callback(void *user_data,
                                               size_t height,
                                               FlutterOpenGLTexture *texture);
 
+bool proxy_runs_task_on_current_thread_callback(void *user_data);
+void proxy_post_task_callback(FlutterTask task, uint64_t target_time_nanos,
+                              void *user_data);
+
 // C helper
 FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
                                FlutterProjectArgs *Args,
@@ -37,6 +41,19 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
   Args->command_line_argc = nVmAgrs;
   Args->command_line_argv = vmArgs;
   Args->platform_message_callback = proxy_platform_message_callback;
+
+  // Configure task runner interop
+  FlutterTaskRunnerDescription platform_task_runner = {};
+  platform_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
+  platform_task_runner.user_data = user_data;
+  platform_task_runner.runs_task_on_current_thread_callback =
+      proxy_runs_task_on_current_thread_callback;
+  platform_task_runner.post_task_callback = proxy_post_task_callback;
+
+  FlutterCustomTaskRunners custom_task_runners = {};
+  custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
+  custom_task_runners.platform_task_runner = &platform_task_runner;
+  Args->custom_task_runners = &custom_task_runners;
 
   return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, user_data,
                           engine);
