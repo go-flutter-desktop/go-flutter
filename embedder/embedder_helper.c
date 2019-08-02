@@ -21,6 +21,9 @@ bool proxy_runs_task_on_current_thread_callback(void *user_data);
 void proxy_post_task_callback(FlutterTask task, uint64_t target_time_nanos,
                               void *user_data);
 
+void proxy_desktop_binary_reply(const uint8_t *data, size_t data_size,
+                                void *user_data);
+
 // C helper
 FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
                                FlutterProjectArgs *Args,
@@ -62,3 +65,10 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
 char **makeCharArray(int size) { return calloc(sizeof(char *), size); }
 
 void setArrayString(char **a, char *s, int n) { a[n] = s; }
+
+FlutterEngineResult
+createMessageResponseHandle(FlutterEngine engine, void *user_data,
+                            FlutterPlatformMessageResponseHandle **reply) {
+  return FlutterPlatformMessageCreateResponseHandle(
+      engine, proxy_desktop_binary_reply, user_data, reply);
+}

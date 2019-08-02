@@ -104,7 +104,7 @@ func (a *Application) Run() error {
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-  
+
 	if a.config.windowInitialLocations.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
 		// using the Visible window hint, set its position and then show it.

@@ -15,7 +15,17 @@ extern "C" {
 
 #ifndef FLUTTER_EXPORT
 #define FLUTTER_EXPORT
-#endif // FLUTTER_EXPORT
+#endif  // FLUTTER_EXPORT
+
+#ifdef FLUTTER_API_SYMBOL_PREFIX
+#define FLUTTER_EMBEDDING_CONCAT(a, b) a##b
+#define FLUTTER_EMBEDDING_ADD_PREFIX(symbol, prefix) \
+  FLUTTER_EMBEDDING_CONCAT(prefix, symbol)
+#define FLUTTER_API_SYMBOL(symbol) \
+  FLUTTER_EMBEDDING_ADD_PREFIX(symbol, FLUTTER_API_SYMBOL_PREFIX)
+#else
+#define FLUTTER_API_SYMBOL(symbol) symbol
+#endif
 
 #define FLUTTER_ENGINE_VERSION 1
 
@@ -168,7 +178,7 @@ typedef enum {
   kFlutterTextDirectionLTR = 2,
 } FlutterTextDirection;
 
-typedef struct _FlutterEngine *FlutterEngine;
+typedef struct _FlutterEngine* FLUTTER_API_SYMBOL(FlutterEngine);
 
 typedef struct {
   //   horizontal scale factor
@@ -191,7 +201,7 @@ typedef struct {
   double pers2;
 } FlutterTransformation;
 
-typedef void (*VoidCallback)(void * /* user data */);
+typedef void (*VoidCallback)(void* /* user data */);
 
 typedef struct {
   //    Target texture of the active texture unit (example GL_TEXTURE_2D).
@@ -201,25 +211,26 @@ typedef struct {
   //    The texture format (example GL_RGBA8).
   uint32_t format;
   //    User data to be returned on the invocation of the destruction callback.
-  void *user_data;
+  void* user_data;
   //    Callback invoked (on an engine managed thread) that asks the embedder to
   //    collect the texture.
   VoidCallback destruction_callback;
 } FlutterOpenGLTexture;
 
-typedef bool (*BoolCallback)(void * /* user data */);
-typedef FlutterTransformation (*TransformationCallback)(void * /* user data */);
-typedef uint32_t (*UIntCallback)(void * /* user data */);
-typedef bool (*SoftwareSurfacePresentCallback)(void * /* user data */,
-                                               const void * /* allocation */,
+typedef bool (*BoolCallback)(void* /* user data */);
+typedef FlutterTransformation (*TransformationCallback)(void* /* user data */);
+typedef uint32_t (*UIntCallback)(void* /* user data */);
+typedef bool (*SoftwareSurfacePresentCallback)(void* /* user data */,
+                                               const void* /* allocation */,
                                                size_t /* row bytes */,
                                                size_t /* height */);
-typedef void *(*ProcResolver)(void * /* user data */, const char * /* name */);
-typedef bool (*TextureFrameCallback)(void * /* user data */,
+typedef void* (*ProcResolver)(void* /* user data */, const char* /* name */);
+typedef bool (*TextureFrameCallback)(void* /* user data */,
                                      int64_t /* texture identifier */,
-                                     size_t /* width */, size_t /* height */,
-                                     FlutterOpenGLTexture * /* texture out */);
-typedef void (*VsyncCallback)(void * /* user data */, intptr_t /* baton */);
+                                     size_t /* width */,
+                                     size_t /* height */,
+                                     FlutterOpenGLTexture* /* texture out */);
+typedef void (*VsyncCallback)(void* /* user data */, intptr_t /* baton */);
 
 typedef struct {
   // The size of this struct. Must be sizeof(FlutterOpenGLRendererConfig).
@@ -344,7 +355,7 @@ typedef struct {
   // The size of this struct. Must be sizeof(FlutterPointerEvent).
   size_t struct_size;
   FlutterPointerPhase phase;
-  size_t timestamp; // in microseconds.
+  size_t timestamp;  // in microseconds.
   double x;
   double y;
   // An optional device identifier. If this is not specified, it is assumed that
@@ -370,8 +381,8 @@ typedef struct _FlutterPlatformMessageResponseHandle
 typedef struct {
   // The size of this struct. Must be sizeof(FlutterPlatformMessage).
   size_t struct_size;
-  const char *channel;
-  const uint8_t *message;
+  const char* channel;
+  const uint8_t* message;
   size_t message_size;
   // The response handle on which to invoke
   // |FlutterEngineSendPlatformMessageResponse| when the response is ready.
@@ -379,14 +390,16 @@ typedef struct {
   // received by the embedder. Failure to call
   // |FlutterEngineSendPlatformMessageResponse| will cause a memory leak. It is
   // not safe to send multiple responses on a single response object.
-  const FlutterPlatformMessageResponseHandle *response_handle;
+  const FlutterPlatformMessageResponseHandle* response_handle;
 } FlutterPlatformMessage;
 
 typedef void (*FlutterPlatformMessageCallback)(
-    const FlutterPlatformMessage * /* message*/, void * /* user data */);
+    const FlutterPlatformMessage* /* message*/,
+    void* /* user data */);
 
-typedef void (*FlutterDataCallback)(const uint8_t * /* data */,
-                                    size_t /* size */, void * /* user data */);
+typedef void (*FlutterDataCallback)(const uint8_t* /* data */,
+                                    size_t /* size */,
+                                    void* /* user data */);
 
 typedef struct {
   double left;
@@ -435,17 +448,17 @@ typedef struct {
   // Describes how much space the semantics node takes up along the z-axis.
   double thickness;
   // A textual description of the node.
-  const char *label;
+  const char* label;
   // A brief description of the result of performing an action on the node.
-  const char *hint;
+  const char* hint;
   // A textual description of the current value of the node.
-  const char *value;
+  const char* value;
   // A value that |value| will have after a kFlutterSemanticsActionIncrease|
   // action has been performed.
-  const char *increased_value;
+  const char* increased_value;
   // A value that |value| will have after a kFlutterSemanticsActionDecrease|
   // action has been performed.
-  const char *decreased_value;
+  const char* decreased_value;
   // The reading direction for |label|, |value|, |hint|, |increasedValue|, and
   // |decreasedValue|.
   FlutterTextDirection text_direction;
@@ -457,14 +470,14 @@ typedef struct {
   // The number of children this node has.
   size_t child_count;
   // Array of child node IDs in traversal order. Has length |child_count|.
-  const int32_t *children_in_traversal_order;
+  const int32_t* children_in_traversal_order;
   // Array of child node IDs in hit test order. Has length |child_count|.
-  const int32_t *children_in_hit_test_order;
+  const int32_t* children_in_hit_test_order;
   // The number of custom accessibility action associated with this node.
   size_t custom_accessibility_actions_count;
   // Array of |FlutterSemanticsCustomAction| IDs associated with this node.
   // Has length |custom_accessibility_actions_count|.
-  const int32_t *custom_accessibility_actions;
+  const int32_t* custom_accessibility_actions;
 } FlutterSemanticsNode;
 
 // |FlutterSemanticsCustomAction| ID used as a sentinel to signal the end of a
@@ -490,19 +503,20 @@ typedef struct {
   // |FlutterSemanticsAction| to override.
   FlutterSemanticsAction override_action;
   // The user-readable name of this custom semantics action.
-  const char *label;
+  const char* label;
   // The hint description of this custom semantics action.
-  const char *hint;
+  const char* hint;
 } FlutterSemanticsCustomAction;
 
 typedef void (*FlutterUpdateSemanticsNodeCallback)(
-    const FlutterSemanticsNode * /* semantics node */, void * /* user data */);
+    const FlutterSemanticsNode* /* semantics node */,
+    void* /* user data */);
 
 typedef void (*FlutterUpdateSemanticsCustomActionCallback)(
-    const FlutterSemanticsCustomAction * /* semantics custom action */,
-    void * /* user data */);
+    const FlutterSemanticsCustomAction* /* semantics custom action */,
+    void* /* user data */);
 
-typedef struct _FlutterTaskRunner *FlutterTaskRunner;
+typedef struct _FlutterTaskRunner* FlutterTaskRunner;
 
 typedef struct {
   FlutterTaskRunner runner;
@@ -510,8 +524,9 @@ typedef struct {
 } FlutterTask;
 
 typedef void (*FlutterTaskRunnerPostTaskCallback)(
-    FlutterTask /* task */, uint64_t /* target time nanos */,
-    void * /* user data */);
+    FlutterTask /* task */,
+    uint64_t /* target time nanos */,
+    void* /* user data */);
 
 // An interface used by the Flutter engine to execute tasks at the target time
 // on a specified thread. There should be a 1-1 relationship between a thread
@@ -520,7 +535,7 @@ typedef void (*FlutterTaskRunnerPostTaskCallback)(
 typedef struct {
   // The size of this struct. Must be sizeof(FlutterTaskRunnerDescription).
   size_t struct_size;
-  void *user_data;
+  void* user_data;
   // May be called from any thread. Should return true if tasks posted on the
   // calling thread will be run on that same thread.
   //
@@ -544,7 +559,7 @@ typedef struct {
   size_t struct_size;
   // Specify the task runner for the thread on which the |FlutterEngineRun| call
   // is made.
-  const FlutterTaskRunnerDescription *platform_task_runner;
+  const FlutterTaskRunnerDescription* platform_task_runner;
 } FlutterCustomTaskRunners;
 
 typedef struct {
@@ -553,7 +568,7 @@ typedef struct {
   // The path to the Flutter assets directory containing project assets. The
   // string can be collected after the call to |FlutterEngineRun| returns. The
   // string must be NULL terminated.
-  const char *assets_path;
+  const char* assets_path;
   // The path to the Dart file containing the |main| entry point.
   // The string can be collected after the call to |FlutterEngineRun| returns.
   // The string must be NULL terminated.
@@ -562,7 +577,7 @@ typedef struct {
   // Dart code should now be compiled to kernel form and will be loaded by from
   // |kernel_blob.bin| in the assets directory. This struct member is retained
   // for ABI stability.
-  const char *main_path__unused__;
+  const char* main_path__unused__;
   // The path to the |.packages| for the project. The string can be collected
   // after the call to |FlutterEngineRun| returns. The string must be NULL
   // terminated.
@@ -571,11 +586,11 @@ typedef struct {
   // Dart code should now be compiled to kernel form and will be loaded by from
   // |kernel_blob.bin| in the assets directory. This struct member is retained
   // for ABI stability.
-  const char *packages_path__unused__;
+  const char* packages_path__unused__;
   // The path to the icudtl.dat file for the project. The string can be
   // collected after the call to |FlutterEngineRun| returns. The string must
   // be NULL terminated.
-  const char *icu_data_path;
+  const char* icu_data_path;
   // The command line argument count used to initialize the project.
   int command_line_argc;
   // The command line arguments used to initialize the project. The strings can
@@ -589,7 +604,7 @@ typedef struct {
   // they may affect engine stability at runtime in the presence of unsanitized
   // input. The list of currently recognized engine flags and their descriptions
   // can be retrieved from the |switches.h| engine source file.
-  const char *const *command_line_argv;
+  const char* const* command_line_argv;
   // The callback invoked by the engine in order to give the embedder the chance
   // to respond to platform messages from the Dart application. The callback
   // will be invoked on the thread on which the |FlutterEngineRun| call is made.
@@ -598,28 +613,28 @@ typedef struct {
   // mapped in as read-only. For more information refer to the documentation on
   // the Wiki at
   // https://github.com/flutter/flutter/wiki/Flutter-engine-operation-in-AOT-Mode
-  const uint8_t *vm_snapshot_data;
+  const uint8_t* vm_snapshot_data;
   // The size of the VM snapshot data buffer.
   size_t vm_snapshot_data_size;
   // The VM snapshot instructions buffer used in AOT operation. This buffer must
   // be mapped in as read-execute. For more information refer to the
   // documentation on the Wiki at
   // https://github.com/flutter/flutter/wiki/Flutter-engine-operation-in-AOT-Mode
-  const uint8_t *vm_snapshot_instructions;
+  const uint8_t* vm_snapshot_instructions;
   // The size of the VM snapshot instructions buffer.
   size_t vm_snapshot_instructions_size;
   // The isolate snapshot data buffer used in AOT operation. This buffer must be
   // mapped in as read-only. For more information refer to the documentation on
   // the Wiki at
   // https://github.com/flutter/flutter/wiki/Flutter-engine-operation-in-AOT-Mode
-  const uint8_t *isolate_snapshot_data;
+  const uint8_t* isolate_snapshot_data;
   // The size of the isolate snapshot data buffer.
   size_t isolate_snapshot_data_size;
   // The isolate snapshot instructions buffer used in AOT operation. This buffer
   // must be mapped in as read-execute. For more information refer to the
   // documentation on the Wiki at
   // https://github.com/flutter/flutter/wiki/Flutter-engine-operation-in-AOT-Mode
-  const uint8_t *isolate_snapshot_instructions;
+  const uint8_t* isolate_snapshot_instructions;
   // The size of the isolate snapshot instructions buffer.
   size_t isolate_snapshot_instructions_size;
   // The callback invoked by the engine in root isolate scope. Called
@@ -651,7 +666,7 @@ typedef struct {
   //
   // This is different from the cache-path-dir argument defined in switches.h,
   // which is used in |flutter::Settings| as |temp_directory_path|.
-  const char *persistent_cache_path;
+  const char* persistent_cache_path;
 
   // If true, we'll only read the existing cache, but not write new ones.
   bool is_persistent_cache_read_only;
@@ -674,39 +689,41 @@ typedef struct {
   // Care must be taken to ensure that the custom entrypoint is not tree-shaken
   // away. Usually, this is done using the `@pragma('vm:entry-point')`
   // decoration.
-  const char *custom_dart_entrypoint;
+  const char* custom_dart_entrypoint;
 
   // Typically the Flutter engine create and manages its internal threads. This
   // optional argument allows for the specification of task runner interfaces to
   // event loops managed by the embedder on threads it creates.
-  const FlutterCustomTaskRunners *custom_task_runners;
+  const FlutterCustomTaskRunners* custom_task_runners;
 } FlutterProjectArgs;
 
 FLUTTER_EXPORT
 FlutterEngineResult FlutterEngineRun(size_t version,
-                                     const FlutterRendererConfig *config,
-                                     const FlutterProjectArgs *args,
-                                     void *user_data,
-                                     FlutterEngine *engine_out);
+                                     const FlutterRendererConfig* config,
+                                     const FlutterProjectArgs* args,
+                                     void* user_data,
+                                     FLUTTER_API_SYMBOL(FlutterEngine) *
+                                         engine_out);
 
 FLUTTER_EXPORT
-FlutterEngineResult FlutterEngineShutdown(FlutterEngine engine);
+FlutterEngineResult FlutterEngineShutdown(FLUTTER_API_SYMBOL(FlutterEngine)
+                                              engine);
 
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineSendWindowMetricsEvent(FlutterEngine engine,
-                                    const FlutterWindowMetricsEvent *event);
+FlutterEngineResult FlutterEngineSendWindowMetricsEvent(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    const FlutterWindowMetricsEvent* event);
 
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineSendPointerEvent(FlutterEngine engine,
-                              const FlutterPointerEvent *events,
-                              size_t events_count);
+FlutterEngineResult FlutterEngineSendPointerEvent(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    const FlutterPointerEvent* events,
+    size_t events_count);
 
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineSendPlatformMessage(FlutterEngine engine,
-                                 const FlutterPlatformMessage *message);
+FlutterEngineResult FlutterEngineSendPlatformMessage(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    const FlutterPlatformMessage* message);
 
 // Creates a platform message response handle that allows the embedder to set a
 // native callback for a response to a message. This handle may be set on the
@@ -723,19 +740,24 @@ FlutterEngineSendPlatformMessage(FlutterEngine engine,
 // call as the third argument.
 FLUTTER_EXPORT
 FlutterEngineResult FlutterPlatformMessageCreateResponseHandle(
-    FlutterEngine engine, FlutterDataCallback data_callback, void *user_data,
-    FlutterPlatformMessageResponseHandle **response_out);
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    FlutterDataCallback data_callback,
+    void* user_data,
+    FlutterPlatformMessageResponseHandle** response_out);
 
 // Collects the handle created using
 // |FlutterPlatformMessageCreateResponseHandle|.
 FLUTTER_EXPORT
 FlutterEngineResult FlutterPlatformMessageReleaseResponseHandle(
-    FlutterEngine engine, FlutterPlatformMessageResponseHandle *response);
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    FlutterPlatformMessageResponseHandle* response);
 
 FLUTTER_EXPORT
 FlutterEngineResult FlutterEngineSendPlatformMessageResponse(
-    FlutterEngine engine, const FlutterPlatformMessageResponseHandle *handle,
-    const uint8_t *data, size_t data_length);
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    const FlutterPlatformMessageResponseHandle* handle,
+    const uint8_t* data,
+    size_t data_length);
 
 // This API is only meant to be used by platforms that need to flush tasks on a
 // message loop not controlled by the Flutter engine. This API will be
@@ -749,21 +771,21 @@ FlutterEngineResult __FlutterEngineFlushPendingTasksNow();
 // mark that a frame is available by calling
 // |FlutterEngineMarkExternalTextureFrameAvailable|.
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineRegisterExternalTexture(FlutterEngine engine,
-                                     int64_t texture_identifier);
+FlutterEngineResult FlutterEngineRegisterExternalTexture(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    int64_t texture_identifier);
 
 // Unregister a previous texture registration.
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineUnregisterExternalTexture(FlutterEngine engine,
-                                       int64_t texture_identifier);
+FlutterEngineResult FlutterEngineUnregisterExternalTexture(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    int64_t texture_identifier);
 
 // Mark that a new texture frame is available for a given texture identifier.
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineMarkExternalTextureFrameAvailable(FlutterEngine engine,
-                                               int64_t texture_identifier);
+FlutterEngineResult FlutterEngineMarkExternalTextureFrameAvailable(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    int64_t texture_identifier);
 
 // Enable or disable accessibility semantics.
 //
@@ -771,21 +793,24 @@ FlutterEngineMarkExternalTextureFrameAvailable(FlutterEngine engine,
 // the |FlutterUpdateSemanticsNodeCallback| registered to
 // |update_semantics_node_callback| in |FlutterProjectArgs|;
 FLUTTER_EXPORT
-FlutterEngineResult FlutterEngineUpdateSemanticsEnabled(FlutterEngine engine,
-                                                        bool enabled);
+FlutterEngineResult FlutterEngineUpdateSemanticsEnabled(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    bool enabled);
 
 // Sets additional accessibility features.
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineUpdateAccessibilityFeatures(FlutterEngine engine,
-                                         FlutterAccessibilityFeature features);
+FlutterEngineResult FlutterEngineUpdateAccessibilityFeatures(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    FlutterAccessibilityFeature features);
 
 // Dispatch a semantics action to the specified semantics node.
 FLUTTER_EXPORT
-FlutterEngineResult
-FlutterEngineDispatchSemanticsAction(FlutterEngine engine, uint64_t id,
-                                     FlutterSemanticsAction action,
-                                     const uint8_t *data, size_t data_length);
+FlutterEngineResult FlutterEngineDispatchSemanticsAction(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    uint64_t id,
+    FlutterSemanticsAction action,
+    const uint8_t* data,
+    size_t data_length);
 
 // Notify the engine that a vsync event occurred. A baton passed to the
 // platform via the vsync callback must be returned. This call must be made on
@@ -804,7 +829,9 @@ FlutterEngineDispatchSemanticsAction(FlutterEngine engine, uint64_t id,
 //
 // That frame timepoints are in nanoseconds.
 FLUTTER_EXPORT
-FlutterEngineResult FlutterEngineOnVsync(FlutterEngine engine, intptr_t baton,
+FlutterEngineResult FlutterEngineOnVsync(FLUTTER_API_SYMBOL(FlutterEngine)
+                                             engine,
+                                         intptr_t baton,
                                          uint64_t frame_start_time_nanos,
                                          uint64_t frame_target_time_nanos);
 
@@ -815,7 +842,7 @@ FlutterEngineResult FlutterEngineOnVsync(FlutterEngine engine, intptr_t baton,
 // Can be called on any thread. Strings passed into the function will NOT be
 // copied when added to the timeline. Only string literals may be passed in.
 FLUTTER_EXPORT
-void FlutterEngineTraceEventDurationBegin(const char *name);
+void FlutterEngineTraceEventDurationBegin(const char* name);
 
 // A profiling utility. Logs a trace duration end event to the timeline. If the
 // timeline is unavailable or disabled, this has no effect. This call must be
@@ -825,22 +852,23 @@ void FlutterEngineTraceEventDurationBegin(const char *name);
 // NOT be copied when added to the timeline. Only string literals may be passed
 // in.
 FLUTTER_EXPORT
-void FlutterEngineTraceEventDurationEnd(const char *name);
+void FlutterEngineTraceEventDurationEnd(const char* name);
 
 // A profiling utility. Logs a trace duration instant event to the timeline. If
 // the timeline is unavailable or disabled, this has no effect. Can be called
 // on any thread. Strings passed into the function will NOT be copied when added
 // to the timeline. Only string literals may be passed in.
 FLUTTER_EXPORT
-void FlutterEngineTraceEventInstant(const char *name);
+void FlutterEngineTraceEventInstant(const char* name);
 
 // Posts a task onto the Flutter render thread. Typically, this may be called
 // from any thread as long as a |FlutterEngineShutdown| on the specific engine
 // has not already been initiated.
 FLUTTER_EXPORT
-FlutterEngineResult FlutterEnginePostRenderThreadTask(FlutterEngine engine,
-                                                      VoidCallback callback,
-                                                      void *callback_data);
+FlutterEngineResult FlutterEnginePostRenderThreadTask(
+    FLUTTER_API_SYMBOL(FlutterEngine) engine,
+    VoidCallback callback,
+    void* callback_data);
 
 // Get the current time in nanoseconds from the clock used by the flutter
 // engine. This is the system monotonic clock.
@@ -852,11 +880,12 @@ uint64_t FlutterEngineGetCurrentTime();
 // call must only be made at the target time specified in that callback. Running
 // the task before that time is undefined behavior.
 FLUTTER_EXPORT
-FlutterEngineResult FlutterEngineRunTask(FlutterEngine engine,
-                                         const FlutterTask *task);
+FlutterEngineResult FlutterEngineRunTask(FLUTTER_API_SYMBOL(FlutterEngine)
+                                             engine,
+                                         const FlutterTask* task);
 
 #if defined(__cplusplus)
-} // extern "C"
+}  // extern "C"
 #endif
 
-#endif // FLUTTER_EMBEDDER_H_
+#endif  // FLUTTER_EMBEDDER_H_
