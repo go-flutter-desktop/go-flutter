@@ -156,7 +156,7 @@ func (p *textinputPlugin) sliceLeftWord() {
 }
 
 func (p *textinputPlugin) sliceLeftLine() {
-	p.word = p.word[:0]
+	p.word = p.word[p.selectionBase:]
 	p.selectionBase = 0
 	p.selectionExtent = 0
 }
