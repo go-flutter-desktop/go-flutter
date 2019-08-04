@@ -98,6 +98,8 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 	if editingState.SelectionBase < 0 || editingState.SelectionExtent < 0 {
 		errorMsg := fmt.Sprintf("text editing state BUG, text selection isn't possible: selectionBase:%v, selectionExtent:%v. Please open a issue on flutter/flutter\n",
 			editingState.SelectionBase, editingState.SelectionExtent)
+		p.selectionBase = 0
+		p.selectionExtent = 0
 		return nil, errors.New(errorMsg)
 	}
 
