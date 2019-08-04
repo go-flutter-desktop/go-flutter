@@ -93,16 +93,18 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetEditingState")
 	}
 
-	p.word = []rune(editingState.Text)
-
 	if editingState.SelectionBase < 0 || editingState.SelectionExtent < 0 {
-		errorMsg := fmt.Sprintf("text editing state BUG, text selection isn't possible: selectionBase:%v, selectionExtent:%v. Please open a issue on flutter/flutter\n",
+		errorMsg := fmt.Sprintf("invalid text selection: selectionBase:%v, selectionExtent:%v. Refer to flutter/flutter#20016\n",
 			editingState.SelectionBase, editingState.SelectionExtent)
-		p.selectionBase = 0
-		p.selectionExtent = 0
-		return nil, errors.New(errorMsg)
+		wordLen := len(p.word)
+		p.selectionBase = wordLen
+		p.selectionExtent = wordLen
+		p.updateEditingState()
+		fmt.Printf("go-flutter: recover from wrong editingState: %s", errorMsg)
+		return nil, nil
 	}
 
+	p.word = []rune(editingState.Text)
 	p.selectionBase = editingState.SelectionBase
 	p.selectionExtent = editingState.SelectionExtent
 	return nil, nil
