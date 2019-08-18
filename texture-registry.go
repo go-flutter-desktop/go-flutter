@@ -32,7 +32,7 @@ type externalTextureHanlder struct {
 	texture uint32
 }
 
-func newRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *TextureRegistry {
+func newTextureRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *TextureRegistry {
 	return &TextureRegistry{
 		window:   window,
 		engine:   engine,
@@ -45,7 +45,7 @@ func (t *TextureRegistry) init() error {
 	// Important! Call gl.Init only under the presence of an active OpenGL context,
 	// i.e., after MakeContextCurrent.
 	if err := gl.Init(); err != nil {
-		return errors.Wrap(err, "TextureRegistry gl init")
+		return errors.Wrap(err, "TextureRegistry gl init failed")
 	}
 	return nil
 }

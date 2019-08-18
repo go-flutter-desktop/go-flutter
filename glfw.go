@@ -19,16 +19,24 @@ const dpPerInch = 160.0
 // glfwRenderer or glfwManager? All the attaching to glfw.Window must be done
 // during manager init in that case. Cannot be done by Application.
 type windowManager struct {
-	forcedPixelRatio          float64
-	oncePrintPixelRatioLimit  sync.Once
-	pointerPhase              embedder.PointerPhase
+	// forcedPixelRatio forces the pixelRatio to given value, when value is not zero.
+	forcedPixelRatio float64
+
+	// sync.Once to limit pixelRatio warning messages.
+	oncePrintPixelRatioLimit sync.Once
+
+	// current pointer state
+	pointerPhase          embedder.PointerPhase
+	pointerButton         embedder.PointerButtonMouse
+	pointerCurrentlyAdded bool
+
+	// caching of ppsc to avoid re-calculating every event
 	pixelsPerScreenCoordinate float64
-	pointerCurrentlyAdded     bool
-	pointerButton             embedder.PointerButtonMouse
 }
 
-func newWindowManager() *windowManager {
+func newWindowManager(forcedPixelRatio float64) *windowManager {
 	return &windowManager{
+		forcedPixelRatio:          forcedPixelRatio,
 		pixelsPerScreenCoordinate: 1.0,
 		pointerPhase:              embedder.PointerPhaseHover,
 	}

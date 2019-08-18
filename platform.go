@@ -31,6 +31,7 @@ var _ PluginGLFW = &platformPlugin{} // compile-time type check
 
 func (p *platformPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.messenger = messenger
+	p.glfwTasker = tasker.New()
 	return nil
 }
 
