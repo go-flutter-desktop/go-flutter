@@ -2,12 +2,12 @@ package plugin
 
 // BinaryMessenger defines a bidirectional binary messenger.
 type BinaryMessenger interface {
-	// Send sends a binary message to the Flutter application.
-	Send(channel string, binaryMessage []byte) (binaryReply []byte, err error)
+	// SendWithReply sends a binary message to the Flutter application.
+	SendWithReply(channel string, binaryMessage []byte) (binaryReply []byte, err error)
 
-	// SendNoReply sends a binary message to the Flutter application without
+	// Send sends a binary message to the Flutter application without
 	// expecting a reply.
-	SendNoReply(channel string, binaryMessage []byte) (err error)
+	Send(channel string, binaryMessage []byte) (err error)
 
 	// SetChannelHandler registers a handler to be invoked when the Flutter
 	// application sends a message to its host platform on given channel.

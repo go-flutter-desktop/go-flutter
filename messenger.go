@@ -30,11 +30,11 @@ func newMessenger(engine *embedder.FlutterEngine) *messenger {
 	}
 }
 
-// Send pushes a binary message on a channel to the Flutter side and wait for a
-// reply.
+// SendWithReply pushes a binary message on a channel to the Flutter side and
+// wait for a reply.
 // NOTE: If no value are returned by the flutter handler, the function will
-// wait forever. In case you don't want to wait for reply, use SendNoReply.
-func (m *messenger) Send(channel string, binaryMessage []byte) (binaryReply []byte, err error) {
+// wait forever. In case you don't want to wait for reply, use Send.
+func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryReply []byte, err error) {
 	reply := make(chan []byte)
 	defer close(reply)
 	responseHandle, err := m.engine.CreatePlatformMessageResponseHandle(func(binaryMessage []byte) {
@@ -64,9 +64,9 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (binaryReply []by
 	return <-reply, nil
 }
 
-// SendNoReply pushes a binary message on a channel to the Flutter side without
+// Send pushes a binary message on a channel to the Flutter side without
 // expecting replies.
-func (m *messenger) SendNoReply(channel string, binaryMessage []byte) (err error) {
+func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
 	msg := &embedder.PlatformMessage{
 		Channel: channel,
 		Message: binaryMessage,

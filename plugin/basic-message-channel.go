@@ -60,7 +60,7 @@ func (b *BasicMessageChannel) Send(message interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode outgoing message")
 	}
-	err = b.messenger.SendNoReply(b.channelName, encodedMessage)
+	err = b.messenger.Send(b.channelName, encodedMessage)
 	if err != nil {
 		return errors.Wrap(err, "failed to send outgoing message")
 	}
@@ -79,7 +79,7 @@ func (b *BasicMessageChannel) SendWithReply(message interface{}) (reply interfac
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode outgoing message")
 	}
-	encodedReply, err := b.messenger.Send(b.channelName, encodedMessage)
+	encodedReply, err := b.messenger.SendWithReply(b.channelName, encodedMessage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send outgoing message")
 	}

@@ -50,7 +50,7 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode methodcall")
 	}
-	err = m.messenger.SendNoReply(m.channelName, encodedMessage)
+	err = m.messenger.Send(m.channelName, encodedMessage)
 	if err != nil {
 		return errors.Wrap(err, "failed to send methodcall")
 	}
@@ -72,7 +72,7 @@ func (m *MethodChannel) InvokeMethodWithReply(name string, arguments interface{}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode methodcall")
 	}
-	encodedReply, err := m.messenger.Send(m.channelName, encodedMessage)
+	encodedReply, err := m.messenger.SendWithReply(m.channelName, encodedMessage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send methodcall")
 	}
