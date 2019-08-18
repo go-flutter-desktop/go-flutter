@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
-	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 )
 
 // Run executes a flutter application with the provided options.
@@ -105,7 +104,7 @@ func (a *Application) Run() error {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	if a.config.windowInitialLocations.xpos != 0 {
+	if a.config.windowInitialLocation.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
 		// using the Visible window hint, set its position and then show it.
 		glfw.WindowHint(glfw.Visible, glfw.False)
@@ -115,12 +114,11 @@ func (a *Application) Run() error {
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
 	}
-	glfw.DefaultWindowHints()
 	defer a.window.Destroy()
+	glfw.DefaultWindowHints()
 
-	if a.config.windowInitialLocations.xpos != 0 {
-		a.window.SetPos(a.config.windowInitialLocations.xpos,
-			a.config.windowInitialLocations.ypos)
+	if a.config.windowInitialLocation.xpos != 0 {
+		a.window.SetPos(a.config.windowInitialLocation.xpos, a.config.windowInitialLocation.ypos)
 		a.window.Show()
 	}
 
@@ -157,6 +155,7 @@ func (a *Application) Run() error {
 
 	a.engine = embedder.NewFlutterEngine()
 
+	// Create a messenger and init plugins
 	messenger := newMessenger(a.engine)
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
@@ -173,6 +172,16 @@ func (a *Application) Run() error {
 		}
 	}
 
+	// Create a TextureRegistry
+	texturer := newTextureRegistry(a.engine, a.window)
+
+	// Create a new eventloop
+	eventLoop := newEventLoop(
+		glfw.PostEmptyEvent, // Wakeup GLFW
+		a.engine.RunTask,    // Flush tasks
+	)
+
+	// Set configuration values to engine, with fallbacks to sane defaults.
 	if a.config.flutterAssetsPath != "" {
 		a.engine.AssetsPath = a.config.flutterAssetsPath
 	} else {
@@ -182,7 +191,6 @@ func (a *Application) Run() error {
 		}
 		a.engine.AssetsPath = filepath.Join(filepath.Dir(execPath), "flutter_assets")
 	}
-
 	if a.config.icuDataPath != "" {
 		a.engine.IcuDataPath = a.config.icuDataPath
 	} else {
@@ -193,7 +201,7 @@ func (a *Application) Run() error {
 		a.engine.IcuDataPath = filepath.Join(filepath.Dir(execPath), "icudtl.dat")
 	}
 
-	// Render callbacks
+	// Attach GL callback functions onto the engine
 	a.engine.GLMakeCurrent = func() bool {
 		a.window.MakeContextCurrent()
 		return true
@@ -219,29 +227,29 @@ func (a *Application) Run() error {
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
 	}
+	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
-	eventLoop := newEventLoop(
-		glfw.PostEmptyEvent, // Wakeup GLFW
-		a.engine.RunTask,    // Flush tasks
-	)
+	// Attach TaskRunner callback functions onto the engine
 	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
 	a.engine.TaskRunnerPostTask = eventLoop.PostTask
 
+	// Attach PlatformMessage callback functions onto the engine
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
-
-	texturer := newRegistry(a.engine, a.window)
-	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
 	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
 
+	// Set the glfw window user pointer to point to the FlutterEngine so that
+	// callback functions may obtain the FlutterEngine from the glfw window
+	// user pointer.
 	flutterEnginePointer := uintptr(unsafe.Pointer(a.engine))
 	defer func() {
 		runtime.KeepAlive(flutterEnginePointer)
 	}()
 	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
+	// Start the engine
 	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
 	if result != embedder.ResultSuccess {
 		switch result {
@@ -255,25 +263,27 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
-	defaultPlatformPlugin.glfwTasker = tasker.New()
+	// Setup a new windowManager to handle windows pixel ratio's and pointer
+	// devices.
+	windowManager := newWindowManager(a.config.forcePixelRatio)
+	// force first refresh
+	windowManager.glfwRefreshCallback(a.window)
+	// Attach glfw window callbacks for refresh and position changes
+	a.window.SetRefreshCallback(windowManager.glfwRefreshCallback)
+	a.window.SetPosCallback(windowManager.glfwPosCallback)
 
-	m := newWindowManager()
-	m.forcedPixelRatio = a.config.forcePixelRatio
-
-	m.glfwRefreshCallback(a.window)
-	a.window.SetRefreshCallback(m.glfwRefreshCallback)
-	a.window.SetPosCallback(m.glfwPosCallback)
-
+	// TODO: Can this only be done here? Why not in the plugin/glfwPlugin init loop above?
 	for _, p := range a.config.plugins {
 		// Extra init call for plugins that satisfy the PluginTexture interface.
-		if glfwPlugin, ok := p.(PluginTexture); ok {
-			err = glfwPlugin.InitPluginTexture(texturer)
+		if texturePlugin, ok := p.(PluginTexture); ok {
+			err = texturePlugin.InitPluginTexture(texturer)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
 			}
 		}
 	}
 
+	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
@@ -281,14 +291,20 @@ func (a *Application) Run() error {
 		})
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 
+	// Attach glfw window callback for iconification
 	a.window.SetIconifyCallback(defaultLifecyclePlugin.glfwIconifyCallback)
 
-	a.window.SetCursorEnterCallback(m.glfwCursorEnterCallback)
-	a.window.SetCursorPosCallback(m.glfwCursorPosCallback)
-	a.window.SetMouseButtonCallback(m.glfwMouseButtonCallback)
-	a.window.SetScrollCallback(m.glfwScrollCallback)
+	// Attach glfw window callbacks for mouse input
+	a.window.SetCursorEnterCallback(windowManager.glfwCursorEnterCallback)
+	a.window.SetCursorPosCallback(windowManager.glfwCursorPosCallback)
+	a.window.SetMouseButtonCallback(windowManager.glfwMouseButtonCallback)
+	a.window.SetScrollCallback(windowManager.glfwScrollCallback)
+
+	// Shutdown the engine if we return from this function (on purpose or panic)
 	defer a.engine.Shutdown()
 
+	// Handle events until the window indicates we should stop. An event may tell the window to stop, in which case
+	// we'll exit on next iteration.
 	for !a.window.ShouldClose() {
 		eventLoop.WaitForEvents(func(duration float64) {
 			glfw.WaitEventsTimeout(duration)
@@ -296,6 +312,9 @@ func (a *Application) Run() error {
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 	}
+
+	// TODO: What if the window indicates to stop, but there are tasks left on
+	// the queue?
 
 	fmt.Println("go-flutter: closing application")
 

@@ -16,7 +16,7 @@ type config struct {
 	windowInitializerDeprecated func(*glfw.Window) error
 	windowIconProvider          func() ([]image.Image, error)
 	windowInitialDimensions     windowDimensions
-	windowInitialLocations      windowLocations
+	windowInitialLocation       windowLocation
 	windowDimensionLimits       windowDimensionLimits
 	windowMode                  windowMode
 
@@ -31,7 +31,7 @@ type windowDimensions struct {
 	height int
 }
 
-type windowLocations struct {
+type windowLocation struct {
 	xpos int
 	ypos int
 }
@@ -102,8 +102,8 @@ func OptionVMArguments(a []string) Option {
 //
 // Deprecated, please use WindowInitialDimensions(x, y).
 func ApplicationWindowDimension(x, y int) Option {
-	// deprecated on 2019-03-10
-	fmt.Println("go-flutter: ApplicationWindowDimension is deprecated, use WindowInitialDimensions(x, y).")
+	// deprecated on 2019-03-10, to be removed 2020-01-01
+	fmt.Println("go-flutter: ApplicationWindowDimension (singular) is deprecated, use WindowInitialDimensions (plural).")
 	return WindowInitialDimensions(x, y)
 }
 
@@ -127,7 +127,18 @@ func WindowInitialDimensions(width, height int) Option {
 // WindowInitialLocations specify the startup's position of the window.
 // Location, in screen coordinates, of the upper-left corner of the client area
 // of the window.
+//
+// Deprecated, please use WindowInitialLocation(xpos, ypos).
 func WindowInitialLocations(xpos, ypos int) Option {
+	// deprecated on 2019-08-18, to be removed 2020-06-01
+	fmt.Println("go-flutter: WindowInitialLocations (plural) is deprecated, use WindowInitialLocation (singular).")
+	return WindowInitialLocation(xpos, ypos)
+}
+
+// WindowInitialLocation specify the startup's position of the window.
+// Location, in screen coordinates, of the upper-left corner of the client area
+// of the window.
+func WindowInitialLocation(xpos, ypos int) Option {
 	if xpos < 1 {
 		fmt.Println("go-flutter: invalid initial value for xpos location, must be 1 or greater.")
 		os.Exit(1)
@@ -138,8 +149,8 @@ func WindowInitialLocations(xpos, ypos int) Option {
 	}
 
 	return func(c *config) {
-		c.windowInitialLocations.xpos = xpos
-		c.windowInitialLocations.ypos = ypos
+		c.windowInitialLocation.xpos = xpos
+		c.windowInitialLocation.ypos = ypos
 	}
 }
 
@@ -175,7 +186,7 @@ func WindowDimensionLimits(minWidth, minHeight, maxWidth, maxHeight int) Option 
 //
 // Deprecated, please use WindowIcon if you'd like to set the window icon.
 func OptionWindowInitializer(ini func(*glfw.Window) error) Option {
-	// deprecated on 2019-03-05
+	// deprecated on 2019-03-05, to be removed 2020-01-01
 	fmt.Println("go-flutter: OptionWindowInitializer is deprecated. Please read https://is.gd/gflut_window_init_deprecated")
 	return func(c *config) {
 		c.windowInitializerDeprecated = ini
