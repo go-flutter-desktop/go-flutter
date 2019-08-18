@@ -10,6 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// once is used for the lazy initialization of go-gl/gl.
+// The initialization occur on the first requested texture's frame.
+var once sync.Once
+
 // TextureRegistry is a registry entry for a managed Texture.
 type TextureRegistry struct {
 	window       *glfw.Window
@@ -89,6 +93,10 @@ func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTex
 
 func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	width int, height int) *embedder.FlutterOpenGLTexture {
+
+	once.Do(func() {
+		t.init()
+	})
 
 	t.channelsLock.RLock()
 	registration, registrationExists := t.channels[textureID]

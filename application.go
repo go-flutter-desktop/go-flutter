@@ -232,8 +232,6 @@ func (a *Application) Run() error {
 	texturer := newRegistry(a.engine, a.window)
 	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
-	texturer.init()
-
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
 	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
