@@ -100,7 +100,7 @@ func (t *EventLoop) WaitForEvents(rendererWaitEvents func(float64)) {
 
 	// Fire expired tasks.
 	for _, item := range expiredTasks {
-		task := item.Value.(embedder.FlutterTask)
+		task := item.Value
 		if t.onExpiredTask(&task) != embedder.ResultSuccess {
 			fmt.Printf("go-flutter: couldn't process task %v\n", task)
 		}
