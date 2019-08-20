@@ -22,7 +22,7 @@ type EventLoop struct {
 	onExpiredTask func(*embedder.FlutterTask) embedder.Result
 
 	// timeout for non-Rendering events that needs to be processed in a polling manner
-	maxWaitDuration time.Duration
+	platformMessageRefreshRate time.Duration
 }
 
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
@@ -37,7 +37,11 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 		// platform messages) and not too low (heavy CPU consumption).
 		// This value isn't related to FPS, as rendering events are process in a
 		// waiting manner.
-		maxWaitDuration: time.Duration(25) * time.Millisecond,
+		// Platform message are fetched from the engine every time the rendering
+		// event loop process rendering event (e.g.: moving the cursor on the
+		// window), when no rendering event occur (e.g., window minimized) platform
+		// message are fetch every 25ms.
+		platformMessageRefreshRate: time.Duration(25) * time.Millisecond,
 	}
 }
 
@@ -110,10 +114,10 @@ func (t *EventLoop) WaitForEvents(rendererWaitEvents func(float64)) {
 	// along, the rendererWaitEvents will be resolved early because PostTask
 	// posts an empty event.
 	if t.priorityqueue.Len() == 0 {
-		rendererWaitEvents(t.maxWaitDuration.Seconds())
+		rendererWaitEvents(t.platformMessageRefreshRate.Seconds())
 	} else {
 		if top.FireTime.After(now) {
-			durationWait := math.Min(top.FireTime.Sub(now).Seconds(), t.maxWaitDuration.Seconds())
+			durationWait := math.Min(top.FireTime.Sub(now).Seconds(), t.platformMessageRefreshRate.Seconds())
 			rendererWaitEvents(durationWait)
 		}
 	}

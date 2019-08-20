@@ -53,8 +53,6 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 		return
 	}
 
-	// TODO(GeertJohan): sometimes the x and/or y given by glfw is negative or over window size, could this cause an issue?
-	// spew.Dump(event)
 	event := embedder.PointerEvent{
 		Phase:     phase,
 		X:         x * m.pixelsPerScreenCoordinate,
@@ -65,6 +63,15 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
 	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
+
+	// Always send a pointer event with PhaseMove before an eventual PhaseRemove.
+	// If x/y on the last move doesn't equal x/y on the PhaseRemove, the remove
+	// is canceled in Flutter.
+	if phase == embedder.PointerPhaseRemove {
+		event.Phase = embedder.PointerPhaseHover
+		flutterEngine.SendPointerEvent(event)
+		event.Phase = embedder.PointerPhaseRemove
+	}
 
 	flutterEngine.SendPointerEvent(event)
 

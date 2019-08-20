@@ -157,21 +157,6 @@ func (a *Application) Run() error {
 
 	// Create a messenger and init plugins
 	messenger := newMessenger(a.engine)
-	for _, p := range a.config.plugins {
-		err = p.InitPlugin(messenger)
-		if err != nil {
-			return errors.Wrap(err, "failed to initialize plugin "+fmt.Sprintf("%T", p))
-		}
-
-		// Extra init call for plugins that satisfy the PluginGLFW interface.
-		if glfwPlugin, ok := p.(PluginGLFW); ok {
-			err = glfwPlugin.InitPluginGLFW(a.window)
-			if err != nil {
-				return errors.Wrap(err, "failed to initialize glfw plugin"+fmt.Sprintf("%T", p))
-			}
-		}
-	}
-
 	// Create a TextureRegistry
 	texturer := newTextureRegistry(a.engine, a.window)
 
@@ -263,17 +248,21 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
-	// Setup a new windowManager to handle windows pixel ratio's and pointer
-	// devices.
-	windowManager := newWindowManager(a.config.forcePixelRatio)
-	// force first refresh
-	windowManager.glfwRefreshCallback(a.window)
-	// Attach glfw window callbacks for refresh and position changes
-	a.window.SetRefreshCallback(windowManager.glfwRefreshCallback)
-	a.window.SetPosCallback(windowManager.glfwPosCallback)
-
-	// TODO: Can this only be done here? Why not in the plugin/glfwPlugin init loop above?
+	// Register plugins
 	for _, p := range a.config.plugins {
+		err = p.InitPlugin(messenger)
+		if err != nil {
+			return errors.Wrap(err, "failed to initialize plugin "+fmt.Sprintf("%T", p))
+		}
+
+		// Extra init call for plugins that satisfy the PluginGLFW interface.
+		if glfwPlugin, ok := p.(PluginGLFW); ok {
+			err = glfwPlugin.InitPluginGLFW(a.window)
+			if err != nil {
+				return errors.Wrap(err, "failed to initialize glfw plugin"+fmt.Sprintf("%T", p))
+			}
+		}
+
 		// Extra init call for plugins that satisfy the PluginTexture interface.
 		if texturePlugin, ok := p.(PluginTexture); ok {
 			err = texturePlugin.InitPluginTexture(texturer)
@@ -282,6 +271,15 @@ func (a *Application) Run() error {
 			}
 		}
 	}
+
+	// Setup a new windowManager to handle windows pixel ratio's and pointer
+	// devices.
+	windowManager := newWindowManager(a.config.forcePixelRatio)
+	// force first refresh
+	windowManager.glfwRefreshCallback(a.window)
+	// Attach glfw window callbacks for refresh and position changes
+	a.window.SetRefreshCallback(windowManager.glfwRefreshCallback)
+	a.window.SetPosCallback(windowManager.glfwPosCallback)
 
 	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(
@@ -312,9 +310,6 @@ func (a *Application) Run() error {
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 	}
-
-	// TODO: What if the window indicates to stop, but there are tasks left on
-	// the queue?
 
 	fmt.Println("go-flutter: closing application")
 
