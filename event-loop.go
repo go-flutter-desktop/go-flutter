@@ -23,6 +23,9 @@ type EventLoop struct {
 
 	// timeout for non-Rendering events that needs to be processed in a polling manner
 	platformMessageRefreshRate time.Duration
+
+	// indetifer for the current thread
+	mainThreadID uint64
 }
 
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
@@ -30,6 +33,7 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 	heap.Init(pq)
 	return &EventLoop{
 		priorityqueue:  pq,
+		mainThreadID:   embedder.GetCurrentTheradID(),
 		postEmptyEvent: postEmptyEvent,
 		onExpiredTask:  onExpiredTask,
 
@@ -45,12 +49,10 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 	}
 }
 
-// RunOnCurrentThread returns if the current thread is the thread used
-// by the GLFW event loop.
+// RunOnCurrentThread May be called from any thread. Should return true if
+// tasks posted on the calling thread will be run on that same thread.
 func (t *EventLoop) RunOnCurrentThread() bool {
-	// We call runtime.LockOSThread, this ensure the current the
-	// goroutine will always execute in that thread.
-	return true
+	return t.mainThreadID == embedder.GetCurrentTheradID()
 }
 
 // PostTask posts a Flutter engine tasks to the event loop for delayed execution.

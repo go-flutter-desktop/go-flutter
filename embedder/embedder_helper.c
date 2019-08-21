@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <threads.h>
 
 #include "embedder.h"
 
@@ -72,3 +73,5 @@ createMessageResponseHandle(FlutterEngine engine, void *user_data,
   return FlutterPlatformMessageCreateResponseHandle(
       engine, proxy_desktop_binary_reply, user_data, reply);
 }
+
+uint64_t getCurrentTheradID() { return (uint64_t)thrd_current(); }
