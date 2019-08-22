@@ -210,7 +210,16 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 	reply, err := handler.HandleMethod(methodArgs)
 	if err != nil {
 		fmt.Printf("go-flutter: handler for method '%s' on channel '%s' returned an error: %v\n", methodName, m.channelName, err)
-		binaryReply, err := m.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
+
+		var errorCode string
+		switch t := err.(type) {
+		case *Error:
+			errorCode = t.code
+		default:
+			errorCode = "error"
+		}
+
+		binaryReply, err := m.methodCodec.EncodeErrorEnvelope(errorCode, err.Error(), nil)
 		if err != nil {
 			fmt.Printf("go-flutter: failed to encode error envelope for method '%s' on channel '%s', error: %v\n", methodName, m.channelName, err)
 		}
@@ -222,4 +231,26 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 		fmt.Printf("go-flutter: failed to encode success envelope for method '%s' on channel '%s', error: %v\n", methodName, m.channelName, err)
 	}
 	responseSender.Send(binaryReply)
+}
+
+// Error implement the Go error interface, can be thrown from a go-flutter
+// method channel plugin to return custom error codes.
+// Normal Go error can also be used, the error code will default to "error".
+type Error struct {
+	err  string
+	code string
+}
+
+// Error is needed to comply with the Golang error interface.
+func (e *Error) Error() string {
+	return e.err
+}
+
+// NewError create an error with an specific error code.
+func NewError(code string, err error) *Error {
+	pe := &Error{
+		code: code,
+		err:  err.Error(),
+	}
+	return pe
 }
