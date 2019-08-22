@@ -213,7 +213,7 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 
 		var errorCode string
 		switch t := err.(type) {
-		case *PluginError:
+		case *Error:
 			errorCode = t.code
 		default:
 			errorCode = "error"
@@ -233,22 +233,22 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 	responseSender.Send(binaryReply)
 }
 
-// This error can be thrown from a go-flutter plugin. Useful if
-// you are interested in returning custom error codes.
-// If that is not the case, you can just throw normal Go 'error's
-type PluginError struct {
+// Error implement the Go error interface, can be thrown from a go-flutter
+// method channel plugin to return custom error codes.
+// Normal Go error can also be used, the error code will default to "error".
+type Error struct {
 	err  string
 	code string
 }
 
-// Needed to comply with the Golang 'error' interface
-func (e *PluginError) Error() string {
+// Error is needed to comply with the Golang error interface.
+func (e *Error) Error() string {
 	return e.err
 }
 
-// Create an error with an specific error code
-func NewPluginError(code string, err error) *PluginError {
-	pe := &PluginError{
+// NewError create an error with an specific error code.
+func NewError(code string, err error) *Error {
+	pe := &Error{
 		code: code,
 		err:  err.Error(),
 	}
