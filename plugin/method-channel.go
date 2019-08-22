@@ -233,19 +233,24 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 	responseSender.Send(binaryReply)
 }
 
+// This error can be thrown from a go-flutter plugin. Useful if
+// you are interested in returning custom error codes.
+// If that is not the case, you can just throw normal Go 'error's
 type PluginError struct {
-	err    string
-	code   string
+	err  string
+	code string
 }
 
+// Needed to comply with the Golang 'error' interface
 func (e *PluginError) Error() string {
-    return e.err
+	return e.err
 }
 
-func NewPluginError(code string, err error) (*PluginError) {
+// Create an error with an specific error code
+func NewPluginError(code string, err error) *PluginError {
 	pe := &PluginError{
-		code:   code,
-		err: err.Error(),
+		code: code,
+		err:  err.Error(),
 	}
 	return pe
 }
