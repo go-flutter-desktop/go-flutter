@@ -194,6 +194,7 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	width, _ := window.GetSize()
 	if width == 0 {
 		fmt.Println("go-flutter: Cannot calculate pixelsPerScreenCoordinate for zero-width window.")
+		return
 	} else {
 		m.pixelsPerScreenCoordinate = float64(widthPx) / float64(width)
 	}
