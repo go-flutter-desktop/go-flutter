@@ -7,7 +7,6 @@ package embedder
 // createMessageResponseHandle(FlutterEngine engine, void *user_data,
 //                             FlutterPlatformMessageResponseHandle **reply);
 // char** makeCharArray(int size);
-// uint64_t getCurrentTheradID();
 // void setArrayString(char **a, char *s, int n);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
@@ -404,10 +403,4 @@ func (flu *FlutterEngine) ReleasePlatformMessageResponseHandle(responseHandle Pl
 // engine.
 func FlutterEngineGetCurrentTime() uint64 {
 	return uint64(C.FlutterEngineGetCurrentTime())
-}
-
-// GetCurrentTheradID gets an identifier of the calling thread.
-// using `thrd_current` from <threads.h>
-func GetCurrentTheradID() uint64 {
-  return uint64(C.getCurrentTheradID())
 }

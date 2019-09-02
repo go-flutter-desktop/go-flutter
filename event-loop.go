@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"fmt"
 	"math"
-	"runtime"
 	"time"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -28,12 +27,13 @@ type EventLoop struct {
 	mainThreadID uint64
 }
 
+// newEventLoop must ALWAYS be called if the calling goroutine is
+// `runtime.LockOSThread()`
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
 	pq := priorityqueue.NewPriorityQueue()
 	heap.Init(pq)
 	return &EventLoop{
 		priorityqueue:  pq,
-		mainThreadID:   embedder.GetCurrentTheradID(),
 		postEmptyEvent: postEmptyEvent,
 		onExpiredTask:  onExpiredTask,
 
@@ -49,15 +49,22 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 	}
 }
 
-// RunOnCurrentThread May be called from any thread. Should return true if
-// tasks posted on the calling thread will be run on that same thread.
+// RunOnCurrentThread FlutterDocs:
+//   May be called from any thread. Should return true if tasks posted on the
+//   calling thread will be run on that same thread.
+//
+// The functions PostTask and onExpiredTask should be called from the same
+// thread, this is ensured if the creation of the event loop (through
+// `newEventLoop`) and the PostTask callback (through
+// `a.engine.TaskRunnerPostTask = eventLoop.PostTask`) are done on a calling
+// goroutine which always execute in that thread (`runtime.LockOSThread()`).
 func (t *EventLoop) RunOnCurrentThread() bool {
-	return t.mainThreadID == embedder.GetCurrentTheradID()
+	return true
 }
 
 // PostTask posts a Flutter engine tasks to the event loop for delayed execution.
+// PostTask must ALWAYS be called on the same goroutine/thread as `newEventLoop`
 func (t *EventLoop) PostTask(task embedder.FlutterTask, targetTimeNanos uint64) {
-	runtime.LockOSThread()
 
 	taskDuration := time.Duration(targetTimeNanos) * time.Nanosecond
 	engineDuration := time.Duration(embedder.FlutterEngineGetCurrentTime())
