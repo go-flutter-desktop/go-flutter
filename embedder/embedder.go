@@ -3,13 +3,18 @@ package embedder
 // #include "embedder.h"
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
+// FlutterEngineResult
+// createMessageResponseHandle(FlutterEngine engine, void *user_data,
+//                             FlutterPlatformMessageResponseHandle **reply);
 // char** makeCharArray(int size);
 // void setArrayString(char **a, char *s, int n);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
+	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"unsafe"
@@ -53,6 +58,19 @@ const (
 	ResultEngineNotRunning      Result = -1
 )
 
+// FlutterOpenGLTexture corresponds to the C.FlutterOpenGLTexture struct.
+type FlutterOpenGLTexture struct {
+	// Target texture of the active texture unit (example GL_TEXTURE_2D)
+	Target uint32
+	// The name of the texture
+	Name uint32
+	// The texture format (example GL_RGBA8)
+	Format uint32
+}
+
+// FlutterTask is a type alias to C.FlutterTask
+type FlutterTask = C.FlutterTask
+
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
 type FlutterEngine struct {
 	// Flutter Engine.
@@ -65,12 +83,17 @@ type FlutterEngine struct {
 	index int
 
 	// GL callback functions
-	GLMakeCurrent         func() bool
-	GLClearCurrent        func() bool
-	GLPresent             func() bool
-	GLFboCallback         func() int32
-	GLMakeResourceCurrent func() bool
-	GLProcResolver        func(procName string) unsafe.Pointer
+	GLMakeCurrent                  func() bool
+	GLClearCurrent                 func() bool
+	GLPresent                      func() bool
+	GLFboCallback                  func() int32
+	GLMakeResourceCurrent          func() bool
+	GLProcResolver                 func(procName string) unsafe.Pointer
+	GLExternalTextureFrameCallback func(textureID int64, width int, height int) *FlutterOpenGLTexture
+
+	// task runner interop
+	TaskRunnerRunOnCurrentThread func() bool
+	TaskRunnerPostTask           func(trask FlutterTask, targetTimeNanos uint64)
 
 	// platform message callback function
 	PlatfromMessage func(message *PlatformMessage)
@@ -238,8 +261,11 @@ type PlatformMessage struct {
 	Channel string
 	Message []byte
 
-	// ResponseHandle is only set when receiving a platform message.
-	// https://github.com/flutter/flutter/issues/18852
+	// ResponseHandle is set on some recieved platform message. All
+	// PlatformMessage recieved with this attribute must send a response with
+	// `SendPlatformMessageResponse`.
+	// ResponseHandle can also be created from the embedder side when a
+	// platform(golang) message needs native callback.
 	ResponseHandle PlatformMessageResponseHandle
 }
 
@@ -299,10 +325,82 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 	return (Result)(res)
 }
 
-// FlutterEngineFlushPendingTasksNow flush tasks on a  message loop not
-// controlled by the Flutter engine.
-//
-// deprecated soon.
-func FlutterEngineFlushPendingTasksNow() {
-	C.__FlutterEngineFlushPendingTasksNow()
+// RunTask inform the engine to run the specified task.
+func (flu *FlutterEngine) RunTask(task *FlutterTask) Result {
+	res := C.FlutterEngineRunTask(flu.Engine, task)
+	return (Result)(res)
+}
+
+// RegisterExternalTexture registers an external texture with a unique identifier.
+func (flu *FlutterEngine) RegisterExternalTexture(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
+	res := C.FlutterEngineRegisterExternalTexture(flu.Engine, C.int64_t(textureID))
+	return (Result)(res)
+}
+
+// UnregisterExternalTexture unregisters a previous texture registration.
+func (flu *FlutterEngine) UnregisterExternalTexture(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
+	res := C.FlutterEngineUnregisterExternalTexture(flu.Engine, C.int64_t(textureID))
+	return (Result)(res)
+}
+
+// MarkExternalTextureFrameAvailable marks that a new texture frame is
+// available for a given texture identifier.
+func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Result {
+	flu.sync.Lock()
+	defer flu.sync.Unlock()
+	if flu.closed {
+		return ResultEngineNotRunning
+	}
+	res := C.FlutterEngineMarkExternalTextureFrameAvailable(flu.Engine, C.int64_t(textureID))
+	return (Result)(res)
+}
+
+// DataCallback is a function called when a PlatformMessage response send back
+// to the embedder.
+type DataCallback func(binaryReply []byte)
+
+// CreatePlatformMessageResponseHandle creates a platform message response
+// handle that allows the embedder to set a native callback for a response to a
+// message.
+// Must be collected via `ReleasePlatformMessageResponseHandle` after the call
+// to `SendPlatformMessage`.
+func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback DataCallback) (PlatformMessageResponseHandle, error) {
+	var responseHandle *C.FlutterPlatformMessageResponseHandle
+
+	callbackPointer := uintptr(unsafe.Pointer(&callback))
+	defer func() {
+		runtime.KeepAlive(callbackPointer)
+	}()
+
+	res := C.createMessageResponseHandle(flu.Engine, unsafe.Pointer(&callbackPointer), &responseHandle)
+	if (Result)(res) != ResultSuccess {
+		return 0, errors.New("failed to create a response handle")
+	}
+	return PlatformMessageResponseHandle(unsafe.Pointer(responseHandle)), nil
+}
+
+// ReleasePlatformMessageResponseHandle collects a platform message response
+// handle.
+func (flu *FlutterEngine) ReleasePlatformMessageResponseHandle(responseHandle PlatformMessageResponseHandle) {
+	cResponseHandle := (*C.FlutterPlatformMessageResponseHandle)(unsafe.Pointer(responseHandle))
+	res := C.FlutterPlatformMessageReleaseResponseHandle(flu.Engine, cResponseHandle)
+	if (Result)(res) != ResultSuccess {
+		fmt.Printf("go-flutter: failed to collect platform response message handle")
+	}
+}
+
+// FlutterEngineGetCurrentTime gets the current time in nanoseconds from the clock used by the flutter
+// engine.
+func FlutterEngineGetCurrentTime() uint64 {
+	return uint64(C.FlutterEngineGetCurrentTime())
 }

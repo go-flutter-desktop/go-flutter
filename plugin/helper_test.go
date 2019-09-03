@@ -29,10 +29,15 @@ func NewTestingBinaryMessenger() *TestingBinaryMessenger {
 
 var _ BinaryMessenger = &TestingBinaryMessenger{} // compile-time type check
 
+func (t *TestingBinaryMessenger) Send(channel string, message []byte) (err error) {
+	err = t.Send(channel, message)
+	return err
+}
+
 // Send sends the bytes onto the given channel.
 // In this testing implementation of a BinaryMessenger, the handler for the
 // channel may be set using MockSetMessageHandler
-func (t *TestingBinaryMessenger) Send(channel string, message []byte) (reply []byte, err error) {
+func (t *TestingBinaryMessenger) SendWithReply(channel string, message []byte) (reply []byte, err error) {
 	t.mockChannelHandlersLock.Lock()
 	handler := t.mockChannelHandlers[channel]
 	t.mockChannelHandlersLock.Unlock()

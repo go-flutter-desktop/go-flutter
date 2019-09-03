@@ -128,7 +128,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 	keyboardShortcutBind := keyboardShortcutsGLFW{mod: mods}
 	if key == glfw.KeyEscape && action == glfw.Press {
-		_, err := defaultNavigationPlugin.channel.InvokeMethod("popRoute", nil)
+		err := defaultNavigationPlugin.channel.InvokeMethod("popRoute", nil)
 		if err != nil {
 			fmt.Printf("go-flutter: failed to pop route after escape key press: %v\n", err)
 		}

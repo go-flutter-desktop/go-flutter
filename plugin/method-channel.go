@@ -40,11 +40,31 @@ func NewMethodChannel(messenger BinaryMessenger, channelName string, methodCodec
 	return mc
 }
 
-// InvokeMethod sends a methodcall to the binary messenger and waits for a
-// result. Results from the Flutter side are not yet implemented in the
-// embedder. Until then, InvokeMethod will always return nil as result.
-// https://github.com/flutter/flutter/issues/18852
-func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result interface{}, err error) {
+// InvokeMethod sends a methodcall to the binary messenger without waiting for
+// a reply.
+func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) error {
+	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
+		Method:    name,
+		Arguments: arguments,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode methodcall")
+	}
+	err = m.messenger.Send(m.channelName, encodedMessage)
+	if err != nil {
+		return errors.Wrap(err, "failed to send methodcall")
+	}
+	return nil
+}
+
+// InvokeMethodWithReply sends a methodcall to the binary messenger and wait
+// for a reply.
+//
+// NOTE: If no value are returned by the handler setted in the
+// setMethodCallHandler flutter method, the function will wait forever. In case
+// you don't want to wait for reply, use InvokeMethod or launch the
+// function in a goroutine.
+func (m *MethodChannel) InvokeMethodWithReply(name string, arguments interface{}) (result interface{}, err error) {
 	encodedMessage, err := m.methodCodec.EncodeMethodCall(MethodCall{
 		Method:    name,
 		Arguments: arguments,
@@ -52,16 +72,10 @@ func (m *MethodChannel) InvokeMethod(name string, arguments interface{}) (result
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode methodcall")
 	}
-	encodedReply, err := m.messenger.Send(m.channelName, encodedMessage)
+	encodedReply, err := m.messenger.SendWithReply(m.channelName, encodedMessage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send methodcall")
 	}
-	// TODO(GeertJohan): InvokeMethod may not return any JSON. In Java this is
-	// handled by not having a callback handler, which means no response is
-	// expected and response is never unmarshalled. We should perhaps define
-	// InvokeMethod(..) and InovkeMethodNoResponse(..) to avoid errors when no
-	// response is given.
-	// https://github.com/go-flutter-desktop/go-flutter/issues/141
 	result, err = m.methodCodec.DecodeEnvelope(encodedReply)
 	if err != nil {
 		return nil, err
@@ -196,7 +210,16 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 	reply, err := handler.HandleMethod(methodArgs)
 	if err != nil {
 		fmt.Printf("go-flutter: handler for method '%s' on channel '%s' returned an error: %v\n", methodName, m.channelName, err)
-		binaryReply, err := m.methodCodec.EncodeErrorEnvelope("error", err.Error(), nil)
+
+		var errorCode string
+		switch t := err.(type) {
+		case *Error:
+			errorCode = t.code
+		default:
+			errorCode = "error"
+		}
+
+		binaryReply, err := m.methodCodec.EncodeErrorEnvelope(errorCode, err.Error(), nil)
 		if err != nil {
 			fmt.Printf("go-flutter: failed to encode error envelope for method '%s' on channel '%s', error: %v\n", methodName, m.channelName, err)
 		}
@@ -208,4 +231,26 @@ func (m *MethodChannel) handleMethodCall(handler MethodHandler, methodName strin
 		fmt.Printf("go-flutter: failed to encode success envelope for method '%s' on channel '%s', error: %v\n", methodName, m.channelName, err)
 	}
 	responseSender.Send(binaryReply)
+}
+
+// Error implement the Go error interface, can be thrown from a go-flutter
+// method channel plugin to return custom error codes.
+// Normal Go error can also be used, the error code will default to "error".
+type Error struct {
+	err  string
+	code string
+}
+
+// Error is needed to comply with the Golang error interface.
+func (e *Error) Error() string {
+	return e.err
+}
+
+// NewError create an error with an specific error code.
+func NewError(code string, err error) *Error {
+	pe := &Error{
+		code: code,
+		err:  err.Error(),
+	}
+	return pe
 }

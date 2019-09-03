@@ -30,13 +30,25 @@ func newMessenger(engine *embedder.FlutterEngine) *messenger {
 	}
 }
 
-// Send pushes a binary message on a channel to the Flutter side. Replies are
-// not supported yet (https://github.com/flutter/flutter/issues/18852). This
-// means that currently, binaryReply will be nil on success.
-func (m *messenger) Send(channel string, binaryMessage []byte) (binaryReply []byte, err error) {
+// SendWithReply pushes a binary message on a channel to the Flutter side and
+// wait for a reply.
+// NOTE: If no value are returned by the flutter handler, the function will
+// wait forever. In case you don't want to wait for reply, use Send.
+func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryReply []byte, err error) {
+	reply := make(chan []byte)
+	defer close(reply)
+	responseHandle, err := m.engine.CreatePlatformMessageResponseHandle(func(binaryMessage []byte) {
+		reply <- binaryMessage
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer m.engine.ReleasePlatformMessageResponseHandle(responseHandle)
+
 	msg := &embedder.PlatformMessage{
-		Channel: channel,
-		Message: binaryMessage,
+		Channel:        channel,
+		Message:        binaryMessage,
+		ResponseHandle: responseHandle,
 	}
 	res := m.engine.SendPlatformMessage(msg)
 	if err != nil {
@@ -48,9 +60,28 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (binaryReply []by
 		return nil, errors.New("failed to send message")
 	}
 
-	// NOTE: Response from engine is not yet supported by embedder.
-	// https://github.com/flutter/flutter/issues/18852
-	return nil, nil
+	// wait for a reply and return
+	return <-reply, nil
+}
+
+// Send pushes a binary message on a channel to the Flutter side without
+// expecting replies.
+func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
+	msg := &embedder.PlatformMessage{
+		Channel: channel,
+		Message: binaryMessage,
+	}
+	res := m.engine.SendPlatformMessage(msg)
+	if err != nil {
+		if ferr, ok := err.(*plugin.FlutterError); ok {
+			return ferr
+		}
+	}
+	if res != embedder.ResultSuccess {
+		return errors.New("failed to send message")
+	}
+
+	return nil
 }
 
 // SetChannelHandler satisfies plugin.BinaryMessenger

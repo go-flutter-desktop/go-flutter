@@ -53,16 +53,33 @@ func NewBasicMessageChannel(messenger BinaryMessenger, channelName string, codec
 	return b
 }
 
-// Send encodes and sends the specified message to the Flutter application and
-// returns the reply, or an error. Results from the Flutter side are not yet
-// implemented in the embedder. Until then, InvokeMethod will always return nil
-// as reult. https://github.com/flutter/flutter/issues/18852
-func (b *BasicMessageChannel) Send(message interface{}) (reply interface{}, err error) {
+// Send encodes and sends the specified message to the Flutter application
+// without waiting for a reply.
+func (b *BasicMessageChannel) Send(message interface{}) error {
+	encodedMessage, err := b.codec.EncodeMessage(message)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode outgoing message")
+	}
+	err = b.messenger.Send(b.channelName, encodedMessage)
+	if err != nil {
+		return errors.Wrap(err, "failed to send outgoing message")
+	}
+	return nil
+}
+
+// SendWithReply encodes and sends the specified message to the Flutter
+// application and returns the reply, or an error.
+//
+// NOTE: If no value are returned by the handler setted in the
+// setMessageHandler flutter method, the function will wait forever. In case
+// you don't want to wait for reply, use Send or launch the
+// function in a goroutine.
+func (b *BasicMessageChannel) SendWithReply(message interface{}) (reply interface{}, err error) {
 	encodedMessage, err := b.codec.EncodeMessage(message)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode outgoing message")
 	}
-	encodedReply, err := b.messenger.Send(b.channelName, encodedMessage)
+	encodedReply, err := b.messenger.SendWithReply(b.channelName, encodedMessage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to send outgoing message")
 	}

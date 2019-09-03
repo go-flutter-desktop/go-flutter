@@ -36,7 +36,10 @@ func (es *EventSink) Success(event interface{}) {
 	if err != nil {
 		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.eventChannel.channelName, err)
 	}
-	es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
+	err = es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to send Success message on event channel '%s', error: %v\n", es.eventChannel.channelName, err)
+	}
 }
 
 // Error consumes an error event.
@@ -51,7 +54,10 @@ func (es *EventSink) Error(errorCode string, errorMessage string, errorDetails i
 	if err != nil {
 		fmt.Printf("go-flutter: failed to encode success envelope for event channel '%s', error: %v\n", es.eventChannel.channelName, err)
 	}
-	es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
+	err = es.eventChannel.messenger.Send(es.eventChannel.channelName, binaryMsg)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to send Error message on event channel '%s', error: %v\n", es.eventChannel.channelName, err)
+	}
 }
 
 // EndOfStream consumes end of stream.
@@ -63,5 +69,8 @@ func (es *EventSink) EndOfStream() {
 	}
 	es.hasEnded = true
 
-	es.eventChannel.messenger.Send(es.eventChannel.channelName, nil)
+	err := es.eventChannel.messenger.Send(es.eventChannel.channelName, nil)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to send EndOfStream message on event channel '%s', error: %v\n", es.eventChannel.channelName, err)
+	}
 }
