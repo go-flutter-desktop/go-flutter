@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
-	"github.com/go-gl/gl/v4.6-core/gl"
+	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
