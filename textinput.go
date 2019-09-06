@@ -94,8 +94,9 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 	}
 
 	if editingState.SelectionBase < 0 || editingState.SelectionExtent < 0 {
-		errorMsg := fmt.Sprintf("invalid text selection: selectionBase:%v, selectionExtent:%v. Refer to flutter/flutter#20016\n",
+		errorMsg := fmt.Sprintf("invalid text selection: selectionBase:%v, selectionExtent:%v. Refer to go-flutter-desktop/go-flutter#221\n",
 			editingState.SelectionBase, editingState.SelectionExtent)
+		p.word = []rune(editingState.Text)
 		wordLen := len(p.word)
 		p.selectionBase = wordLen
 		p.selectionExtent = wordLen
