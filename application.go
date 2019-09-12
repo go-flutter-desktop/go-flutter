@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
+	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 )
 
 // Run executes a flutter application with the provided options.
@@ -99,10 +100,7 @@ func (a *Application) Run() error {
 		return errors.Errorf("invalid window mode %T", a.config.windowMode)
 	}
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	opengl.GLFWWindowHint()
 
 	if a.config.windowInitialLocation.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
@@ -210,7 +208,7 @@ func (a *Application) Run() error {
 		return true
 	}
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
-		return glfw.GetProcAddress(procName)
+		return opengl.GetProcAddress(procName)
 	}
 	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
