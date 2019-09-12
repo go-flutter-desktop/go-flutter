@@ -130,7 +130,7 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	)
 
 	return &embedder.FlutterOpenGLTexture{
-		Target: opengl.TEXTURE_2D,
+		Target: opengl.TEXTURE2D,
 		Name:   registration.texture,
 		Format: opengl.RGBA8,
 	}

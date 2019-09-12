@@ -1,5 +1,10 @@
-// The default version of OpenGL used by go-flutter.
+// +build !openglnone
+
 package opengl
+
+// The default version (3.3) of OpenGL used by go-flutter.
+// If you want to support other version, copy/pase this file, change the import
+// statement, add builds constraints and open a PR.
 
 import (
 	"unsafe"
@@ -9,8 +14,10 @@ import (
 )
 
 // const exposed to go-flutter
-const TEXTURE_2D = gl.TEXTURE_2D
-const RGBA8 = gl.RGBA8
+const (
+	TEXTURE2D = gl.TEXTURE_2D
+	RGBA8     = gl.RGBA8
+)
 
 // Init opengl
 func Init() error {
@@ -67,11 +74,4 @@ func GLFWWindowHint() {
 	glfw.WindowHint(glfw.ContextVersionMinor, 3)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
-
-}
-
-// GetProcAddress returns the address of the specified OpenGL or OpenGL ES core
-// or extension function, if it is supported by the current context.
-func GetProcAddress(namea string) unsafe.Pointer {
-	return gl.GlowGetProcAddress(namea)
 }

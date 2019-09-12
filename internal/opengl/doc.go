@@ -5,5 +5,5 @@
 // building go-flutter.
 // default is v3.3
 //
-// Golang build constraints are used to do the version selection.
+// Golang build constraints are used for version selection.
 package opengl

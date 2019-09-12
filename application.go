@@ -208,7 +208,7 @@ func (a *Application) Run() error {
 		return true
 	}
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
-		return opengl.GetProcAddress(procName)
+		return glfw.GetProcAddress(procName)
 	}
 	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
