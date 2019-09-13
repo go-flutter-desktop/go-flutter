@@ -40,7 +40,7 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
   - StandardMessageCodec, JSONMessageCodec
   - StandardMethodCodec, **MethodChannel**
 - Importable as Go library into custom projects
-- Text input handling
+- UTF-8 Text input
 - Clipboard copy & paste
 - Window title and icon
 - Standard keyboard shortcuts
