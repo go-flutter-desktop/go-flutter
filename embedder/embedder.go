@@ -261,8 +261,8 @@ type PlatformMessage struct {
 	Channel string
 	Message []byte
 
-	// ResponseHandle is set on some recieved platform message. All
-	// PlatformMessage recieved with this attribute must send a response with
+	// ResponseHandle is set on some received platform message. All
+	// PlatformMessage received with this attribute must send a response with
 	// `SendPlatformMessageResponse`.
 	// ResponseHandle can also be created from the embedder side when a
 	// platform(golang) message needs native callback.
