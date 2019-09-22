@@ -14,6 +14,6 @@ var (
 	PlatformVersion = "unknown"
 	// ProjectName contains the application name
 	ProjectName = "unknown"
-	// OrganizationName contains the package org name, (Can by set upon flutter create (--org flag))
-	OrganizationName = "unknown"
+	// ProjectOrganizationName contains the package org name, (Can by set upon flutter create (--org flag))
+	ProjectOrganizationName = "unknown"
 )
