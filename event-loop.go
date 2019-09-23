@@ -109,6 +109,7 @@ func (t *EventLoop) WaitForEvents(rendererWaitEvents func(float64)) {
 		expiredTasks = append(expiredTasks, top)
 
 	}
+	hasTask := t.priorityqueue.Len() != 0
 	t.priorityqueue.Unlock()
 
 	// Fire expired tasks.
@@ -122,7 +123,7 @@ func (t *EventLoop) WaitForEvents(rendererWaitEvents func(float64)) {
 	// Sleep till the next task needs to be processed. If a new task comes
 	// along, the rendererWaitEvents will be resolved early because PostTask
 	// posts an empty event.
-	if t.priorityqueue.Len() == 0 {
+	if !hasTask {
 		rendererWaitEvents(t.platformMessageRefreshRate.Seconds())
 	} else {
 		if top.FireTime.After(now) {
