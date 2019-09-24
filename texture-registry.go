@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
-	"github.com/go-gl/gl/v4.6-core/gl"
+	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -42,9 +42,9 @@ func newTextureRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *Te
 
 func (t *TextureRegistry) init() error {
 	t.window.MakeContextCurrent()
-	// Important! Call gl.Init only under the presence of an active OpenGL context,
+	// Important! Call open.Init only under the presence of an active OpenGL context,
 	// i.e., after MakeContextCurrent.
-	if err := gl.Init(); err != nil {
+	if err := opengl.Init(); err != nil {
 		return errors.Wrap(err, "TextureRegistry gl init failed")
 	}
 	return nil
@@ -80,7 +80,7 @@ func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTex
 	if handler == nil {
 		texture := t.channels[textureID]
 		if texture != nil {
-			gl.DeleteTextures(1, &texture.texture)
+			opengl.DeleteTextures(1, &texture.texture)
 		}
 		delete(t.channels, textureID)
 	} else {
@@ -118,33 +118,21 @@ func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	t.window.MakeContextCurrent()
 
 	if registration.texture == 0 {
-		gl.GenTextures(1, &registration.texture)
-		gl.BindTexture(gl.TEXTURE_2D, registration.texture)
-		// set the texture wrapping parameters
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
-		// set texture filtering parameters
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+		opengl.CreateTexture(&registration.texture)
 	}
 
-	gl.BindTexture(gl.TEXTURE_2D, registration.texture)
-	// It seems that current flutter/engine can only support RGBA texture.
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
-		0,
-		gl.RGBA,
+	opengl.BindTexture(registration.texture)
+
+	opengl.TexImage2D(
 		int32(pixelBuffer.Width),
 		int32(pixelBuffer.Height),
-		0,
-		gl.RGBA,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(pixelBuffer.Pix))
+		opengl.Ptr(pixelBuffer.Pix),
+	)
 
 	return &embedder.FlutterOpenGLTexture{
-		Target: gl.TEXTURE_2D,
+		Target: opengl.TEXTURE2D,
 		Name:   registration.texture,
-		Format: gl.RGBA8,
+		Format: opengl.RGBA8,
 	}
 
 }
