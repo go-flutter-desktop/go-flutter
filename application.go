@@ -278,18 +278,22 @@ func (a *Application) Run() error {
 	windowManager := newWindowManager(a.config.forcePixelRatio)
 	// force first refresh
 	windowManager.glfwRefreshCallback(a.window)
-
-	// Debounce the refresh and position callbacks.
+	// Attach glfw window callbacks for refresh and position changes
+	a.window.SetRefreshCallback(windowManager.glfwRefreshCallback)
+	// Debounce the position callback.
 	// This avoid making too much flutter redraw and potentially redundant
 	// network calls.
 	glfwDebouceTasker := tasker.New()
-	debounced := debounce.New(50*time.Millisecond, glfwDebouceTasker)
-	// Attach glfw window callbacks for refresh and position changes
-	a.window.SetRefreshCallback(func(window *glfw.Window) {
-		debounced(windowManager.glfwRefreshCallback, window)
-	})
+	debounced := debounce.New(50 * time.Millisecond)
+	// SetPosCallback is called when the window is moved, this directly calls
+	// glfwRefreshCallback in order to recalculate DPI.
+	// TODO: when moving to glfw 3.3, use glfwSetWindowContentScaleCallback
 	a.window.SetPosCallback(func(window *glfw.Window, xpos int, ypos int) {
-		debounced(windowManager.glfwRefreshCallback, window)
+		debounced(func() {
+			glfwDebouceTasker.Do(func() {
+				windowManager.glfwRefreshCallback(window)
+			})
+		})
 	})
 
 	// Attach glfw window callbacks for text input

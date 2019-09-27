@@ -8,15 +8,11 @@
 // a break.
 //
 // Copied from https://github.com/bep/debounce/blob/master/debounce.go
-// modified to support an glfw.Window argument.
 package debounce
 
 import (
 	"sync"
 	"time"
-
-	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
-	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 // New returns a debounced function that takes another functions as its argument.
@@ -24,32 +20,26 @@ import (
 // for the given duration.
 // The debounced function can be invoked with different functions, if needed,
 // the last one will win.
-func New(after time.Duration, glfwTasker *tasker.Tasker) func(f func(window *glfw.Window), window *glfw.Window) {
-	d := &debouncer{after: after, glfwTasker: glfwTasker}
+func New(after time.Duration) func(f func()) {
+	d := &debouncer{after: after}
 
-	return func(f func(window *glfw.Window), window *glfw.Window) {
-		d.add(f, window)
+	return func(f func()) {
+		d.add(f)
 	}
 }
 
 type debouncer struct {
-	mu         sync.Mutex
-	after      time.Duration
-	timer      *time.Timer
-	glfwTasker *tasker.Tasker
+	mu    sync.Mutex
+	after time.Duration
+	timer *time.Timer
 }
 
-func (d *debouncer) add(f func(window *glfw.Window), window *glfw.Window) {
+func (d *debouncer) add(f func()) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	if d.timer != nil {
 		d.timer.Stop()
 	}
-	d.timer = time.AfterFunc(d.after, func() {
-		// needs to run on main thread
-		d.glfwTasker.Do(func() {
-			f(window)
-		})
-	})
+	d.timer = time.AfterFunc(d.after, f)
 }
