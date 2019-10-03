@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
-	"runtime/debug"
 	"sync"
 	"unsafe"
 )
@@ -23,28 +22,6 @@ import (
 // A list of flutter engines that are managed by this embedder.
 var flutterEngines []*FlutterEngine
 var flutterEnginesLock sync.RWMutex
-
-// FlutterEngineByIndex returns an existing FlutterEngine by its index in this embedder.
-// Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
-func FlutterEngineByIndex(index int) (engine *FlutterEngine) {
-	fmt.Println("go-flutter: FlutterEngineByIndex(..) is deprecated")
-	flutterEnginesLock.RLock()
-	if index <= len(flutterEngines)-1 {
-		engine = flutterEngines[index]
-	}
-	flutterEnginesLock.RUnlock()
-	if engine == nil {
-		fmt.Printf("go-flutter: no flutterEngine found for index %d\n", index)
-		debug.PrintStack()
-		return nil
-	}
-	return engine
-}
-
-// CountFlutterEngines return the number of engines registered in this embedder.
-func CountFlutterEngines() int {
-	return len(flutterEngines)
-}
 
 // Result corresponds to the C.enum retuned by the shared flutter library
 // whenever we call it.
@@ -79,8 +56,6 @@ type FlutterEngine struct {
 	// closed indicates if the engine has Shutdown
 	closed bool
 	sync   sync.Mutex
-	// index of the engine in the global flutterEngines slice
-	index int
 
 	// GL callback functions
 	GLMakeCurrent                  func() bool
@@ -106,30 +81,11 @@ type FlutterEngine struct {
 // NewFlutterEngine creates an empty FlutterEngine
 // and assigns it an index for global lookup.
 func NewFlutterEngine() *FlutterEngine {
-	fe := &FlutterEngine{}
-	flutterEnginesLock.Lock()
-	flutterEngines = append(flutterEngines, fe)
-	fe.index = len(flutterEngines) - 1
-	flutterEnginesLock.Unlock()
-	return fe
-}
-
-// Index returns the index of the engine in the global flutterEngines slice
-// Deprecated 2019-04-05, this is not used by go-flutter anymore and may be removed in the future.
-func (flu *FlutterEngine) Index() int {
-	fmt.Println("go-flutter: engine.Index() is deprecated")
-	return flu.index
+	return &FlutterEngine{}
 }
 
 // Run launches the Flutter Engine in a background thread.
 func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
-	// validate this FlutterEngine was created correctly
-	flutterEnginesLock.RLock()
-	if len(flutterEngines) <= flu.index || flutterEngines[flu.index] != flu {
-		panic("FlutterEngine was wrongly created. Use embedder.NewFlutterEngine().")
-	}
-	flutterEnginesLock.RUnlock()
-
 	args := C.FlutterProjectArgs{
 		assets_path:   C.CString(flu.AssetsPath),
 		icu_data_path: C.CString(flu.IcuDataPath),
