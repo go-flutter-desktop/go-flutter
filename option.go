@@ -13,12 +13,11 @@ type config struct {
 	icuDataPath       string
 	vmArguments       []string
 
-	windowInitializerDeprecated func(*glfw.Window) error
-	windowIconProvider          func() ([]image.Image, error)
-	windowInitialDimensions     windowDimensions
-	windowInitialLocation       windowLocation
-	windowDimensionLimits       windowDimensionLimits
-	windowMode                  windowMode
+	windowIconProvider      func() ([]image.Image, error)
+	windowInitialDimensions windowDimensions
+	windowInitialLocation   windowLocation
+	windowDimensionLimits   windowDimensionLimits
+	windowMode              windowMode
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts

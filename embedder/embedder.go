@@ -19,10 +19,6 @@ import (
 	"unsafe"
 )
 
-// A list of flutter engines that are managed by this embedder.
-var flutterEngines []*FlutterEngine
-var flutterEnginesLock sync.RWMutex
-
 // Result corresponds to the C.enum retuned by the shared flutter library
 // whenever we call it.
 type Result int32
