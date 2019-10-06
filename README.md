@@ -13,7 +13,7 @@
 
 This [unofficial](https://github.com/go-flutter-desktop/go-flutter/issues/191#issuecomment-511384007) project brings Flutter to the desktop through the power of [Go](http://golang.org/) and [GLFW](https://github.com/go-gl/glfw).
 
-The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. This project implements the [Flutter's Embedding API](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders) using a single code base that runs on Windows, MacOS, and Linux. For rendering, [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
+The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. This project implements the [Flutter's Embedding API](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders) using a single code base that runs on Windows, macOS, and Linux. For rendering, [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
 
 The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus Golang is a great language because it keeps everything simple and readable, which makes it easy to build cross-platform plugins.
 
@@ -25,7 +25,7 @@ The choice of [Golang](https://github.com/golang/go) comes from the fact that it
 
 The best way to get started is to install [hover](https://github.com/go-flutter-desktop/hover), the official go-flutter tool to set up, build and run Flutter apps on the desktop, including hot-reload.
 
-Read the [hover tutorial](https://github.com/go-flutter-desktop/hover) to run your app on desktop, or start with [one of our example apps](https://github.com/go-flutter-desktop/examples).
+Read the [hover tutorial](https://github.com/go-flutter-desktop/hover) to run your app on the desktop, or start with [one of our example apps](https://github.com/go-flutter-desktop/examples).
 
 If you want more in-depth information about go-flutter, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki).
 
@@ -74,7 +74,7 @@ Flutter itself is a relatively young project. Its framework and engine are updat
 
 ### Go version
 
-Updating Go is simple, and Go [seldomly has backwards incompatible changes](https://golang.org/doc/go1compat). This project remains compatible with the [latest Go stable release](https://golang.org/dl/).
+Updating Go is simple and Go [seldomly has backwards-incompatible changes](https://golang.org/doc/go1compat). This project remains compatible with the [latest Go stable release](https://golang.org/dl/).
 
 ### GLFW version
 
