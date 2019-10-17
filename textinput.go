@@ -26,6 +26,9 @@ type textinputPlugin struct {
 	word            []rune
 	selectionBase   int
 	selectionExtent int
+
+	virtualKeyboardShow func()
+	virtualKeyboardHide func()
 }
 
 // keyboardShortcutsGLFW handle glfw.ModifierKey from glfwKeyCallback.
@@ -51,9 +54,18 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 	p.channel.HandleFuncSync("TextInput.setClient", p.handleSetClient)
 	p.channel.HandleFuncSync("TextInput.clearClient", p.handleClearClient)
 	p.channel.HandleFuncSync("TextInput.setEditingState", p.handleSetEditingState)
-	// Ignored: Desktop's don't have a virtual keyboard, so there is no need to show or hide it
-	p.channel.HandleFuncSync("TextInput.show", func(_ interface{}) (interface{}, error) { return nil, nil })
-	p.channel.HandleFuncSync("TextInput.hide", func(_ interface{}) (interface{}, error) { return nil, nil })
+	p.channel.HandleFunc("TextInput.show", func(_ interface{}) (interface{}, error) {
+		if p.virtualKeyboardShow != nil {
+			p.virtualKeyboardShow()
+		}
+		return nil, nil 
+	})
+	p.channel.HandleFunc("TextInput.hide", func(_ interface{}) (interface{}, error) {
+		if p.virtualKeyboardHide != nil {
+			p.virtualKeyboardHide()
+		}
+		return nil, nil
+	})
 	return nil
 }
 

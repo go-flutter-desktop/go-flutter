@@ -245,3 +245,27 @@ type KeyboardShortcuts struct {
 	Paste     glfw.Key
 	SelectAll glfw.Key
 }
+
+// VirtualKeyboardShow sets an func called when the flutter framework want to
+// show the keyboard.
+// This Option is interesting for people wanting to display the on-screen
+// keyboard on TextField focus.
+// It's up to the flutter developer to implement (or not) this function with
+// the OS related call.
+func VirtualKeyboardShow(showCallback func()) Option {
+	return func(c *config) {
+		// Reference the callback to the platform plugin (singleton) responsible
+		// for textinput.
+		defaultTextinputPlugin.virtualKeyboardShow = showCallback
+	}
+}
+
+// VirtualKeyboardHide sets an func called when the flutter framework want to
+// hide the keyboard.
+func VirtualKeyboardHide(hideCallback func()) Option {
+	return func(c *config) {
+		// Reference the callback to the platform plugin (singleton) responsible
+		// for textinput.
+		defaultTextinputPlugin.virtualKeyboardHide = hideCallback
+	}
+}
