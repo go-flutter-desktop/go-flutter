@@ -13,6 +13,7 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
+	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
 // Run executes a flutter application with the provided options.
@@ -267,6 +268,16 @@ func (a *Application) Run() error {
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
 			}
+		}
+	}
+
+	// Change the flutter initial route
+	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
+	if initialRoute != "" {
+		defaultPlatformPlugin.flutterInitialized = func() {
+			plugin.
+				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
+				InvokeMethod("pushRoute", initialRoute)
 		}
 	}
 

@@ -19,11 +19,16 @@ type platformPlugin struct {
 	glfwTasker *tasker.Tasker
 	window     *glfw.Window
 	channel    *plugin.MethodChannel
+
+	// flutterInitialized gets called once flutter is running and ready
+	// to process upstream plugin calls. (It usually takes ~10 rendering frame).
+	flutterInitialized func()
 }
 
 // hardcoded because there is no swappable renderer interface.
 var defaultPlatformPlugin = &platformPlugin{
-	popBehavior: PopBehaviorNone,
+	popBehavior:        PopBehaviorNone,
+	flutterInitialized: func() {},
 }
 
 var _ Plugin = &platformPlugin{}     // compile-time type check
@@ -104,5 +109,8 @@ func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply inte
 	p.glfwTasker.Do(func() {
 		p.window.SetTitle(appSwitcherDescription.Label)
 	})
+
+	p.flutterInitialized()
+
 	return nil, nil
 }
