@@ -286,8 +286,7 @@ func (a *Application) Run() error {
 	glfwDebouceTasker := tasker.New()
 	debounced := debounce.New(50 * time.Millisecond)
 	// SetPosCallback is called when the window is moved, this directly calls
-	// glfwRefreshCallback in order to recalculate DPI.
-	// TODO: when moving to glfw 3.3, use glfwSetWindowContentScaleCallback
+	// glfwRefreshCallback in order to redraw and avoid transparent scene.
 	a.window.SetPosCallback(func(window *glfw.Window, xpos int, ypos int) {
 		debounced(func() {
 			glfwDebouceTasker.Do(func() {
@@ -295,6 +294,7 @@ func (a *Application) Run() error {
 			})
 		})
 	})
+	// TODO: when moving to glfw 3.3, also use glfwSetWindowContentScaleCallback
 
 	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(
