@@ -135,13 +135,6 @@ func (a *Application) Run() error {
 		a.window.SetIcon(images)
 	}
 
-	if a.config.windowInitializerDeprecated != nil {
-		err = a.config.windowInitializerDeprecated(a.window)
-		if err != nil {
-			return errors.Wrap(err, "executing window initializer")
-		}
-	}
-
 	if a.config.windowDimensionLimits.minWidth != 0 {
 		a.window.SetSizeLimits(
 			a.config.windowDimensionLimits.minWidth,
