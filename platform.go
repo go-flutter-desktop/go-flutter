@@ -20,15 +20,17 @@ type platformPlugin struct {
 	window     *glfw.Window
 	channel    *plugin.MethodChannel
 
-	// flutterInitialized gets called once flutter is running and ready
-	// to process upstream plugin calls. (It usually takes ~10 rendering frame).
-	flutterInitialized func()
+	// flutterInitialized is used as callbacks to know when the flutter framework
+	// is running and ready to process upstream plugin calls.
+	// (It usually takes ~10 rendering frame).
+	// flutterInitialized is trigger when the plugin "flutter/platform" received
+	// a message from "SystemChrome.setApplicationSwitcherDescription".
+	flutterInitialized []func()
 }
 
 // hardcoded because there is no swappable renderer interface.
 var defaultPlatformPlugin = &platformPlugin{
-	popBehavior:        PopBehaviorNone,
-	flutterInitialized: func() {},
+	popBehavior: PopBehaviorNone,
 }
 
 var _ Plugin = &platformPlugin{}     // compile-time type check
@@ -110,7 +112,10 @@ func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply inte
 		p.window.SetTitle(appSwitcherDescription.Label)
 	})
 
-	p.flutterInitialized()
+	// triggers flutter framework initialized callbacks
+	for _, f := range p.flutterInitialized {
+		f()
+	}
 
 	return nil, nil
 }

@@ -274,11 +274,11 @@ func (a *Application) Run() error {
 	// Change the flutter initial route
 	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
 	if initialRoute != "" {
-		defaultPlatformPlugin.flutterInitialized = func() {
+		defaultPlatformPlugin.flutterInitialized = append(defaultPlatformPlugin.flutterInitialized, func() {
 			plugin.
 				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
 				InvokeMethod("pushRoute", initialRoute)
-		}
+		})
 	}
 
 	// Setup a new windowManager to handle windows pixel ratio's and pointer
