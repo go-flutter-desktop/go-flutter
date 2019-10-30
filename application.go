@@ -5,14 +5,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 	"unsafe"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
+	"github.com/go-flutter-desktop/go-flutter/internal/debounce"
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
+	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
@@ -134,13 +137,6 @@ func (a *Application) Run() error {
 			return errors.Wrap(err, "getting images from icon provider")
 		}
 		a.window.SetIcon(images)
-	}
-
-	if a.config.windowInitializerDeprecated != nil {
-		err = a.config.windowInitializerDeprecated(a.window)
-		if err != nil {
-			return errors.Wrap(err, "executing window initializer")
-		}
 	}
 
 	if a.config.windowDimensionLimits.minWidth != 0 {
@@ -288,7 +284,21 @@ func (a *Application) Run() error {
 	windowManager.glfwRefreshCallback(a.window)
 	// Attach glfw window callbacks for refresh and position changes
 	a.window.SetRefreshCallback(windowManager.glfwRefreshCallback)
-	a.window.SetPosCallback(windowManager.glfwPosCallback)
+	// Debounce the position callback.
+	// This avoid making too much flutter redraw and potentially redundant
+	// network calls.
+	glfwDebouceTasker := tasker.New()
+	debounced := debounce.New(50 * time.Millisecond)
+	// SetPosCallback is called when the window is moved, this directly calls
+	// glfwRefreshCallback in order to redraw and avoid transparent scene.
+	a.window.SetPosCallback(func(window *glfw.Window, xpos int, ypos int) {
+		debounced(func() {
+			glfwDebouceTasker.Do(func() {
+				windowManager.glfwRefreshCallback(window)
+			})
+		})
+	})
+	// TODO: when moving to glfw 3.3, also use glfwSetWindowContentScaleCallback
 
 	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(
@@ -316,6 +326,7 @@ func (a *Application) Run() error {
 		eventLoop.WaitForEvents(func(duration float64) {
 			glfw.WaitEventsTimeout(duration)
 		})
+		glfwDebouceTasker.ExecuteTasks()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 	}

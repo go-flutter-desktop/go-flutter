@@ -58,7 +58,7 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 		if p.virtualKeyboardShow != nil {
 			p.virtualKeyboardShow()
 		}
-		return nil, nil 
+		return nil, nil
 	})
 	p.channel.HandleFunc("TextInput.hide", func(_ interface{}) (interface{}, error) {
 		if p.virtualKeyboardHide != nil {
