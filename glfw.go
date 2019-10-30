@@ -193,12 +193,6 @@ func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yo
 	m.sendPointerEventScroll(window, xoff*scrollModifier, yoff*scrollModifier)
 }
 
-// glfwPosCallback is called when the window is moved, this directly calls
-// glfwRefreshCallback in order to recalculate DPI.
-func (m *windowManager) glfwPosCallback(window *glfw.Window, xpos int, ypos int) {
-	m.glfwRefreshCallback(window)
-}
-
 // glfwRefreshCallback is called when the window needs a reresh, this
 // can occur when the window is resized, was covered by another window, etc.
 // When forcedPixelratio is zero, the forcedPixelratio communicated to the
