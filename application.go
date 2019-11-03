@@ -270,7 +270,7 @@ func (a *Application) Run() error {
 	// Change the flutter initial route
 	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
 	if initialRoute != "" {
-		defaultPlatformPlugin.flutterInitialized = append(defaultPlatformPlugin.flutterInitialized, func() {
+		defaultPlatformPlugin.addFrameworkReadyCallback(func() {
 			plugin.
 				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
 				InvokeMethod("pushRoute", initialRoute)

@@ -119,3 +119,9 @@ func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply inte
 
 	return nil, nil
 }
+
+// addFrameworkReadyCallback adds a callback which if trigger when the flutter
+// framework is ready.
+func (p *platformPlugin) addFrameworkReadyCallback(f func()) {
+	p.flutterInitialized = append(p.flutterInitialized, f)
+}
