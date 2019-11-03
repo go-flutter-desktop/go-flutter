@@ -1,7 +1,6 @@
 ---
-name: I have a problem with go-flutter/hover.
-about: You are writing an application with Flutter but the application is 
-       not compiling, crashing, throwing an exception or something looks wrong.
+name: "\U0001F41B Bug Report"
+about: "If something isn't working as expected."
 ---
 
 <!-- Thank you for trying go-flutter! -->
