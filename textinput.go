@@ -6,7 +6,7 @@ import (
 	"unicode"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 )
 
@@ -202,11 +202,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 		case p.keyboardLayout.Paste:
 			if keyboardShortcutBind.isModifier() {
-				var clpString, err = window.GetClipboardString()
-				if err != nil {
-					fmt.Printf("go-flutter: unable to get the clipboard content: %v\n", err)
-					return
-				}
+				clpString := window.GetClipboardString()
 				p.addChar([]rune(clpString))
 			}
 		}

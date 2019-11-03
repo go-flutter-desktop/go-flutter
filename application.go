@@ -8,7 +8,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -110,6 +110,8 @@ func (a *Application) Run() error {
 		// using the Visible window hint, set its position and then show it.
 		glfw.WindowHint(glfw.Visible, glfw.False)
 	}
+
+	glfw.WindowHint(glfw.ScaleToMonitor, glfw.True)
 
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
 	if err != nil {
