@@ -289,7 +289,9 @@ func (a *Application) Run() error {
 			})
 		})
 	})
-	// TODO: when moving to glfw 3.3, also use glfwSetWindowContentScaleCallback
+	a.window.SetContentScaleCallback(func(window *glfw.Window, x float32, y float32) {
+		windowManager.glfwRefreshCallback(window)
+	})
 
 	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(
