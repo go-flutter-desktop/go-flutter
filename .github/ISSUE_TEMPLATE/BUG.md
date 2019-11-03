@@ -1,12 +1,12 @@
 ---
-name: I have a problem with go-flutter hover.
+name: I have a problem with go-flutter/hover.
 about: You are writing an application with Flutter but the application is 
        not compiling, crashing, throwing an exception or something looks wrong.
 ---
 
 <!-- Thank you for trying go-flutter! -->
 
-## hover doctor version
+## Hover doctor
 
 <!-- Please tell us information about the installed tooling. Run `hover doctor` in your project!-->
 
