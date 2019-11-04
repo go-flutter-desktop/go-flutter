@@ -14,10 +14,23 @@ $ hover doctor
 hover: Running on linux
 hover: Docker installed: true
 hover: Sharing flutter version
-[.....]
+[...]
 ```
 
-## Steps to Reproduce
+## Error output
+
+<!-- Please share the output error with the associated hover command -->
+
+Using `hover build [...] --XXX` to build my application, I get the following
+error:
+
+```log
+hover: Using engine from cache
+hover: Cleaning the build directory
+hover: Bundling flutter app
+hover: Compiling 'go-flutter' and plugins
+[...]
+```
 
 <!--
      Please tell us exactly how to reproduce the problem you are running into.
