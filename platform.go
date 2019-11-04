@@ -19,6 +19,13 @@ type platformPlugin struct {
 	glfwTasker *tasker.Tasker
 	window     *glfw.Window
 	channel    *plugin.MethodChannel
+
+	// flutterInitialized is used as callbacks to know when the flutter framework
+	// is running and ready to process upstream plugin calls.
+	// (It usually takes ~10 rendering frame).
+	// flutterInitialized is trigger when the plugin "flutter/platform" received
+	// a message from "SystemChrome.setApplicationSwitcherDescription".
+	flutterInitialized []func()
 }
 
 // hardcoded because there is no swappable renderer interface.
@@ -104,5 +111,17 @@ func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply inte
 	p.glfwTasker.Do(func() {
 		p.window.SetTitle(appSwitcherDescription.Label)
 	})
+
+	// triggers flutter framework initialized callbacks
+	for _, f := range p.flutterInitialized {
+		f()
+	}
+
 	return nil, nil
+}
+
+// addFrameworkReadyCallback adds a callback which if trigger when the flutter
+// framework is ready.
+func (p *platformPlugin) addFrameworkReadyCallback(f func()) {
+	p.flutterInitialized = append(p.flutterInitialized, f)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
+	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
 // Run executes a flutter application with the provided options.
@@ -264,6 +265,16 @@ func (a *Application) Run() error {
 				return errors.Wrap(err, "failed to initialize texture plugin"+fmt.Sprintf("%T", p))
 			}
 		}
+	}
+
+	// Change the flutter initial route
+	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
+	if initialRoute != "" {
+		defaultPlatformPlugin.addFrameworkReadyCallback(func() {
+			plugin.
+				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
+				InvokeMethod("pushRoute", initialRoute)
+		})
 	}
 
 	// Setup a new windowManager to handle windows pixel ratio's and pointer
