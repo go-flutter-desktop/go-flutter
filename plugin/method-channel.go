@@ -144,6 +144,15 @@ func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments inter
 	m.HandleSync(methodName, MethodHandlerFunc(f))
 }
 
+// ClearAllHandle clear all the handlers registered by
+// Handle\HandleFunc and HandleSync\HandleFuncSync.
+// ClearAllHandle dose not clear the handler registered by CatchAllHandle\CatchAllHandleFunc
+func (m *MethodChannel) ClearAllHandle() {
+	m.methodsLock.Lock()
+	m.methods = make(map[string]methodHandlerRegistration)
+	m.methodsLock.Unlock()
+}
+
 // CatchAllHandle registers a default method handler.
 // When no Handle are found, the handler provided in CatchAllHandle will be
 // used. If no CatchAllHandle is provided, a MissingPluginException exception
