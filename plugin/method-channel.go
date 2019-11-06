@@ -161,6 +161,9 @@ func (m *MethodChannel) ClearAllHandle() {
 // Consecutive calls override any existing handler registration for (the name
 // of) this method. When given nil as handler, the previously registered
 // handler for a method is unregistered.
+//
+// The argument of the HandleMethod function of the MethodHandler interface is
+// a MethodCall struct instead of MethodCall.Arguments
 func (m *MethodChannel) CatchAllHandle(handler MethodHandler) {
 	m.methodsLock.Lock()
 	m.catchAllhandler = handler
@@ -169,7 +172,8 @@ func (m *MethodChannel) CatchAllHandle(handler MethodHandler) {
 
 // CatchAllHandleFunc is a shorthand for m.CatchAllHandle(MethodHandlerFunc(f))
 //
-// The argument of the function f is a MethodCall struct
+// The argument of the function f is a MethodCall struct instead of
+// MethodCall.Arguments
 func (m *MethodChannel) CatchAllHandleFunc(f func(arguments interface{}) (reply interface{}, err error)) {
 	m.CatchAllHandle(MethodHandlerFunc(f))
 }
