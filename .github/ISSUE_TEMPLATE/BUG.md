@@ -5,6 +5,10 @@ about: "If something isn't working as expected."
 
 <!-- Thank you for trying go-flutter! -->
 
+<!-- Before reporting an error: -->
+<!-- Make sure you are using the latest version of hover `$ go get -u github.com/go-flutter-desktop/hover` -->
+<!-- Make sure you are using the latest version of the beta channel : `$ flutter channel beta` -->
+
 ## Hover doctor
 
 <!-- Please tell us information about the installed tooling. Run `hover doctor` in your project!-->
