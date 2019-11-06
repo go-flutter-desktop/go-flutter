@@ -1,17 +1,16 @@
-// +build !openglnone
-// +build !opengl3.2
-// +build !opengl3.2_compatibility
+// +build opengl3.2
 
 package opengl
 
-// The default version (3.3) of OpenGL used by go-flutter.
-// If you want to support other version, copy/pase this file, change the import
-// statement, add builds constraints and open a PR.
+// Compile go-flutter with a lower version of OpenGL than the default on
+// (3.3).
+//
+// compile go-flutter with: hover build|run --opengl=3.2
 
 import (
 	"unsafe"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/gl/v3.2-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -73,7 +72,7 @@ func TexImage2D(width, height int32, pixels unsafe.Pointer) {
 // GLFWWindowHint sets hints for the next call to CreateWindow.
 func GLFWWindowHint() {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 }
