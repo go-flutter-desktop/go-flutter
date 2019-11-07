@@ -1,6 +1,4 @@
 // +build !openglnone
-// +build !opengl3.2
-// +build !opengl3.2_compatibility
 
 package opengl
 
