@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
+	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/pkg/errors"
 )
@@ -21,6 +22,9 @@ type TextureRegistry struct {
 	channels     map[int64]*externalTextureHanlder
 	channelsLock sync.RWMutex
 
+	// engineTasker holds tasks which must be executed in the engine thread
+	engineTasker *tasker.Tasker
+
 	texture      int64
 	texturesLock sync.Mutex
 }
@@ -34,12 +38,14 @@ type externalTextureHanlder struct {
 
 func newTextureRegistry(engine *embedder.FlutterEngine, window *glfw.Window) *TextureRegistry {
 	return &TextureRegistry{
-		window:   window,
-		engine:   engine,
-		channels: make(map[int64]*externalTextureHanlder),
+		window:       window,
+		engine:       engine,
+		channels:     make(map[int64]*externalTextureHanlder),
+		engineTasker: tasker.New(),
 	}
 }
 
+// init must happen in engine thread
 func (t *TextureRegistry) init() error {
 	t.window.MakeContextCurrent()
 	// Important! Call open.Init only under the presence of an active OpenGL context,
@@ -80,7 +86,10 @@ func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTex
 	if handler == nil {
 		texture := t.channels[textureID]
 		if texture != nil {
-			opengl.DeleteTextures(1, &texture.texture)
+			t.engineTasker.Do(func() {
+				// Must run on the main tread
+				opengl.DeleteTextures(1, &texture.texture)
+			})
 		}
 		delete(t.channels, textureID)
 	} else {
@@ -91,6 +100,10 @@ func (t *TextureRegistry) setTextureHandler(textureID int64, handler ExternalTex
 	t.channelsLock.Unlock()
 }
 
+// handleExternalTexture receive low level C calls to create and/or update the
+// content of a OpenGL TexImage2D.
+// Calls must happen on the engine thread, no need to use engineTasker as this
+// function is a callback directly managed by the engine.
 func (t *TextureRegistry) handleExternalTexture(textureID int64,
 	width int, height int) *embedder.FlutterOpenGLTexture {
 
