@@ -11,4 +11,10 @@ export CGO_LDFLAGS="-L/home/${HOME}/.cache/hover/engine/linux/"
 go build
 ```
 
+To build this package on Mac OS
+```bash
+export CGO_LDFLAGS="-F ${HOME}/Library/Caches/hover/engine/darwin"
+go build
+```
+
 This works if [hover](https://github.com/go-flutter-desktop/hover) has cached the flutter engine for the local user.
