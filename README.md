@@ -34,11 +34,12 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
 - Linux :penguin:
 - MacOS :apple:
 - Windows :checkered_flag:
-- **Hot Reload**
+- [**Hot Reload**](https://github.com/go-flutter-desktop/go-flutter/issues/129#issuecomment-513590141)
 - Plugin system
   - BinaryMessageCodec, BinaryMessageChannel
   - StandardMessageCodec, JSONMessageCodec
   - StandardMethodCodec, **MethodChannel**
+- Plugin detection for [suppoted plugins](https://github.com/go-flutter-desktop/go-flutter/wiki/Create-a-hover-compatible-plugin)
 - Importable as Go library into custom projects
 - UTF-8 Text input
 - Clipboard copy & paste
@@ -52,6 +53,8 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
 - Mouse-over/hovering
 - Mouse-buttons
 - RawKeyboard events (through `RawKeyEventDataLinux` regardless of the platform)
+- Distribution format (windows-msi, mac-dmg, linux-appimage, and more)
+- Cross-compiling using docker :whale:
 
 Are you missing a feature? [Open an issue!](https://github.com/go-flutter-desktop/go-flutter/issues/new)
 
