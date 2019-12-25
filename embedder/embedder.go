@@ -1,7 +1,7 @@
 package embedder
 
 // #include "embedder.h"
-// FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
+// FlutterEngineResult initEngine(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
 //						 const char *const * vmArgs, int nVmAgrs);
 // FlutterEngineResult
 // createMessageResponseHandle(FlutterEngine engine, void *user_data,
@@ -28,6 +28,7 @@ const (
 	ResultSuccess               Result = C.kSuccess
 	ResultInvalidLibraryVersion Result = C.kInvalidLibraryVersion
 	ResultInvalidArguments      Result = C.kInvalidArguments
+	ResultInternalInconsistency Result = C.kInternalInconsistency
 	ResultEngineNotRunning      Result = -1
 )
 
@@ -80,8 +81,19 @@ func NewFlutterEngine() *FlutterEngine {
 	return &FlutterEngine{}
 }
 
-// Run launches the Flutter Engine in a background thread.
-func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
+// Runs an initialized engine in a background thread.
+func (flu *FlutterEngine) Run() Result {
+	if flu.Engine == nil {
+		fmt.Printf("go-flutter: The engine must be ini")
+		return ResultInvalidArguments
+	}
+
+	res := C.FlutterEngineRunInitialized(flu.Engine)
+	return (Result)(res)
+}
+
+// Init the Flutter Engine.
+func (flu *FlutterEngine) Init(userData unsafe.Pointer, vmArgs []string) Result {
 	args := C.FlutterProjectArgs{
 		assets_path:   C.CString(flu.AssetsPath),
 		icu_data_path: C.CString(flu.IcuDataPath),
@@ -94,7 +106,7 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
 	}
 
-	res := C.runFlutter(userData, &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
+	res := C.initEngine(userData, &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
 	if flu.Engine == nil {
 		return ResultInvalidArguments
 	}

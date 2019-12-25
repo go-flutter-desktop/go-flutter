@@ -233,14 +233,32 @@ func (a *Application) Run() error {
 	}()
 	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
+	// Init the engine
+	result := a.engine.Init(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
+	if result != embedder.ResultSuccess {
+		switch result {
+		case embedder.ResultInvalidLibraryVersion:
+			fmt.Printf("go-flutter: engine.Init() returned result code %d (invalid library version)\n", result)
+		case embedder.ResultInvalidArguments:
+			fmt.Printf("go-flutter: engine.Init() returned result code %d (invalid arguments)\n", result)
+		case embedder.ResultInternalInconsistency:
+			fmt.Printf("go-flutter: engine.Init() returned result code %d (internal inconsistency)\n", result)
+		default:
+			fmt.Printf("go-flutter: engine.Init() returned result code %d (unknown result code)\n", result)
+		}
+		os.Exit(1)
+	}
+
 	// Start the engine
-	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
+	result = a.engine.Run()
 	if result != embedder.ResultSuccess {
 		switch result {
 		case embedder.ResultInvalidLibraryVersion:
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid library version)\n", result)
 		case embedder.ResultInvalidArguments:
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid arguments)\n", result)
+		case embedder.ResultInternalInconsistency:
+			fmt.Printf("go-flutter: engine.Run() returned result code %d (internal inconsistency)\n", result)
 		default:
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (unknown result code)\n", result)
 		}
