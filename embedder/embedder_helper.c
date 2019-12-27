@@ -24,10 +24,8 @@ void proxy_post_task_callback(FlutterTask task, uint64_t target_time_nanos,
 void proxy_desktop_binary_reply(const uint8_t *data, size_t data_size,
                                 void *user_data);
 
- static size_t gTaskRunnerIdentifiers = 0;
-
 // C helper
-FlutterEngineResult initEngine(void *user_data, FlutterEngine *engine,
+FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
                                FlutterProjectArgs *Args,
                                const char *const *vmArgs, int nVmAgrs) {
   FlutterRendererConfig config = {};
@@ -47,24 +45,20 @@ FlutterEngineResult initEngine(void *user_data, FlutterEngine *engine,
   Args->command_line_argv = vmArgs;
   Args->platform_message_callback = proxy_platform_message_callback;
 
-  // Configure a task runner interop
+  // Configure task runner interop
   FlutterTaskRunnerDescription platform_task_runner = {};
   platform_task_runner.struct_size = sizeof(FlutterTaskRunnerDescription);
   platform_task_runner.user_data = user_data;
   platform_task_runner.runs_task_on_current_thread_callback =
       proxy_runs_task_on_current_thread_callback;
   platform_task_runner.post_task_callback = proxy_post_task_callback;
-  platform_task_runner.identifier = ++gTaskRunnerIdentifiers;
 
   FlutterCustomTaskRunners custom_task_runners = {};
   custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
-  // Render task and platform task are handled by the same TaskRunner
   custom_task_runners.platform_task_runner = &platform_task_runner;
-  custom_task_runners.render_task_runner = &platform_task_runner;
-
   Args->custom_task_runners = &custom_task_runners;
 
-  return FlutterEngineInitialize(FLUTTER_ENGINE_VERSION, &config, Args, user_data,
+  return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, user_data,
                           engine);
 }
 
