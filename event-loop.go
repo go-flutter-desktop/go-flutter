@@ -11,7 +11,7 @@ import (
 )
 
 // EventLoop is a event loop for the main thread that allows for delayed task
-// execution.
+// execution.()
 type EventLoop struct {
 	// store the task (event) by their priorities
 	priorityqueue *priorityqueue.PriorityQueue
