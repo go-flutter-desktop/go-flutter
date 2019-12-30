@@ -32,3 +32,4 @@ example/stocks/stocks
 core.*
 
 .vscode
+.idea
