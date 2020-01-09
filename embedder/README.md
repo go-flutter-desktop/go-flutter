@@ -6,8 +6,21 @@ This package wraps the [Flutter embedder API](https://raw.githubusercontent.com/
 
 To build this package set the `CGO_LDFLAGS` and run `go build`. For example:
 
+On Linux:
 ```bash
 export CGO_LDFLAGS="-L/home/${HOME}/.cache/hover/engine/linux/"
+go build
+```
+
+To build this package on Mac OS
+```bash
+export CGO_LDFLAGS="-F ${HOME}/Library/Caches/hover/engine/darwin"
+go build
+```
+
+To build this package on Windows
+```cmd
+set CGO_LDFLAGS="-L%HOMEPATH%/.cache/hover/engine/windows/"
 go build
 ```
 

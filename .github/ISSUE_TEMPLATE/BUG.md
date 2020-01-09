@@ -1,32 +1,40 @@
 ---
-name: I have a problem with go-flutter.
-about: You are writing an application with Flutter but the application is 
-       crashing, throws an exception or something looks wrong.
+name: "\U0001F41B Bug Report"
+about: "If something isn't working as expected."
 ---
 
 <!-- Thank you for trying go-flutter! -->
 
-## Flutter version
+<!-- Before reporting an error: -->
+<!-- Make sure you are using the latest version of hover `$ go get -u github.com/go-flutter-desktop/hover` -->
+<!-- Make sure you are using the latest version of the beta channel : `$ flutter channel beta` -->
 
-<!-- Please tell us wich flutter version are you using, we generally try to stay compatible with the beta channel. Run `flutter --version` to get the version -->
+## Hover doctor
 
-```
-Flutter x.xx.x • channel beta • https://github.com/flutter/flutter.git
-Framework • revision xxxxxxxxxx (x weeks ago) • xxxxxxxxxxxxxxxxxxxxxxxx
-Engine • revision xxxxxxxxxx
-Tools • Dart x.x.x (build xxxxxxxxxx)
-```
-
-## Golang errors (Optional)
-
-<!-- If compilation fails, please tell us the output of go build -->
-<!-- Please make sure you followed the README.md instructions -->
+<!-- Please tell us information about the installed tooling. Run `hover doctor` in your project!-->
 
 ```
-Golang's compiling errors
+$ hover doctor
+hover: Running on linux
+hover: Docker installed: true
+hover: Sharing flutter version
+[...]
 ```
 
-## Steps to Reproduce
+## Error output
+
+<!-- Please share the output error with the associated hover command -->
+
+Using `hover build [...] --XXX` to build my application, I get the following
+error:
+
+```log
+hover: Using engine from cache
+hover: Cleaning the build directory
+hover: Bundling flutter app
+hover: Compiling 'go-flutter' and plugins
+[...]
+```
 
 <!--
      Please tell us exactly how to reproduce the problem you are running into.
@@ -37,7 +45,3 @@ Golang's compiling errors
      If the problem is with your application's rendering, then please attach
      a screenshot and explain what the problem is.
 -->
-
-1. xxx
-2. xxx
-3. xxx

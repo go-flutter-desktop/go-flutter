@@ -16,6 +16,7 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
+	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
 // Run executes a flutter application with the provided options.
@@ -63,7 +64,11 @@ func NewApplication(opt ...Option) *Application {
 // createResourceWindow creates an invisible GLFW window that shares the 'view'
 // window's resource context. This window is used to upload resources in the
 // background. Must be call after the 'view' window is created.
+//
+// Though optional, it is recommended that all embedders set this callback as
+// it will lead to better performance in texture handling.
 func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
+	opengl.GLFWWindowHint()
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	resourceWindow, err := glfw.CreateWindow(1, 1, "", nil, window)
@@ -268,6 +273,16 @@ func (a *Application) Run() error {
 		}
 	}
 
+	// Change the flutter initial route
+	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
+	if initialRoute != "" {
+		defaultPlatformPlugin.addFrameworkReadyCallback(func() {
+			plugin.
+				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
+				InvokeMethod("pushRoute", initialRoute)
+		})
+	}
+
 	// Setup a new windowManager to handle windows pixel ratio's and pointer
 	// devices.
 	windowManager := newWindowManager(a.config.forcePixelRatio)
@@ -316,9 +331,12 @@ func (a *Application) Run() error {
 		eventLoop.WaitForEvents(func(duration float64) {
 			glfw.WaitEventsTimeout(duration)
 		})
+
+		// Execute tasks that MUST be run in the engine thread (!blocks rendering!)
 		glfwDebouceTasker.ExecuteTasks()
 		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
+		texturer.engineTasker.ExecuteTasks()
 	}
 
 	fmt.Println("go-flutter: closing application")

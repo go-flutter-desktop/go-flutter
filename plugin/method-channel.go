@@ -144,6 +144,15 @@ func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments inter
 	m.HandleSync(methodName, MethodHandlerFunc(f))
 }
 
+// ClearAllHandle clear all the handlers registered by
+// Handle\HandleFunc and HandleSync\HandleFuncSync.
+// ClearAllHandle dose not clear the handler registered by CatchAllHandle\CatchAllHandleFunc
+func (m *MethodChannel) ClearAllHandle() {
+	m.methodsLock.Lock()
+	m.methods = make(map[string]methodHandlerRegistration)
+	m.methodsLock.Unlock()
+}
+
 // CatchAllHandle registers a default method handler.
 // When no Handle are found, the handler provided in CatchAllHandle will be
 // used. If no CatchAllHandle is provided, a MissingPluginException exception
@@ -152,6 +161,9 @@ func (m *MethodChannel) HandleFuncSync(methodName string, f func(arguments inter
 // Consecutive calls override any existing handler registration for (the name
 // of) this method. When given nil as handler, the previously registered
 // handler for a method is unregistered.
+//
+// The argument of the HandleMethod function of the MethodHandler interface is
+// a MethodCall struct instead of MethodCall.Arguments
 func (m *MethodChannel) CatchAllHandle(handler MethodHandler) {
 	m.methodsLock.Lock()
 	m.catchAllhandler = handler
@@ -160,7 +172,8 @@ func (m *MethodChannel) CatchAllHandle(handler MethodHandler) {
 
 // CatchAllHandleFunc is a shorthand for m.CatchAllHandle(MethodHandlerFunc(f))
 //
-// The argument of the function f is a MethodCall struct
+// The argument of the function f is a MethodCall struct instead of
+// MethodCall.Arguments
 func (m *MethodChannel) CatchAllHandleFunc(f func(arguments interface{}) (reply interface{}, err error)) {
 	m.CatchAllHandle(MethodHandlerFunc(f))
 }
