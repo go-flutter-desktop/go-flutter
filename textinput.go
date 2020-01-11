@@ -95,8 +95,12 @@ func (p *textinputPlugin) handleClearClient(arguments interface{}) (reply interf
 	return nil, nil
 }
 
+func (p *textinputPlugin) hasClient() bool {
+	return p.clientID != 0
+}
+
 func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply interface{}, err error) {
-	if p.clientID == 0 {
+	if !p.hasClient() {
 		return nil, errors.New("cannot set editing state when no client is selected")
 	}
 
@@ -125,7 +129,7 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 }
 
 func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
-	if p.clientID == 0 {
+	if !p.hasClient() {
 		return
 	}
 	// Opinionated: If a flutter dev uses TextCapitalization.characters
@@ -150,7 +154,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 	}
 
 	if action == glfw.Repeat || action == glfw.Press {
-		if p.clientID == 0 {
+		if !p.hasClient() {
 			return
 		}
 

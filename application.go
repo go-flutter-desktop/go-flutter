@@ -316,7 +316,12 @@ func (a *Application) Run() error {
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
-			defaultKeyeventsPlugin.sendKeyEvent(window, key, scancode, action, mods)
+			if !defaultTextinputPlugin.hasClient() {
+				// don't send keyevent if the user is editing text in a TextField.
+				// let go-flutter handle keyboard text selection/keyboard paste
+				// https://github.com/go-flutter-desktop/go-flutter/issues/314
+				defaultKeyeventsPlugin.sendKeyEvent(window, key, scancode, action, mods)
+			}
 		})
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 
