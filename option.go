@@ -25,6 +25,8 @@ type config struct {
 	scrollAmount    float64
 
 	plugins []Plugin
+
+	sendKeyEventInTextField bool
 }
 
 type windowDimensions struct {
@@ -233,5 +235,16 @@ func VirtualKeyboardHide(hideCallback func()) Option {
 func ScrollAmount(amount float64) Option {
 	return func(c *config) {
 		c.scrollAmount = amount
+	}
+}
+
+// SendKeyEventInTextField makes go-flutter send keyevent to
+// the flutter framework even when the client is editing text.
+// By setting this to True, both go-flutter and the flutter framework will
+// attempt to paste/move the cursor in the TextField.
+// default false.
+func SendKeyEventInTextField() Option {
+	return func(c *config) {
+		c.sendKeyEventInTextField = true
 	}
 }
