@@ -243,8 +243,8 @@ func ScrollAmount(amount float64) Option {
 // By setting this to True, both go-flutter and the flutter framework will
 // attempt to paste/move the cursor in the TextField.
 // default false.
-func SendKeyEventInTextField() Option {
+func SendKeyEventInTextField(v bool) Option {
 	return func(c *config) {
-		c.sendKeyEventInTextField = true
+		c.sendKeyEventInTextField = v
 	}
 }
