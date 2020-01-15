@@ -229,10 +229,6 @@ func (a *Application) Run() error {
 	// Attach PlatformMessage callback functions onto the engine
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
-	// Not very nice, but we can only really fix this when there's a pluggable
-	// renderer.
-	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
-
 	// Set the glfw window user pointer to point to the FlutterEngine so that
 	// callback functions may obtain the FlutterEngine from the glfw window
 	// user pointer.
@@ -316,12 +312,7 @@ func (a *Application) Run() error {
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
-			if !defaultTextinputPlugin.hasClient() || a.config.sendKeyEventInTextField {
-				// don't send keyevent if the user is editing text in a TextField.
-				// let go-flutter handle keyboard text selection/keyboard paste
-				// https://github.com/go-flutter-desktop/go-flutter/issues/314
-				defaultKeyeventsPlugin.sendKeyEvent(window, key, scancode, action, mods)
-			}
+			defaultKeyeventsPlugin.sendKeyEvent(window, key, scancode, action, mods)
 		})
 	a.window.SetCharCallback(defaultTextinputPlugin.glfwCharCallback)
 

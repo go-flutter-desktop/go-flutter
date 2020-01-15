@@ -21,12 +21,13 @@ type config struct {
 	windowAlwaysOnTop       bool
 
 	forcePixelRatio float64
+<<<<<<< HEAD
 	keyboardLayout  KeyboardShortcuts
 	scrollAmount    float64
+=======
+>>>>>>> 70cced5... rework key handling
 
 	plugins []Plugin
-
-	sendKeyEventInTextField bool
 }
 
 type windowDimensions struct {
@@ -53,10 +54,14 @@ var defaultApplicationConfig = config{
 		width:  800,
 		height: 600,
 	},
+<<<<<<< HEAD
 	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
 	scrollAmount:      100.0,
+=======
+	windowMode: WindowModeDefault,
+>>>>>>> 70cced5... rework key handling
 }
 
 // Option for Application
@@ -187,14 +192,6 @@ func WindowAlwaysOnTop(enabled bool) Option {
 func AddPlugin(p Plugin) Option {
 	return func(c *config) {
 		c.plugins = append(c.plugins, p)
-	}
-}
-
-// OptionKeyboardLayout allow application to support keyboard that have a
-// different layout and therefore different keyboard shortcuts.
-func OptionKeyboardLayout(keyboardLayout KeyboardShortcuts) Option {
-	return func(c *config) {
-		c.keyboardLayout = keyboardLayout
 	}
 }
 

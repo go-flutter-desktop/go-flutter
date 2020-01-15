@@ -1,5 +1,7 @@
 package flutter
 
+// #include "key-codepoint.cpp"
+import "C"
 import (
 	"encoding/json"
 	"fmt"
@@ -42,12 +44,13 @@ func (j keyEventJSONMessageCodec) DecodeMessage(binaryMessage []byte) (message i
 }
 
 type keyEventMessage struct {
-	Toolkit   string `json:"toolkit"`
-	KeyCode   int    `json:"keyCode"`
-	Type      string `json:"type"`
-	ScanCode  int    `json:"scanCode"`
-	Modifiers int    `json:"modifiers"`
-	Keymap    string `json:"keymap"`
+	Toolkit             string `json:"toolkit"`
+	KeyCode             int    `json:"keyCode"`
+	Type                string `json:"type"`
+	ScanCode            int    `json:"scanCode"`
+	Modifiers           int    `json:"modifiers"`
+	Keymap              string `json:"keymap"`
+	UnicodeScalarValues uint32 `json:"unicodeScalarValues"`
 }
 
 // Flutter only support keydown & keyup events type.
@@ -73,13 +76,17 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 		return
 	}
 
+	utf8 := glfw.GetKeyName(key, scancode)
+	unicodeInt := C.GetUTF32CodePointFromGLFWKey(C.CString(utf8))
+
 	event := keyEventMessage{
-		KeyCode:   int(key),
-		Keymap:    "linux",
-		Toolkit:   "glfw",
-		Type:      typeKey,
-		ScanCode:  scancode,
-		Modifiers: int(mods),
+		KeyCode:             int(key),
+		Keymap:              "linux",
+		Toolkit:             "glfw",
+		Type:                typeKey,
+		ScanCode:            scancode,
+		Modifiers:           int(mods),
+		UnicodeScalarValues: uint32(unicodeInt),
 	}
 	err := p.keyEventChannel.Send(event)
 	if err != nil {

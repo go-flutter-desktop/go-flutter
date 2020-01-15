@@ -46,10 +46,9 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
 - Window title and icon
 - Standard keyboard shortcuts
   - <kbd>ctrl-c</kbd>  <kbd>ctrl-v</kbd>  <kbd>ctrl-x</kbd>  <kbd>ctrl-a</kbd>
-  - <kbd>Home</kbd>  <kbd>End</kbd>  <kbd>shift-Home</kbd>  <kbd>shift-End</kbd>
   - <kbd>Left</kbd>  <kbd>ctrl-Left</kbd>  <kbd>ctrl-shift-Left</kbd>
   - <kbd>Right</kbd>  <kbd>ctrl-Right</kbd>  <kbd>ctrl-shift-Right</kbd>
-  - <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
+  - <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd>
 - Mouse-over/hovering
 - Mouse-buttons
 - RawKeyboard events (through `RawKeyEventDataLinux` regardless of the platform)
