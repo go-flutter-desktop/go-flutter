@@ -116,6 +116,10 @@ func (a *Application) Run() error {
 		glfw.WindowHint(glfw.Visible, glfw.False)
 	}
 
+	if a.config.alwaysOnTop {
+		glfw.WindowHint(glfw.Floating, glfw.True)
+	}
+
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
