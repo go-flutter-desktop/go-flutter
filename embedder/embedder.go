@@ -7,8 +7,6 @@ import "C"
 // FlutterEngineResult
 // createMessageResponseHandle(FlutterEngine engine, void *user_data,
 //                             FlutterPlatformMessageResponseHandle **reply);
-// char** makeCharArray(int size);
-// void setArrayString(char **a, char *s, int n);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"

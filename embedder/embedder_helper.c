@@ -58,10 +58,6 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterPr
                           engine);
 }
 
-char **makeCharArray(int size) { return calloc(sizeof(char *), size); }
-
-void setArrayString(char **a, char *s, int n) { a[n] = s; }
-
 FlutterEngineResult
 createMessageResponseHandle(FlutterEngine engine, void *user_data,
                             FlutterPlatformMessageResponseHandle **reply) {
