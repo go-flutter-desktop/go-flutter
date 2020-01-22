@@ -16,7 +16,4 @@ var (
 	ProjectName = "unknown"
 	// ProjectOrganizationName contains the package org name, (Can by set upon flutter create (--org flag))
 	ProjectOrganizationName = "unknown"
-	// IsAot contains if the build is an AOT build, because the blobs have to be loaded differently for that
-	// Booleans can't be passed using -X flags so a string is used
-	IsAot = "false"
 )

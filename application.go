@@ -230,7 +230,7 @@ func (a *Application) Run() error {
 	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
 	// Start the engine
-	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments, IsAot == "true")
+	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
 	if result != embedder.ResultSuccess {
 		switch result {
 		case embedder.ResultInvalidLibraryVersion:

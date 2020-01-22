@@ -1,6 +1,7 @@
 package embedder
 
 import "C"
+
 // #include "embedder.h"
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args);
 // FlutterEngineResult
@@ -83,7 +84,8 @@ func NewFlutterEngine() *FlutterEngine {
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string, IsAot bool) Result {
+func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
+
 	for range vmArgs {
 		if vmArgs[0] == "" {
 			vmArgs = vmArgs[1:]
@@ -91,7 +93,8 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string, IsAot bo
 	}
 	vmArgs = append([]string{"go-flutter"}, vmArgs...)
 
-	if IsAot {
+	// TODO: add support for other OS. Only linux is currently supported (libapp.so)
+	if C.FlutterEngineRunsAOTCompiledDartCode() {
 		path, err := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "libapp.so"))
 		if err != nil {
 			fmt.Printf("Failed to resolve AOT snapshot file: %v\n", err)
