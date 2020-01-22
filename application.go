@@ -116,7 +116,7 @@ func (a *Application) Run() error {
 		glfw.WindowHint(glfw.Visible, glfw.False)
 	}
 
-	if a.config.alwaysOnTop {
+	if a.config.windowAlwaysOnTop {
 		glfw.WindowHint(glfw.Floating, glfw.True)
 	}
 
