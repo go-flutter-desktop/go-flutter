@@ -91,7 +91,6 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 	}
 	vmArgs = append([]string{"go-flutter"}, vmArgs...)
 
-	// TODO: add support for other OS. Only linux is currently supported (libapp.so)
 	if C.FlutterEngineRunsAOTCompiledDartCode() {
 		path, err := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "libapp.so"))
 		if err != nil {
