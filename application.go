@@ -169,23 +169,19 @@ func (a *Application) Run() error {
 		a.engine.RunTask,    // Flush tasks
 	)
 
+	execPath, err := execpath.ExecPath()
+	if err != nil {
+		return errors.Wrap(err, "failed to resolve path for executable")
+	}
 	// Set configuration values to engine, with fallbacks to sane defaults.
 	if a.config.flutterAssetsPath != "" {
 		a.engine.AssetsPath = a.config.flutterAssetsPath
 	} else {
-		execPath, err := execpath.ExecPath()
-		if err != nil {
-			return errors.Wrap(err, "failed to resolve path for executable")
-		}
 		a.engine.AssetsPath = filepath.Join(filepath.Dir(execPath), "flutter_assets")
 	}
 	if a.config.icuDataPath != "" {
 		a.engine.IcuDataPath = a.config.icuDataPath
 	} else {
-		execPath, err := execpath.ExecPath()
-		if err != nil {
-			return errors.Wrap(err, "failed to resolve path for executable")
-		}
 		a.engine.IcuDataPath = filepath.Join(filepath.Dir(execPath), "icudtl.dat")
 	}
 

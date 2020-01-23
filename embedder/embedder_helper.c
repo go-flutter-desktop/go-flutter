@@ -25,9 +25,7 @@ void proxy_desktop_binary_reply(const uint8_t *data, size_t data_size,
                                 void *user_data);
 
 // C helper
-FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
-                               FlutterProjectArgs *Args,
-                               const char *const *vmArgs, int nVmAgrs) {
+FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs *Args) {
   FlutterRendererConfig config = {};
   config.type = kOpenGL;
 
@@ -41,8 +39,6 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
   config.open_gl.gl_external_texture_frame_callback =
       proxy_gl_external_texture_frame_callback;
 
-  Args->command_line_argc = nVmAgrs;
-  Args->command_line_argv = vmArgs;
   Args->platform_message_callback = proxy_platform_message_callback;
 
   // Configure task runner interop
@@ -61,10 +57,6 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine,
   return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, user_data,
                           engine);
 }
-
-char **makeCharArray(int size) { return calloc(sizeof(char *), size); }
-
-void setArrayString(char **a, char *s, int n) { a[n] = s; }
 
 FlutterEngineResult
 createMessageResponseHandle(FlutterEngine engine, void *user_data,
