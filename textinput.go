@@ -199,16 +199,6 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				window.SetClipboardString(selectedContent)
 				p.removeSelectedText()
 			}
-
-		case p.keyboardLayout.Paste:
-			if keyboardShortcutBind.isModifier() {
-				var clpString, err = window.GetClipboardString()
-				if err != nil {
-					fmt.Printf("go-flutter: unable to get the clipboard content: %v\n", err)
-					return
-				}
-				p.addChar([]rune(clpString))
-			}
 		}
 		p.updateEditingState()
 	}
