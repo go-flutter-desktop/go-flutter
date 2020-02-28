@@ -68,7 +68,6 @@ func NewApplication(opt ...Option) *Application {
 // Though optional, it is recommended that all embedders set this callback as
 // it will lead to better performance in texture handling.
 func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
-	opengl.GLFWWindowHint()
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	resourceWindow, err := glfw.CreateWindow(1, 1, "", nil, window)
