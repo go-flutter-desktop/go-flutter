@@ -3,6 +3,7 @@ package flutter
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -37,9 +38,13 @@ func newMessenger(engine *embedder.FlutterEngine) *messenger {
 func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryReply []byte, err error) {
 	reply := make(chan []byte)
 	defer close(reply)
-	responseHandle, err := m.engine.CreatePlatformMessageResponseHandle(func(binaryMessage []byte) {
-		reply <- binaryMessage
-	})
+	callbackHandle := &embedder.DataCallback{
+		Handle: func(binaryMessage []byte) {
+			reply <- binaryMessage
+		},
+	}
+	defer runtime.KeepAlive(callbackHandle)
+	responseHandle, err := m.engine.CreatePlatformMessageResponseHandle(callbackHandle)
 	if err != nil {
 		return nil, err
 	}

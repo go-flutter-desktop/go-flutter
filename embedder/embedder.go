@@ -46,6 +46,10 @@ type FlutterOpenGLTexture struct {
 type FlutterTask = C.FlutterTask
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
+//
+// Trick the panic error:
+// cgo argument has Go pointer to Go pointer
+// GoType(KeepAlive) -> unsafe.Pointer -> uintptr(KeepAlive) -> unsafe.Pointer(Pass to the C function) <- uintptr <- unsafe.Pointer <- GoType
 type FlutterEngine struct {
 	// Flutter Engine.
 	Engine C.FlutterEngine
@@ -346,17 +350,24 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 
 // DataCallback is a function called when a PlatformMessage response send back
 // to the embedder.
-type DataCallback func(binaryReply []byte)
+//
+// Trick the panic error:
+// cgo argument has Go pointer to Go pointer
+// GoType(KeepAlive) -> unsafe.Pointer -> uintptr(KeepAlive) -> unsafe.Pointer(Pass to the C function) <- uintptr <- unsafe.Pointer <- GoType
+type DataCallback struct {
+	// Handle func
+	Handle func(binaryReply []byte)
+}
 
 // CreatePlatformMessageResponseHandle creates a platform message response
 // handle that allows the embedder to set a native callback for a response to a
 // message.
 // Must be collected via `ReleasePlatformMessageResponseHandle` after the call
 // to `SendPlatformMessage`.
-func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback DataCallback) (PlatformMessageResponseHandle, error) {
+func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback *DataCallback) (PlatformMessageResponseHandle, error) {
 	var responseHandle *C.FlutterPlatformMessageResponseHandle
 
-	callbackPointer := uintptr(unsafe.Pointer(&callback))
+	callbackPointer := uintptr(unsafe.Pointer(callback))
 	defer func() {
 		runtime.KeepAlive(callbackPointer)
 	}()
