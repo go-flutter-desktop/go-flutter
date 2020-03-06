@@ -70,6 +70,10 @@ func NewApplication(opt ...Option) *Application {
 func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
+	if runtime.GOOS == "linux" {
+		// Skia expects an EGL context on linux (libglvnd)
+		glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI)
+	}
 	resourceWindow, err := glfw.CreateWindow(1, 1, "", nil, window)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating the resource window")
@@ -117,6 +121,11 @@ func (a *Application) Run() error {
 
 	if a.config.windowAlwaysOnTop {
 		glfw.WindowHint(glfw.Floating, glfw.True)
+	}
+
+	if runtime.GOOS == "linux" {
+		// Skia expects an EGL context on linux (libglvnd)
+		glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI)
 	}
 
 	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
