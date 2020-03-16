@@ -199,12 +199,6 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				window.SetClipboardString(selectedContent)
 				p.removeSelectedText()
 			}
-
-		case p.keyboardLayout.Paste:
-			if keyboardShortcutBind.isModifier() {
-				clpString := window.GetClipboardString()
-				p.addChar([]rune(clpString))
-			}
 		}
 		p.updateEditingState()
 	}

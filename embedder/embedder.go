@@ -1,19 +1,20 @@
 package embedder
 
+import "C"
+
 // #include "embedder.h"
-// FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args,
-//						 const char *const * vmArgs, int nVmAgrs);
+// FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args);
 // FlutterEngineResult
 // createMessageResponseHandle(FlutterEngine engine, void *user_data,
 //                             FlutterPlatformMessageResponseHandle **reply);
-// char** makeCharArray(int size);
-// void setArrayString(char **a, char *s, int n);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 	"unsafe"
@@ -82,19 +83,45 @@ func NewFlutterEngine() *FlutterEngine {
 
 // Run launches the Flutter Engine in a background thread.
 func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
+
+	for range vmArgs {
+		if vmArgs[0] == "" {
+			vmArgs = vmArgs[1:]
+		}
+	}
+	vmArgs = append([]string{"go-flutter"}, vmArgs...)
+
+	if C.FlutterEngineRunsAOTCompiledDartCode() {
+		path, err := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "libapp.so"))
+		if err != nil {
+			fmt.Printf("Failed to resolve AOT snapshot file: %v\n", err)
+			os.Exit(1)
+		}
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			fmt.Printf("Failed to find AOT snapshot file in %s: %v", path, err)
+			os.Exit(1)
+		}
+		vmArgs = append(vmArgs, "--aot-shared-library-name="+path)
+	}
+
+	cVMArgs := C.malloc(C.size_t(len(vmArgs)) * C.size_t(unsafe.Sizeof(uintptr(0))))
+
+	a := (*[1<<30 - 1]*C.char)(cVMArgs)
+
+	for idx, substring := range vmArgs {
+		a[idx] = C.CString(substring)
+	}
+
 	args := C.FlutterProjectArgs{
-		assets_path:   C.CString(flu.AssetsPath),
-		icu_data_path: C.CString(flu.IcuDataPath),
+		assets_path:       C.CString(flu.AssetsPath),
+		icu_data_path:     C.CString(flu.IcuDataPath),
+		command_line_argv: (**C.char)(cVMArgs),
+		command_line_argc: C.int(len(vmArgs)),
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	cVMArgs := C.makeCharArray(C.int(len(vmArgs)))
-	for i, s := range vmArgs {
-		C.setArrayString(cVMArgs, C.CString(s), C.int(i))
-	}
-
-	res := C.runFlutter(userData, &flu.Engine, &args, cVMArgs, C.int(len(vmArgs)))
+	res := C.runFlutter(userData, &flu.Engine, &args)
 	if flu.Engine == nil {
 		return ResultInvalidArguments
 	}

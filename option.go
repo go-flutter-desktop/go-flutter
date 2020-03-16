@@ -18,6 +18,7 @@ type config struct {
 	windowInitialLocation   windowLocation
 	windowDimensionLimits   windowDimensionLimits
 	windowMode              windowMode
+	windowAlwaysOnTop       bool
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
@@ -49,8 +50,9 @@ var defaultApplicationConfig = config{
 		width:  800,
 		height: 600,
 	},
-	keyboardLayout: KeyboardQwertyLayout,
-	windowMode:     WindowModeDefault,
+	keyboardLayout:    KeyboardQwertyLayout,
+	windowMode:        WindowModeDefault,
+	windowAlwaysOnTop: false,
 }
 
 // Option for Application
@@ -167,6 +169,13 @@ func WindowIcon(iconProivder func() ([]image.Image, error)) Option {
 func ForcePixelRatio(ratio float64) Option {
 	return func(c *config) {
 		c.forcePixelRatio = ratio
+	}
+}
+
+// WindowAlwaysOnTop sets the application window to be always on top of other windows
+func WindowAlwaysOnTop(enabled bool) Option {
+	return func(c *config) {
+		c.windowAlwaysOnTop = enabled
 	}
 }
 
