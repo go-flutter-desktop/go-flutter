@@ -1,7 +1,9 @@
 package flutter
 
 import (
+	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -19,6 +21,9 @@ const dpPerInch = 160.0
 type windowManager struct {
 	// forcedPixelRatio forces the pixelRatio to given value, when value is not zero.
 	forcedPixelRatio float64
+
+	// sync.Once to limit pixelRatio warning messages.
+	oncePrintPixelRatioLimit sync.Once
 
 	// current pointer state
 	pointerPhase          embedder.PointerPhase
@@ -206,16 +211,70 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	if m.forcedPixelRatio != 0 {
 		pixelRatio = m.forcedPixelRatio
 	} else {
-		xscale, _ := window.GetContentScale()
+		var selectedMonitor *glfw.Monitor
+		winX, winY := window.GetPos()
+		winCenterX, winCenterY := winX+widthPx/2, winY+heightPx/2
 
-		calculatedPixelRatio := m.calculatedPixelRatio(window)
-		if calculatedPixelRatio > 1.0 {
-			calculatedPixelRatio = 1.0
+		monitors := glfw.GetMonitors()
+		for _, monitor := range monitors {
+			monX1, monY1 := monitor.GetPos()
+			monMode := monitor.GetVideoMode()
+			if monMode == nil {
+				continue
+			}
+			monX2, monY2 := monX1+monMode.Width, monY1+monMode.Height
+			if (monX1 <= winCenterX && winCenterX <= monX2) &&
+				(monY1 <= winCenterY && winCenterY <= monY2) {
+				selectedMonitor = monitor
+				break
+			}
 		}
-		pixelRatio = float64(xscale) * calculatedPixelRatio
-		fmt.Println(pixelRatio)
+
+		if selectedMonitor == nil {
+			// when no monitor was selected, try fallback to primary monitor
+			// TODO: ? perhaps select monitor that is "closest" to the window ?
+			selectedMonitor = glfw.GetPrimaryMonitor()
+		}
+		if selectedMonitor == nil {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		selectedMonitorMode := selectedMonitor.GetVideoMode()
+		if selectedMonitorMode == nil {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		selectedMonitorWidthMM, _ := selectedMonitor.GetPhysicalSize()
+		if selectedMonitorWidthMM == 0 {
+			pixelRatio = 1.0
+			goto SendWindowMetricsEvent
+		}
+		monitorScreenCoordinatesPerInch := float64(selectedMonitorMode.Width) / (float64(selectedMonitorWidthMM) / 25.4)
+
+		dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
+		pixelRatio = dpi / dpPerInch
+
+		// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+		if pixelRatio < 1.0 {
+			m.oncePrintPixelRatioLimit.Do(func() {
+				metrics := map[string]interface{}{
+					"ppsc":           m.pixelsPerScreenCoordinate,
+					"windowWidthPx":  widthPx,
+					"windowWidthSc":  width,
+					"mscpi":          monitorScreenCoordinatesPerInch,
+					"dpi":            dpi,
+					"pixelRatio":     pixelRatio,
+					"monitorWidthMm": selectedMonitorWidthMM,
+					"monitorWidthSc": selectedMonitorMode.Width,
+				}
+				metricsBytes, _ := json.Marshal(metrics)
+				fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
+			})
+			pixelRatio = 1.0
+		}
 	}
 
+SendWindowMetricsEvent:
 	event := embedder.WindowMetricsEvent{
 		Width:      widthPx,
 		Height:     heightPx,
@@ -226,58 +285,4 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 
 	flutterEngine.SendWindowMetricsEvent(event)
-}
-
-func (m *windowManager) calculatedPixelRatio(window *glfw.Window) float64 {
-	widthPx, heightPx := window.GetFramebufferSize()
-	width, _ := window.GetSize()
-	if width == 0 {
-		fmt.Println("go-flutter: Cannot calculate pixelRatio for zero-width window.")
-		return 1.0
-	}
-
-	var selectedMonitor *glfw.Monitor
-	winX, winY := window.GetPos()
-	winCenterX, winCenterY := winX+widthPx/2, winY+heightPx/2
-
-	monitors := glfw.GetMonitors()
-	for _, monitor := range monitors {
-		monX1, monY1 := monitor.GetPos()
-		monMode := monitor.GetVideoMode()
-		if monMode == nil {
-			continue
-		}
-		monX2, monY2 := monX1+monMode.Width, monY1+monMode.Height
-		if (monX1 <= winCenterX && winCenterX <= monX2) &&
-			(monY1 <= winCenterY && winCenterY <= monY2) {
-			selectedMonitor = monitor
-			break
-		}
-	}
-
-	if selectedMonitor == nil {
-		// when no monitor was selected, try fallback to primary monitor
-		// TODO: ? perhaps select monitor that is "closest" to the window ?
-		selectedMonitor = glfw.GetPrimaryMonitor()
-	}
-	if selectedMonitor == nil {
-		fmt.Println("go-flutter: Cannot calculate pixelRatio, selectedMonitor is nil.")
-		return 1.0
-	}
-	selectedMonitorMode := selectedMonitor.GetVideoMode()
-	if selectedMonitorMode == nil {
-		fmt.Println("go-flutter: Cannot calculate pixelRatio, selectedMonitorMode is nil.")
-		return 1.0
-	}
-	selectedMonitorWidthMM, _ := selectedMonitor.GetPhysicalSize()
-	if selectedMonitorWidthMM == 0 {
-		fmt.Println("go-flutter: Cannot calculate pixelRatio, selectedMonitorWidthMM is equal to 0.")
-		return 1.0
-	}
-	monitorScreenCoordinatesPerInch := float64(selectedMonitorMode.Width) / (float64(selectedMonitorWidthMM) / 25.4)
-
-	dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
-	pixelRatio := dpi / dpPerInch
-
-	return pixelRatio
 }
