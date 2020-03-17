@@ -8,7 +8,7 @@ import (
 	"unsafe"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // dpPerInch defines the amount of display pixels per inch as defined for Flutter.

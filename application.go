@@ -8,7 +8,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -119,6 +119,7 @@ func (a *Application) Run() error {
 		glfw.WindowHint(glfw.Visible, glfw.False)
 	}
 
+	glfw.WindowHint(glfw.ScaleToMonitor, glfw.True)
 	if a.config.windowAlwaysOnTop {
 		glfw.WindowHint(glfw.Floating, glfw.True)
 	}
@@ -310,7 +311,6 @@ func (a *Application) Run() error {
 			})
 		})
 	})
-	// TODO: when moving to glfw 3.3, also use glfwSetWindowContentScaleCallback
 
 	// Attach glfw window callbacks for text input
 	a.window.SetKeyCallback(

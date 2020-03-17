@@ -5,7 +5,7 @@ import (
 	"image"
 	"os"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type config struct {
@@ -156,7 +156,7 @@ func WindowDimensionLimits(minWidth, minHeight, maxWidth, maxHeight int) Option 
 
 // WindowIcon sets an icon provider func, which is called during window
 // initialization. For tips on the kind of images to provide, see
-// https://godoc.org/github.com/go-gl/glfw/v3.2/glfw#Window.SetIcon
+// https://godoc.org/github.com/go-gl/glfw/v3.3/glfw#Window.SetIcon
 func WindowIcon(iconProivder func() ([]image.Image, error)) Option {
 	return func(c *config) {
 		c.windowIconProvider = iconProivder

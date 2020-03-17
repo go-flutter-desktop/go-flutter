@@ -7,7 +7,7 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 )
 

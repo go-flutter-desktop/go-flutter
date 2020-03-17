@@ -3,7 +3,7 @@ package flutter
 import (
 	"encoding/json"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
@@ -85,11 +85,8 @@ func (p *platformPlugin) handleClipboardGetData(arguments interface{}) (reply in
 
 	var clipText string
 	p.glfwTasker.Do(func() {
-		clipText, err = p.window.GetClipboardString()
+		clipText = p.window.GetClipboardString()
 	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get string from clipboard")
-	}
 
 	reply = struct {
 		Text string `json:"text"`

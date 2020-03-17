@@ -1,8 +1,6 @@
 package flutter
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 )
 
@@ -47,14 +45,9 @@ func (p *platformPlugin) handleSystemNavigatorPop(arguments interface{}) (reply 
 		})
 		return nil, nil
 	case PopBehaviorIconify:
-		var err error
 		p.glfwTasker.Do(func() {
-			err = p.window.Iconify()
+			p.window.Iconify()
 		})
-		if err != nil {
-			fmt.Printf("go-flutter: error on iconifying window: %v\n", err)
-			return nil, errors.Wrap(err, "failed to iconify window")
-		}
 		return nil, nil
 	case PopBehaviorClose:
 		p.glfwTasker.Do(func() {

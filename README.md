@@ -81,7 +81,7 @@ Updating Go is simple and Go [seldomly has backwards-incompatible changes](https
 
 ### GLFW version
 
-This project uses go-gl/glfw for GLFW v3.2.
+This project uses go-gl/glfw for GLFW v3.3.
 
 ## License
 
