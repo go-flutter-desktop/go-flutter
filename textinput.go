@@ -3,6 +3,7 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"unicode"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
@@ -198,6 +199,15 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				_, _, selectedContent := p.getSelectedText()
 				window.SetClipboardString(selectedContent)
 				p.removeSelectedText()
+			}
+
+		case p.keyboardLayout.Paste:
+			if runtime.GOOS != "darwin" {
+				break
+			}
+			if keyboardShortcutBind.isModifier() {
+				clpString := window.GetClipboardString()
+				p.addChar([]rune(clpString))
 			}
 		}
 		p.updateEditingState()
