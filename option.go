@@ -19,6 +19,7 @@ type config struct {
 	windowDimensionLimits   windowDimensionLimits
 	windowMode              windowMode
 	windowAlwaysOnTop       bool
+	windowFocusCallback     func(focused bool)
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
@@ -176,6 +177,14 @@ func ForcePixelRatio(ratio float64) Option {
 func WindowAlwaysOnTop(enabled bool) Option {
 	return func(c *config) {
 		c.windowAlwaysOnTop = enabled
+	}
+}
+
+// WindowFocusCallback sets the focus callback of the window, which is called
+// when the window gains or loses focus.
+func WindowFocusCallback(h func(bool)) Option {
+	return func(c *config) {
+		c.windowFocusCallback = h
 	}
 }
 

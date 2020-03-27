@@ -256,6 +256,13 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
+	// Register window focus callback
+	if a.config.windowFocusCallback != nil {
+		a.window.SetFocusCallback(func(_ *glfw.Window, focused bool) {
+			a.config.windowFocusCallback(focused)
+		})
+	}
+
 	// Register plugins
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
