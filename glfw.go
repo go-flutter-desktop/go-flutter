@@ -188,8 +188,8 @@ func (m *windowManager) glfwMouseButtonCallback(window *glfw.Window, key glfw.Mo
 	}
 }
 
-func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yoff float64) {
-	const scrollModifier = -50
+func (m *windowManager) glfwScrollCallback(window *glfw.Window, xoff float64, yoff float64, scrollAmount float64) {
+	scrollModifier := -scrollAmount
 	m.sendPointerEventScroll(window, xoff*scrollModifier, yoff*scrollModifier)
 }
 

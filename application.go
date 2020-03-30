@@ -327,7 +327,10 @@ func (a *Application) Run() error {
 	a.window.SetCursorEnterCallback(windowManager.glfwCursorEnterCallback)
 	a.window.SetCursorPosCallback(windowManager.glfwCursorPosCallback)
 	a.window.SetMouseButtonCallback(windowManager.glfwMouseButtonCallback)
-	a.window.SetScrollCallback(windowManager.glfwScrollCallback)
+	a.window.SetScrollCallback(
+		func(window *glfw.Window, xoff float64, yoff float64) {
+			windowManager.glfwScrollCallback(window, xoff, yoff, a.config.scrollAmount)
+		})
 
 	// Shutdown the engine if we return from this function (on purpose or panic)
 	defer a.engine.Shutdown()
