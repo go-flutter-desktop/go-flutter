@@ -54,7 +54,7 @@ var defaultApplicationConfig = config{
 	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
-	scrollAmount:      50.0,
+	scrollAmount:      100.0,
 }
 
 // Option for Application
