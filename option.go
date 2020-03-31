@@ -22,6 +22,7 @@ type config struct {
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
+	scrollAmount    float64
 
 	plugins []Plugin
 }
@@ -53,6 +54,7 @@ var defaultApplicationConfig = config{
 	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
+	scrollAmount:      100.0,
 }
 
 // Option for Application
@@ -224,5 +226,12 @@ func VirtualKeyboardHide(hideCallback func()) Option {
 		// Reference the callback to the platform plugin (singleton) responsible
 		// for textinput.
 		defaultTextinputPlugin.virtualKeyboardHide = hideCallback
+	}
+}
+
+// ScrollAmount sets the number of pixels to scroll with the mouse wheel
+func ScrollAmount(amount float64) Option {
+	return func(c *config) {
+		c.scrollAmount = amount
 	}
 }
