@@ -46,10 +46,6 @@ type FlutterOpenGLTexture struct {
 type FlutterTask = C.FlutterTask
 
 // FlutterEngine corresponds to the C.FlutterEngine with his associated callback's method.
-//
-// Trick the panic error:
-// cgo argument has Go pointer to Go pointer
-// GoType(KeepAlive) -> unsafe.Pointer -> uintptr(KeepAlive) -> unsafe.Pointer(Pass to the C function) <- uintptr <- unsafe.Pointer <- GoType
 type FlutterEngine struct {
 	// Flutter Engine.
 	Engine C.FlutterEngine
@@ -350,10 +346,6 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 
 // DataCallback is a function called when a PlatformMessage response send back
 // to the embedder.
-//
-// Trick the panic error:
-// cgo argument has Go pointer to Go pointer
-// GoType(KeepAlive) -> unsafe.Pointer -> uintptr(KeepAlive) -> unsafe.Pointer(Pass to the C function) <- uintptr <- unsafe.Pointer <- GoType
 type DataCallback struct {
 	// Handle func
 	Handle func(binaryReply []byte)
