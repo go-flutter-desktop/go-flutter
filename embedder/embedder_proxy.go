@@ -97,6 +97,6 @@ func proxy_post_task_callback(task C.FlutterTask, targetTimeNanos C.uint64_t, us
 //export proxy_desktop_binary_reply
 func proxy_desktop_binary_reply(data *C.uint8_t, dataSize C.size_t, userData unsafe.Pointer) {
 	callbackPointer := *(*uintptr)(userData)
-	handler := *(*DataCallback)(unsafe.Pointer(callbackPointer))
-	handler(C.GoBytes(unsafe.Pointer(data), C.int(dataSize)))
+	callback := (*DataCallback)(unsafe.Pointer(callbackPointer))
+	callback.Handle(C.GoBytes(unsafe.Pointer(data), C.int(dataSize)))
 }

@@ -346,17 +346,20 @@ func (flu *FlutterEngine) MarkExternalTextureFrameAvailable(textureID int64) Res
 
 // DataCallback is a function called when a PlatformMessage response send back
 // to the embedder.
-type DataCallback func(binaryReply []byte)
+type DataCallback struct {
+	// Handle func
+	Handle func(binaryReply []byte)
+}
 
 // CreatePlatformMessageResponseHandle creates a platform message response
 // handle that allows the embedder to set a native callback for a response to a
 // message.
 // Must be collected via `ReleasePlatformMessageResponseHandle` after the call
 // to `SendPlatformMessage`.
-func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback DataCallback) (PlatformMessageResponseHandle, error) {
+func (flu *FlutterEngine) CreatePlatformMessageResponseHandle(callback *DataCallback) (PlatformMessageResponseHandle, error) {
 	var responseHandle *C.FlutterPlatformMessageResponseHandle
 
-	callbackPointer := uintptr(unsafe.Pointer(&callback))
+	callbackPointer := uintptr(unsafe.Pointer(callback))
 	defer func() {
 		runtime.KeepAlive(callbackPointer)
 	}()
