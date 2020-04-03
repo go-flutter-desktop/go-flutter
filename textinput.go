@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
-<<<<<<< HEAD
-=======
 	"sort"
->>>>>>> 70cced5... rework key handling
 	"unicode"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
@@ -304,23 +301,12 @@ func (p *textinputPlugin) sliceLeftWord() {
 	}
 }
 
-<<<<<<< HEAD
-		case p.keyboardLayout.Paste:
-			if runtime.GOOS != "darwin" {
-				break
-			}
-			if keyboardShortcutBind.isModifier() {
-				clpString := window.GetClipboardString()
-				p.addChar([]rune(clpString))
-			}
-=======
 func indexStartLeadingWord(line []rune, start int) int {
 	pos := start
 	// Remove whitespace to the left
 	for {
 		if pos == 0 || !unicode.IsSpace(line[pos-1]) {
 			break
->>>>>>> 70cced5... rework key handling
 		}
 		pos--
 	}

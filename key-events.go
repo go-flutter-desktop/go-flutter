@@ -1,7 +1,5 @@
 package flutter
 
-// #include "key-codepoint.cpp"
-import "C"
 import (
 	"encoding/json"
 	"fmt"
@@ -63,7 +61,6 @@ type keyEventMessage struct {
 // Comment about RawKeyEvent on others embedders:
 // https://github.com/go-flutter-desktop/go-flutter#issuecomment-494998771
 func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-
 	var typeKey string
 	if action == glfw.Release {
 		typeKey = "keyup"
@@ -77,20 +74,19 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 	}
 
 	utf8 := glfw.GetKeyName(key, scancode)
-	unicodeInt := C.GetUTF32CodePointFromGLFWKey(C.CString(utf8))
+	unicodeInt := codepointFromGLFWKey([]rune(utf8)...)
 
 	event := keyEventMessage{
 		KeyCode:             int(key),
-		Keymap:              "linux",
+		Keymap:              "linux", // TODO: darwin? windows?
 		Toolkit:             "glfw",
 		Type:                typeKey,
 		ScanCode:            scancode,
 		Modifiers:           int(mods),
 		UnicodeScalarValues: uint32(unicodeInt),
 	}
-	err := p.keyEventChannel.Send(event)
-	if err != nil {
+
+	if err := p.keyEventChannel.Send(event); err != nil {
 		fmt.Printf("go-flutter: Failed to send raw_keyboard event %v: %v\n", event, err)
 	}
-
 }

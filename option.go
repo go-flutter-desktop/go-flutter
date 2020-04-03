@@ -21,11 +21,8 @@ type config struct {
 	windowAlwaysOnTop       bool
 
 	forcePixelRatio float64
-<<<<<<< HEAD
 	keyboardLayout  KeyboardShortcuts
 	scrollAmount    float64
-=======
->>>>>>> 70cced5... rework key handling
 
 	plugins []Plugin
 }
@@ -54,14 +51,9 @@ var defaultApplicationConfig = config{
 		width:  800,
 		height: 600,
 	},
-<<<<<<< HEAD
-	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
 	scrollAmount:      100.0,
-=======
-	windowMode: WindowModeDefault,
->>>>>>> 70cced5... rework key handling
 }
 
 // Option for Application
@@ -232,16 +224,5 @@ func VirtualKeyboardHide(hideCallback func()) Option {
 func ScrollAmount(amount float64) Option {
 	return func(c *config) {
 		c.scrollAmount = amount
-	}
-}
-
-// SendKeyEventInTextField makes go-flutter send keyevent to
-// the flutter framework even when the client is editing text.
-// By setting this to True, both go-flutter and the flutter framework will
-// attempt to paste/move the cursor in the TextField.
-// default false.
-func SendKeyEventInTextField(v bool) Option {
-	return func(c *config) {
-		c.sendKeyEventInTextField = v
 	}
 }
