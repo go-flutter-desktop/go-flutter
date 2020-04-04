@@ -3,7 +3,10 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
+	"runtime/debug"
 
+	"github.com/go-flutter-desktop/go-flutter/internal/glfwkeyconversion"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -42,23 +45,28 @@ func (j keyEventJSONMessageCodec) DecodeMessage(binaryMessage []byte) (message i
 }
 
 type keyEventMessage struct {
-	Toolkit   string `json:"toolkit"`
+	// Common
+	Keymap    string `json:"keymap"` // Linux/MacOS switch
+	Character string `json:"character"`
 	KeyCode   int    `json:"keyCode"`
-	Type      string `json:"type"`
-	ScanCode  int    `json:"scanCode"`
 	Modifiers int    `json:"modifiers"`
-	Keymap    string `json:"keymap"`
+	Type      string `json:"type"`
+
+	// Linux
+	Toolkit             string `json:"toolkit,omitempty"`
+	ScanCode            int    `json:"scanCode,omitempty"`
+	UnicodeScalarValues uint32 `json:"unicodeScalarValues,omitempty"`
+
+	// MacOS
+	CharactersIgnoringModifiers string `json:"charactersIgnoringModifiers,omitempty"`
+	Characters                  string `json:"characters,omitempty"`
 }
 
 // Flutter only support keydown & keyup events type.
-// 2019-05-19, LOC of the flutter keyevent handler:
-// https://github.com/flutter/flutter/blob/7a4c33425ddd78c54aba07d86f3f9a4a0051769b/packages/flutter/lib/src/services/raw_keyboard.dart#L291-L298
 // On GLFW we are receiving glfw.Repeat events, those events are,
 // unknown to the Flutter Framework.
-// To stay consistent with other embedders, glfw.Repeat is "seen" as a
+// To stay consistent with other embedders, glfw.Repeat is treated as a
 // keydown event.
-// Comment about RawKeyEvent on others embedders:
-// https://github.com/go-flutter-desktop/go-flutter#issuecomment-494998771
 func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
 	var typeKey string
@@ -73,17 +81,60 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 		return
 	}
 
-	event := keyEventMessage{
-		KeyCode:   int(key),
-		Keymap:    "linux",
-		Toolkit:   "glfw",
-		Type:      typeKey,
-		ScanCode:  scancode,
-		Modifiers: int(mods),
+	defer func() {
+		p := recover()
+		if p != nil {
+			fmt.Printf("go-flutter: recovered from panic while handling %s event: %v\n", typeKey, p)
+			debug.PrintStack()
+		}
+	}()
+
+	utf8 := glfw.GetKeyName(key, scancode)
+	var event keyEventMessage
+
+	if runtime.GOOS == "darwin" {
+		macosMods := glfwkeyconversion.ToMacOSModifiers(mods)
+		if glfwkeyconversion.IsModiferKeycode(key) && macosMods == 0 {
+			// On GLFW, the "modifiers" keycode is the state as it is BEFORE this event
+			// happened, not AFTER, like every other platform.
+			macosMods = glfwkeyconversion.AsMacOSModifiers(key)
+		}
+
+		event = keyEventMessage{
+			KeyCode:                     glfwkeyconversion.ToMacOSKeyCode(key, scancode),
+			Keymap:                      "macos",
+			Type:                        typeKey,
+			Character:                   utf8,
+			CharactersIgnoringModifiers: utf8,
+			Characters:                  utf8,
+			Modifiers:                   macosMods,
+		}
+	} else {
+		event = keyEventMessage{
+			KeyCode:   int(key),
+			Keymap:    "linux",
+			Toolkit:   "glfw",
+			Type:      typeKey,
+			ScanCode:  scancode,
+			Modifiers: int(mods),
+			Character: utf8,
+		}
+
+		if len(utf8) > 0 {
+			event.UnicodeScalarValues = CodepointFromGLFWKey([]rune(utf8))
+		}
 	}
-	err := p.keyEventChannel.Send(event)
-	if err != nil {
+
+	if err := p.keyEventChannel.Send(event); err != nil {
 		fmt.Printf("go-flutter: Failed to send raw_keyboard event %v: %v\n", event, err)
 	}
 
+}
+
+// CodepointFromGLFWKey Queries GLFW for the printable key name given a key.
+// The Flutter framework accepts only one code point, therefore, only the first
+// code point will be used. There is unlikely to be more than one, but there
+// is no guarantee that it won't happen.
+func CodepointFromGLFWKey(utf8 []rune) uint32 {
+	return uint32(utf8[0])
 }

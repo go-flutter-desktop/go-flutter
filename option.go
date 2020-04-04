@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image"
 	"os"
-
-	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type config struct {
@@ -21,7 +19,6 @@ type config struct {
 	windowAlwaysOnTop       bool
 
 	forcePixelRatio float64
-	keyboardLayout  KeyboardShortcuts
 	scrollAmount    float64
 
 	plugins []Plugin
@@ -51,7 +48,6 @@ var defaultApplicationConfig = config{
 		width:  800,
 		height: 600,
 	},
-	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
 	scrollAmount:      100.0,
@@ -186,23 +182,6 @@ func AddPlugin(p Plugin) Option {
 	return func(c *config) {
 		c.plugins = append(c.plugins, p)
 	}
-}
-
-// OptionKeyboardLayout allow application to support keyboard that have a
-// different layout and therefore different keyboard shortcuts.
-func OptionKeyboardLayout(keyboardLayout KeyboardShortcuts) Option {
-	return func(c *config) {
-		c.keyboardLayout = keyboardLayout
-	}
-}
-
-// KeyboardShortcuts contains the configuration for keyboard shortcut keys. This
-// allows an application to support keyboard layout different from US layout.
-type KeyboardShortcuts struct {
-	Cut       glfw.Key
-	Copy      glfw.Key
-	Paste     glfw.Key
-	SelectAll glfw.Key
 }
 
 // VirtualKeyboardShow sets an func called when the flutter framework want to

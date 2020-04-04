@@ -52,7 +52,7 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
   - <kbd>Backspace</kbd>  <kbd>ctrl-Backspace</kbd> <kbd>Delete</kbd>
 - Mouse-over/hovering
 - Mouse-buttons
-- RawKeyboard events (through `RawKeyEventDataLinux` regardless of the platform)
+- RawKeyboard events
 - Distribution format (windows-msi, mac-dmg, linux-appimage, and more)
 - Cross-compiling using docker :whale:
 

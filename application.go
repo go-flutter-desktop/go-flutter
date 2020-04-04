@@ -229,10 +229,6 @@ func (a *Application) Run() error {
 	// Attach PlatformMessage callback functions onto the engine
 	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
-	// Not very nice, but we can only really fix this when there's a pluggable
-	// renderer.
-	defaultTextinputPlugin.keyboardLayout = a.config.keyboardLayout
-
 	// Set the glfw window user pointer to point to the FlutterEngine so that
 	// callback functions may obtain the FlutterEngine from the glfw window
 	// user pointer.

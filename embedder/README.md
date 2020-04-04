@@ -8,7 +8,7 @@ To build this package set the `CGO_LDFLAGS` and run `go build`. For example:
 
 On Linux:
 ```bash
-export CGO_LDFLAGS="-L/home/${HOME}/.cache/hover/engine/linux/"
+export CGO_LDFLAGS="-L${HOME}/.cache/hover/engine/linux/"
 go build
 ```
 
