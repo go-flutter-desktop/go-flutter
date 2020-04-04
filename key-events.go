@@ -3,6 +3,7 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -74,8 +75,20 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 	}
 
 	utf8 := glfw.GetKeyName(key, scancode)
+	log.Println(
+		"go-flutter: debug key:", key,
+		"key utfseq:", fmt.Sprintf("\\u%x", key),
+		"scancode:", scancode,
+		"scancode utfseq:", fmt.Sprintf("\\u%x", scancode),
+		"/", utf8, "/",
+		"rune:", rune(key),
+		"string:", string(rune(key)),
+	)
+	if len(utf8) == 0 {
+		log.Println("go-flutter: unable to lookup utf8 for key:", key, "scancode:", scancode, "/", utf8, "/", "rune:", rune(scancode))
+		return
+	}
 	unicodeInt := codepointFromGLFWKey([]rune(utf8)...)
-
 	event := keyEventMessage{
 		KeyCode:             int(key),
 		Keymap:              "linux", // TODO: darwin? windows?
