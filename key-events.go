@@ -98,7 +98,7 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 		if val, ok := glfwkeyconversion.AsMacOSModifiers(key); ok {
 			// On GLFW, the "modifiers" keycode is the state as it is BEFORE this event
 			// happened, not AFTER, like every other platform.
-			macosMods = val
+			macosMods = val | int(macosMods)
 		}
 
 		event = keyEventMessage{
