@@ -2,6 +2,8 @@ package glfwkeyconversion
 
 import "github.com/go-gl/glfw/v3.3/glfw"
 
+// Modifier key masks pulled from flutter/packages/flutter/lib/src/services/raw_keyboard_macos.dart
+// URL: https://github.com/flutter/flutter/blob/3e63411256cc88afc48044aa5ea06c5c9c6a6846/packages/flutter/lib/src/services/raw_keyboard_macos.dart#L241
 const (
 	modifierControl    = 0x40000
 	modifierShift      = 0x20000
@@ -11,39 +13,23 @@ const (
 	modifierNumericPad = 0x200000
 )
 
-var modifierKeyNames = []string{"controlLeft", "shiftLeft", "altLeft", "metaLeft", "controlRight", "shiftRight", "altRight", "metaRight", "capsLock", "numLock"}
-var modifierKeytoMods = map[int]int{
-	341: modifierControl,
-	340: modifierShift,
-	342: modifierOption,
-	343: modifierCommand,
-	345: modifierControl,
-	344: modifierShift,
-	346: modifierOption,
-	347: modifierCommand,
-	280: modifierCapsLock,
-	282: modifierNumericPad,
-}
-
-// IsModiferKeycode returns true if the keycode is from a ModifierKey
-func IsModiferKeycode(keycode glfw.Key) bool {
-	// GLFW Key codes for modifier keys.
-	if val, ok := glfwToLogicalKey[int(keycode)]; ok {
-		for _, modCode := range modifierKeyNames {
-			if modCode == val {
-				return true
-			}
-		}
-	}
-	return false
+var modifierKeytoMods = map[glfw.Key]int{
+	glfw.KeyLeftControl:  modifierControl,
+	glfw.KeyLeftShift:    modifierShift,
+	glfw.KeyLeftAlt:      modifierOption,
+	glfw.KeyLeftSuper:    modifierCommand,
+	glfw.KeyRightControl: modifierControl,
+	glfw.KeyRightShift:   modifierShift,
+	glfw.KeyRightAlt:     modifierOption,
+	glfw.KeyRightSuper:   modifierCommand,
+	glfw.KeyCapsLock:     modifierCapsLock,
+	glfw.KeyNumLock:      modifierNumericPad,
 }
 
 // AsMacOSModifiers translate the keycode to the ModifierKey
-func AsMacOSModifiers(keycode glfw.Key) int {
-	if val, ok := modifierKeytoMods[int(keycode)]; ok {
-		return val
-	}
-	return 0
+func AsMacOSModifiers(keycode glfw.Key) (int, bool) {
+	val, ok := modifierKeytoMods[keycode]
+	return val, ok
 }
 
 // ToMacOSModifiers takes a glfw ModifierKey and return his MacOS equivalent

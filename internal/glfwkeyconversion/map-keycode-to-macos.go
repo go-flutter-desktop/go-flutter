@@ -6,13 +6,13 @@ import "github.com/go-gl/glfw/v3.3/glfw"
 /// MacOS doesn't provide a scan code, but a virtual keycode to represent a
 //  physical key.
 //  We first try to convert the physical key to the virtual keycode and then
-//  return the MacOS keycode version of this key (physical one).
+//  return the MacOS keycode version of this key.
 //  If we fail to get the virtual keycode, map the physical GLFW keycode to the
 //  MacOS on.
 func ToMacOSKeyCode(keycode glfw.Key, scancode int) int {
 
-	// First try with the knownLogicalKeys
-	// This maps to the acutal character on it regardless of location of the key.
+	// Map virtual key to a intermediate knownLogicalKeys, than maps the
+	// knownLogicalKeys to the macOsToPhysicalKey.
 	// This takes into account keyboard mapping. (Azerty keyboard on a Qwerty layout)
 	// Example "A" on a Qwerty layout but with a `setxkbmap fr` should return "Q"
 	utf8 := glfw.GetKeyName(keycode, scancode)
@@ -25,8 +25,8 @@ func ToMacOSKeyCode(keycode glfw.Key, scancode int) int {
 		}
 	}
 
-	// If the key is a is a non-printable on.
-	// we don't care about the actual keyboard mapping.
+	// If the key is a non-printable on.
+	// we cannot use knownLogicalKeys.
 	// Example "Backspace".
 	if val, ok := glfwToLogicalKey[int(keycode)]; ok {
 		if macOSKey, ok := macOsToPhysicalKey[val]; ok {

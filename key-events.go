@@ -93,11 +93,12 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 	var event keyEventMessage
 
 	if runtime.GOOS == "darwin" {
+
 		macosMods := glfwkeyconversion.ToMacOSModifiers(mods)
-		if glfwkeyconversion.IsModiferKeycode(key) && macosMods == 0 {
+		if val, ok := glfwkeyconversion.AsMacOSModifiers(key); ok {
 			// On GLFW, the "modifiers" keycode is the state as it is BEFORE this event
 			// happened, not AFTER, like every other platform.
-			macosMods = glfwkeyconversion.AsMacOSModifiers(key)
+			macosMods = val
 		}
 
 		event = keyEventMessage{
