@@ -3,6 +3,7 @@ module github.com/go-flutter-desktop/go-flutter
 go 1.12
 
 require (
+	github.com/cloudfoundry-attic/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4

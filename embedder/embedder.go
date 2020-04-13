@@ -3,12 +3,14 @@ package embedder
 import "C"
 
 // #include "embedder.h"
+// #include <stdlib.h>
 // FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterProjectArgs * Args);
 // FlutterEngineResult
 // createMessageResponseHandle(FlutterEngine engine, void *user_data,
 //                             FlutterPlatformMessageResponseHandle **reply);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
+// typedef FlutterLocale* pFlutterLocale;
 import "C"
 import (
 	"errors"
@@ -18,6 +20,8 @@ import (
 	"runtime"
 	"sync"
 	"unsafe"
+
+	"github.com/cloudfoundry-attic/jibber_jabber"
 )
 
 // Result corresponds to the C.enum retuned by the shared flutter library
@@ -256,6 +260,24 @@ type PlatformMessageResponseHandle uintptr
 // response.
 func (p PlatformMessage) ExpectsResponse() bool {
 	return p.ResponseHandle != 0
+}
+
+// UpdateSystemLocale is used to update the flutter locale to the system locale
+func (flu *FlutterEngine) UpdateSystemLocale() {
+	lang, err := jibber_jabber.DetectLanguage()
+	if err != nil {
+		return
+	}
+	locale := C.FlutterLocale{
+		language_code: C.CString(lang),
+	}
+	locale.struct_size = C.size_t(unsafe.Sizeof(locale))
+	arr := (**C.FlutterLocale)(C.malloc(locale.struct_size))
+	ps := (*[1]C.pFlutterLocale)(unsafe.Pointer(arr))[:1:1]
+	ps[0] = &locale
+
+	C.FlutterEngineUpdateLocales(flu.Engine, arr, (C.size_t)(1))
+	C.free(unsafe.Pointer(arr))
 }
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.

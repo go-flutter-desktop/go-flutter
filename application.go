@@ -256,6 +256,8 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
+	a.engine.UpdateSystemLocale()
+
 	// Register plugins
 	for _, p := range a.config.plugins {
 		err = p.InitPlugin(messenger)
