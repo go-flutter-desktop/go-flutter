@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 	"unsafe"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -54,11 +53,10 @@ func (m *windowManager) sendPointerEvent(window *glfw.Window, phase embedder.Poi
 	}
 
 	event := embedder.PointerEvent{
-		Phase:     phase,
-		X:         x * m.pixelsPerScreenCoordinate,
-		Y:         y * m.pixelsPerScreenCoordinate,
-		Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
-		Buttons:   m.pointerButton,
+		Phase:   phase,
+		X:       x * m.pixelsPerScreenCoordinate,
+		Y:       y * m.pixelsPerScreenCoordinate,
+		Buttons: m.pointerButton,
 	}
 
 	flutterEnginePointer := *(*uintptr)(window.GetUserPointer())
@@ -88,7 +86,6 @@ func (m *windowManager) sendPointerEventButton(window *glfw.Window, phase embedd
 		Phase:      phase,
 		X:          x * m.pixelsPerScreenCoordinate,
 		Y:          y * m.pixelsPerScreenCoordinate,
-		Timestamp:  time.Now().UnixNano() / int64(time.Millisecond),
 		SignalKind: embedder.PointerSignalKindNone,
 		Buttons:    m.pointerButton,
 	}
@@ -103,7 +100,6 @@ func (m *windowManager) sendPointerEventScroll(window *glfw.Window, xDelta, yDel
 		Phase:        m.pointerPhase,
 		X:            x * m.pixelsPerScreenCoordinate,
 		Y:            y * m.pixelsPerScreenCoordinate,
-		Timestamp:    time.Now().UnixNano() / int64(time.Millisecond),
 		SignalKind:   embedder.PointerSignalKindScroll,
 		ScrollDeltaX: xDelta,
 		ScrollDeltaY: yDelta,

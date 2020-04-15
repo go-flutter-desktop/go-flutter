@@ -1,3 +1,5 @@
+github.com/cubiest/jibberjabber v0.0.0-20200222172555-1351aa3fb4de h1:T/+z9EyfuAur9RtvpyY2bnidbgRR1rklpKjkypTaumY=
+github.com/cubiest/jibberjabber v0.0.0-20200222172555-1351aa3fb4de/go.mod h1:KwsZfRYrxgmPSgdFdORzlShUdTV5/Ri6XBMVT7TVCJY=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
