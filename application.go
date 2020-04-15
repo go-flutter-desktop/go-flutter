@@ -251,6 +251,8 @@ func (a *Application) Run() error {
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid library version)\n", result)
 		case embedder.ResultInvalidArguments:
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid arguments)\n", result)
+		case embedder.ResultInternalInconsistency:
+			fmt.Printf("go-flutter: engine.Run() returned result code %d (internal inconsistency)\n", result)
 		default:
 			fmt.Printf("go-flutter: engine.Run() returned result code %d (unknown result code)\n", result)
 		}
