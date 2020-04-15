@@ -8,6 +8,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/cubiest/jibberjabber"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
 
@@ -256,7 +257,14 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
-	a.engine.UpdateSystemLocale()
+	languageTag, _ := jibberjabber.DetectLanguageTag() // ignore error, always returns a valid Tag
+	base, _ := languageTag.Base()
+	region, _ := languageTag.Region()
+	scriptCode, _ := languageTag.Script()
+	result = a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
+	if result != embedder.ResultSuccess {
+		fmt.Printf("go-flutter: engine.UpdateSystemLocale() returned result code %d\n", result)
+	}
 
 	// Register plugins
 	for _, p := range a.config.plugins {

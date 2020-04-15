@@ -10,7 +10,6 @@ import "C"
 //                             FlutterPlatformMessageResponseHandle **reply);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
-// typedef FlutterLocale* pFlutterLocale;
 import "C"
 import (
 	"errors"
@@ -20,8 +19,6 @@ import (
 	"runtime"
 	"sync"
 	"unsafe"
-
-	"github.com/cloudfoundry-attic/jibber_jabber"
 )
 
 // Result corresponds to the C.enum retuned by the shared flutter library
@@ -109,16 +106,23 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 	}
 
 	cVMArgs := C.malloc(C.size_t(len(vmArgs)) * C.size_t(unsafe.Sizeof(uintptr(0))))
+	defer C.free(cVMArgs)
 
 	a := (*[1<<30 - 1]*C.char)(cVMArgs)
 
 	for idx, substring := range vmArgs {
 		a[idx] = C.CString(substring)
+		defer C.free(unsafe.Pointer(a[idx]))
 	}
 
+	assetsPath := C.CString(flu.AssetsPath)
+	icuDataPath := C.CString(flu.IcuDataPath)
+	defer C.free(unsafe.Pointer(assetsPath))
+	defer C.free(unsafe.Pointer(icuDataPath))
+
 	args := C.FlutterProjectArgs{
-		assets_path:       C.CString(flu.AssetsPath),
-		icu_data_path:     C.CString(flu.IcuDataPath),
+		assets_path:       assetsPath,
+		icu_data_path:     icuDataPath,
 		command_line_argv: (**C.char)(cVMArgs),
 		command_line_argc: C.int(len(vmArgs)),
 	}
@@ -202,7 +206,7 @@ func (flu *FlutterEngine) SendPointerEvent(event PointerEvent) Result {
 		phase:          (C.FlutterPointerPhase)(event.Phase),
 		x:              C.double(event.X),
 		y:              C.double(event.Y),
-		timestamp:      C.size_t(event.Timestamp),
+		timestamp:      C.size_t(FlutterEngineGetCurrentTime()),
 		signal_kind:    (C.FlutterPointerSignalKind)(event.SignalKind),
 		device_kind:    (C.FlutterPointerDeviceKind)(PointerDeviceKindMouse),
 		scroll_delta_x: C.double(event.ScrollDeltaX),
@@ -263,21 +267,28 @@ func (p PlatformMessage) ExpectsResponse() bool {
 }
 
 // UpdateSystemLocale is used to update the flutter locale to the system locale
-func (flu *FlutterEngine) UpdateSystemLocale() {
-	lang, err := jibber_jabber.DetectLanguage()
-	if err != nil {
-		return
-	}
+func (flu *FlutterEngine) UpdateSystemLocale(lang, country, script string) Result {
+	languageCode := C.CString(lang)
+	countryCode := C.CString(country)
+	scriptCode := C.CString(script)
+	defer C.free(unsafe.Pointer(languageCode))
+	defer C.free(unsafe.Pointer(countryCode))
+	defer C.free(unsafe.Pointer(scriptCode))
+
 	locale := C.FlutterLocale{
-		language_code: C.CString(lang),
+		language_code: languageCode,
+		country_code:  countryCode,
+		script_code:   scriptCode,
 	}
+
 	locale.struct_size = C.size_t(unsafe.Sizeof(locale))
 	arr := (**C.FlutterLocale)(C.malloc(locale.struct_size))
-	ps := (*[1]C.pFlutterLocale)(unsafe.Pointer(arr))[:1:1]
-	ps[0] = &locale
+	defer C.free(unsafe.Pointer(arr))
+	(*[1]*C.FlutterLocale)(unsafe.Pointer(arr))[0] = &locale
 
-	C.FlutterEngineUpdateLocales(flu.Engine, arr, (C.size_t)(1))
-	C.free(unsafe.Pointer(arr))
+	res := C.FlutterEngineUpdateLocales(flu.Engine, arr, (C.size_t)(1))
+
+	return (Result)(res)
 }
 
 // SendPlatformMessage is used to send a PlatformMessage to the Flutter engine.
@@ -288,11 +299,14 @@ func (flu *FlutterEngine) SendPlatformMessage(msg *PlatformMessage) Result {
 		return ResultEngineNotRunning
 	}
 
+	message := C.CBytes(msg.Message)
+	channel := C.CString(msg.Channel)
+	defer C.free(message)
+	defer C.free(unsafe.Pointer(channel))
+
 	cPlatformMessage := C.FlutterPlatformMessage{
-		channel: C.CString(msg.Channel),
-		// TODO: who is responsible for free-ing this C alloc? And can they be
-		// freed when this call returns? Or are they stil used at that time?
-		message:      (*C.uint8_t)(C.CBytes(msg.Message)),
+		channel:      channel,
+		message:      (*C.uint8_t)(message),
 		message_size: C.size_t(len(msg.Message)),
 
 		response_handle: (*C.FlutterPlatformMessageResponseHandle)(unsafe.Pointer(msg.ResponseHandle)),
@@ -314,12 +328,14 @@ func (flu *FlutterEngine) SendPlatformMessageResponse(
 	responseTo PlatformMessageResponseHandle,
 	encodedMessage []byte,
 ) Result {
+
+	message := C.CBytes(encodedMessage)
+	defer C.free(message)
+
 	res := C.FlutterEngineSendPlatformMessageResponse(
 		flu.Engine,
 		(*C.FlutterPlatformMessageResponseHandle)(unsafe.Pointer(responseTo)),
-		// TODO: who is responsible for free-ing this C alloc? And can they be
-		// freed when this call returns? Or are they stil used at that time?
-		(*C.uint8_t)(C.CBytes(encodedMessage)),
+		(*C.uint8_t)(message),
 		(C.size_t)(len(encodedMessage)),
 	)
 
