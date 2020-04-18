@@ -93,7 +93,6 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 	var event keyEventMessage
 
 	if runtime.GOOS == "darwin" {
-
 		macosMods := glfwkeyconversion.ToMacOSModifiers(mods)
 		if val, ok := glfwkeyconversion.AsMacOSModifiers(key); ok {
 			// On GLFW, the "modifiers" keycode is the state as it is BEFORE this event
@@ -120,10 +119,10 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 			Modifiers: int(mods),
 			Character: utf8,
 		}
+	}
 
-		if len(utf8) > 0 {
-			event.UnicodeScalarValues = CodepointFromGLFWKey([]rune(utf8))
-		}
+	if len(utf8) > 0 {
+		event.UnicodeScalarValues = CodepointFromGLFWKey([]rune(utf8))
 	}
 
 	if err := p.keyEventChannel.Send(event); err != nil {
