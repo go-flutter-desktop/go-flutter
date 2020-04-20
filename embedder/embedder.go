@@ -191,7 +191,6 @@ const (
 // PointerEvent represents the position and phase of the mouse at a given time.
 type PointerEvent struct {
 	Phase        PointerPhase
-	Timestamp    int64
 	X            float64
 	Y            float64
 	SignalKind   PointerSignalKind
