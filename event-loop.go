@@ -24,7 +24,7 @@ type EventLoop struct {
 	// timeout for non-Rendering events that needs to be processed in a polling manner
 	platformMessageRefreshRate time.Duration
 
-	// indetifer for the current thread
+	// identifier for the current thread
 	mainThreadID int64
 }
 
