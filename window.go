@@ -17,6 +17,11 @@ const (
 	// Flutter application has a close button and use PopBehaviorIconify to
 	// minimize or PopBehaviorClose to close the application.
 	WindowModeBorderlessFullscreen
+	// WindowModeMaximize starts the application maximized.
+	WindowModeMaximize
+	// WindowModeBorderlessMaximize starts the application in borderless
+	// maximize mode.
+	WindowModeBorderlessMaximize
 )
 
 // WindowMode sets the window mode on the application.

@@ -97,6 +97,11 @@ func (a *Application) Run() error {
 	switch a.config.windowMode {
 	case WindowModeDefault:
 		// nothing
+	case WindowModeMaximize:
+		glfw.WindowHint(glfw.Maximized, glfw.True)
+	case WindowModeBorderlessMaximize:
+		glfw.WindowHint(glfw.Maximized, glfw.True)
+		glfw.WindowHint(glfw.Decorated, glfw.False)
 	case WindowModeBorderless:
 		glfw.WindowHint(glfw.Decorated, glfw.False)
 	case WindowModeBorderlessFullscreen:
@@ -123,6 +128,9 @@ func (a *Application) Run() error {
 	glfw.WindowHint(glfw.ScaleToMonitor, glfw.True)
 	if a.config.windowAlwaysOnTop {
 		glfw.WindowHint(glfw.Floating, glfw.True)
+	}
+	if a.config.windowTransparent {
+		glfw.WindowHint(glfw.TransparentFramebuffer, glfw.True)
 	}
 
 	if runtime.GOOS == "linux" {

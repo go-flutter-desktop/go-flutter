@@ -19,6 +19,7 @@ type config struct {
 	windowDimensionLimits   windowDimensionLimits
 	windowMode              windowMode
 	windowAlwaysOnTop       bool
+	windowTransparent       bool
 
 	forcePixelRatio float64
 	keyboardLayout  KeyboardShortcuts
@@ -54,6 +55,7 @@ var defaultApplicationConfig = config{
 	keyboardLayout:    KeyboardQwertyLayout,
 	windowMode:        WindowModeDefault,
 	windowAlwaysOnTop: false,
+	windowTransparent: false,
 	scrollAmount:      100.0,
 }
 
@@ -171,6 +173,13 @@ func WindowIcon(iconProivder func() ([]image.Image, error)) Option {
 func ForcePixelRatio(ratio float64) Option {
 	return func(c *config) {
 		c.forcePixelRatio = ratio
+	}
+}
+
+// WindowTransparentBackground sets the init window background to be transparent
+func WindowTransparentBackground(enabled bool) Option {
+	return func(c *config) {
+		c.windowTransparent = enabled
 	}
 }
 
