@@ -21,10 +21,10 @@ package currentthread
 //     return pthread_self();
 //   #endif
 // }
-// size_t getCurrentTheradID() { return (size_t)thrd_current(); }
+// size_t getCurrentThreadID() { return (size_t)thrd_current(); }
 import "C"
 
 // ID returns the id of the current thread
 func ID() int64 {
-	return (int64)(C.getCurrentTheradID())
+	return (int64)(C.getCurrentThreadID())
 }
