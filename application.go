@@ -8,9 +8,10 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/cubiest/jibberjabber"
+	"github.com/Xuanwo/go-locale"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
+	"golang.org/x/text/language"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/debounce"
@@ -267,7 +268,11 @@ func (a *Application) Run() error {
 		os.Exit(1)
 	}
 
-	languageTag, _ := jibberjabber.DetectLanguageTag() // ignore error, always returns a valid Tag
+	languageTag, err := locale.Detect()
+	if err != nil {
+		fmt.Printf("go-flutter: failed to detect locale code: %v\n", err)
+		languageTag = language.English
+	}
 	base, _ := languageTag.Base()
 	region, _ := languageTag.Region()
 	scriptCode, _ := languageTag.Script()
