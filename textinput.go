@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sort"
 	"unicode"
+	"unicode/utf16"
 
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -23,7 +24,7 @@ type textinputPlugin struct {
 
 	clientID        float64
 	clientConf      argSetClientConf
-	word            []rune
+	word            []uint16
 	selectionBase   int
 	selectionExtent int
 
@@ -104,7 +105,7 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetEditingState")
 	}
 
-	p.word = []rune(editingState.Text)
+	p.word = utf16.Encode([]rune(editingState.Text))
 	wordLen := len(p.word)
 
 	// Dart currently inaccuracy calculate the RuneLen
@@ -179,12 +180,12 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 			// Word Backspace
 			if (runtime.GOOS == "darwin" && mods == glfw.ModAlt) || (runtime.GOOS != "darwin" && mods == glfw.ModControl) {
 				// Remove whitespace to the left
-				for p.selectionBase != 0 && unicode.IsSpace(p.word[p.selectionBase-1]) {
+				for p.selectionBase != 0 && unicode.IsSpace(utf16.Decode(p.word)[p.selectionBase-1]) {
 					p.sliceLeftChar()
 				}
 				// Remove non-whitespace to the left
 				for {
-					if p.selectionBase == 0 || unicode.IsSpace(p.word[p.selectionBase-1]) {
+					if p.selectionBase == 0 || unicode.IsSpace(utf16.Decode(p.word)[p.selectionBase-1]) {
 						break
 					}
 					p.sliceLeftChar()
@@ -224,9 +225,9 @@ type argsEditingState struct {
 
 func (p *textinputPlugin) addChar(char []rune) {
 	p.removeSelectedText()
-	newWord := make([]rune, 0, len(char)+len(p.word))
+	newWord := make([]uint16, 0, len(char)+len(p.word))
 	newWord = append(newWord, p.word[:p.selectionBase]...)
-	newWord = append(newWord, char...)
+	newWord = append(newWord, utf16.Encode(char)...)
 	newWord = append(newWord, p.word[p.selectionBase:]...)
 
 	p.word = newWord
@@ -240,7 +241,7 @@ func (p *textinputPlugin) addChar(char []rune) {
 // TextInputClient.updateEditingState in the flutter framework
 func (p *textinputPlugin) updateEditingState() {
 	editingState := argsEditingState{
-		Text:                   string(p.word),
+		Text:                   string(utf16.Decode(p.word)),
 		SelectionAffinity:      "TextAffinity.downstream",
 		SelectionBase:          p.selectionBase,
 		SelectionExtent:        p.selectionExtent,
@@ -283,7 +284,7 @@ type argSetClientConf struct {
 // removeSelectedText do nothing if no text is selected return true if the
 // state needs to updated
 func (p *textinputPlugin) removeSelectedText() bool {
-	selectionIndexStart, selectionIndexEnd, _ := p.getSelectedText()
+	selectionIndexStart, selectionIndexEnd := p.getSelectedText()
 	if selectionIndexStart != selectionIndexEnd {
 		p.word = append(p.word[:selectionIndexStart], p.word[selectionIndexEnd:]...)
 		p.selectionBase = selectionIndexStart
@@ -297,12 +298,11 @@ func (p *textinputPlugin) removeSelectedText() bool {
 
 // getSelectedText return (left index of the selection, right index of the
 // selection, the content of the selection)
-func (p *textinputPlugin) getSelectedText() (int, int, string) {
+func (p *textinputPlugin) getSelectedText() (int, int) {
 	selectionIndex := []int{p.selectionBase, p.selectionExtent}
 	sort.Ints(selectionIndex)
 	return selectionIndex[0],
-		selectionIndex[1],
-		string(p.word[selectionIndex[0]:selectionIndex[1]])
+		selectionIndex[1]
 }
 
 func (p *textinputPlugin) sliceLeftChar() {
