@@ -8,6 +8,7 @@ import (
 	"unicode"
 	"unicode/utf16"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
@@ -180,12 +181,12 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 			// Word Backspace
 			if (runtime.GOOS == "darwin" && mods == glfw.ModAlt) || (runtime.GOOS != "darwin" && mods == glfw.ModControl) {
 				// Remove whitespace to the left
-				for p.selectionBase != 0 && unicode.IsSpace(utf16.Decode(p.word)[p.selectionBase-1]) {
+				for p.selectionBase != 0 && unicode.IsSpace(utf16.Decode([]uint16{p.word[p.selectionBase-1]})[0]) {
 					p.sliceLeftChar()
 				}
 				// Remove non-whitespace to the left
 				for {
-					if p.selectionBase == 0 || unicode.IsSpace(utf16.Decode(p.word)[p.selectionBase-1]) {
+					if p.selectionBase == 0 || unicode.IsSpace(utf16.Decode([]uint16{p.word[p.selectionBase-1]})[0]) {
 						break
 					}
 					p.sliceLeftChar()
@@ -251,6 +252,7 @@ func (p *textinputPlugin) updateEditingState() {
 		p.clientID,
 		editingState,
 	}
+	spew.Dump(editingState)
 	p.channel.InvokeMethod("TextInputClient.updateEditingState", arguments)
 }
 
@@ -307,8 +309,14 @@ func (p *textinputPlugin) getSelectedText() (int, int) {
 
 func (p *textinputPlugin) sliceLeftChar() {
 	if len(p.word) > 0 && p.selectionBase > 0 {
-		p.word = append(p.word[:p.selectionBase-1], p.word[p.selectionBase:]...)
-		p.selectionBase--
+		count := 1
+		// Check if code point appear in a surrogate pair
+		if p.word[p.selectionBase-1] >= 55296 && p.word[p.selectionBase-1] < 57344 {
+			count = 2
+		}
+		p.word = append(p.word[:p.selectionBase-count], p.word[p.selectionBase:]...)
+		p.selectionBase -= count
 		p.selectionExtent = p.selectionBase
+		spew.Dump(p.word)
 	}
 }
