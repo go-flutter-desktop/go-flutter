@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
+	"github.com/go-flutter-desktop/go-flutter/internal/currentthread"
 	"github.com/go-flutter-desktop/go-flutter/internal/priorityqueue"
 )
 
 // EventLoop is a event loop for the main thread that allows for delayed task
-// execution.()
+// execution.
 type EventLoop struct {
 	// store the task (event) by their priorities
 	priorityqueue *priorityqueue.PriorityQueue
@@ -22,10 +23,11 @@ type EventLoop struct {
 
 	// timeout for non-Rendering events that needs to be processed in a polling manner
 	platformMessageRefreshRate time.Duration
+
+	// identifier for the current thread
+	mainThreadID currentthread.ThreadID
 }
 
-// newEventLoop must ALWAYS be called if the calling goroutine is
-// `runtime.LockOSThread()`
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
 	pq := priorityqueue.NewPriorityQueue()
 	heap.Init(pq)
@@ -33,6 +35,7 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 		priorityqueue:  pq,
 		postEmptyEvent: postEmptyEvent,
 		onExpiredTask:  onExpiredTask,
+		mainThreadID:   currentthread.ID(),
 
 		// 25 Millisecond is arbitrary value, not too high (adds too much delay to
 		// platform messages) and not too low (heavy CPU consumption).
@@ -46,17 +49,10 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 	}
 }
 
-// RunOnCurrentThread FlutterDocs:
-//   May be called from any thread. Should return true if tasks posted on the
-//   calling thread will be run on that same thread.
-//
-// The functions PostTask and onExpiredTask should be called from the same
-// thread, this is ensured if the creation of the event loop (through
-// `newEventLoop`) and the PostTask callback (through
-// `a.engine.TaskRunnerPostTask = eventLoop.PostTask`) are done on a calling
-// goroutine which always execute in that thread (`runtime.LockOSThread()`).
+// RunOnCurrentThread return true if tasks posted on the
+// calling thread will be run on that same thread.
 func (t *EventLoop) RunOnCurrentThread() bool {
-	return true
+	return currentthread.Equal(currentthread.ID(), t.mainThreadID)
 }
 
 // PostTask posts a Flutter engine tasks to the event loop for delayed execution.

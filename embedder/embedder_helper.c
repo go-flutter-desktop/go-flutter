@@ -51,7 +51,9 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterPr
 
   FlutterCustomTaskRunners custom_task_runners = {};
   custom_task_runners.struct_size = sizeof(FlutterCustomTaskRunners);
+  // Render task and platform task are handled by the same TaskRunner
   custom_task_runners.platform_task_runner = &platform_task_runner;
+  custom_task_runners.render_task_runner = &platform_task_runner;
   Args->custom_task_runners = &custom_task_runners;
 
   return FlutterEngineRun(FLUTTER_ENGINE_VERSION, &config, Args, user_data,
