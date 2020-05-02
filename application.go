@@ -206,7 +206,6 @@ func (a *Application) Run() error {
 
 	// Attach GL callback functions onto the engine
 	a.engine.GLMakeCurrent = func() bool {
-		fmt.Println("-- GLMakeCurrent")
 		a.window.MakeContextCurrent()
 		return true
 	}
@@ -225,7 +224,6 @@ func (a *Application) Run() error {
 		if a.resourceWindow == nil {
 			return false
 		}
-		fmt.Println("-- GLMakeResourceCurrent")
 		a.resourceWindow.MakeContextCurrent()
 		return true
 	}

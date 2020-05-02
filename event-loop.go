@@ -6,7 +6,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/currentthread"
 	"github.com/go-flutter-desktop/go-flutter/internal/priorityqueue"
@@ -26,13 +25,12 @@ type EventLoop struct {
 	platformMessageRefreshRate time.Duration
 
 	// identifier for the current thread
-	mainThreadID int64
+	mainThreadID currentthread.ThreadID
 }
 
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
 	pq := priorityqueue.NewPriorityQueue()
 	heap.Init(pq)
-	fmt.Println("EventLoop Thread id: " + spew.Sdump(currentthread.ID()))
 	return &EventLoop{
 		priorityqueue:  pq,
 		postEmptyEvent: postEmptyEvent,
@@ -54,9 +52,7 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 // RunOnCurrentThread return true if tasks posted on the
 // calling thread will be run on that same thread.
 func (t *EventLoop) RunOnCurrentThread() bool {
-	id := currentthread.ID()
-	fmt.Println("Task Thread id: " + spew.Sdump(id))
-	return id == t.mainThreadID
+	return currentthread.Equal(currentthread.ID(), t.mainThreadID)
 }
 
 // PostTask posts a Flutter engine tasks to the event loop for delayed execution.
