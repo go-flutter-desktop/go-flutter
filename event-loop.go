@@ -54,8 +54,9 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 // RunOnCurrentThread return true if tasks posted on the
 // calling thread will be run on that same thread.
 func (t *EventLoop) RunOnCurrentThread() bool {
-	fmt.Println("Task Thread id: " + spew.Sdump(currentthread.ID()))
-	return currentthread.ID() == t.mainThreadID
+	id := currentthread.ID()
+	fmt.Println("Task Thread id: " + spew.Sdump(id))
+	return id == t.mainThreadID
 }
 
 // PostTask posts a Flutter engine tasks to the event loop for delayed execution.

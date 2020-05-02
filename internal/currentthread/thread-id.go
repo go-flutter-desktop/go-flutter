@@ -23,8 +23,14 @@ package currentthread
 // }
 // size_t getCurrentThreadID() { return (size_t)thrd_current(); }
 import "C"
+import (
+	"fmt"
+
+	"github.com/davecgh/go-spew/spew"
+)
 
 // ID returns the id of the current thread
 func ID() int64 {
+	fmt.Println("Real Thread id: " + spew.Sdump(C.thrd_current()))
 	return (int64)(C.getCurrentThreadID())
 }
