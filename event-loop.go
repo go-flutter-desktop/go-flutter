@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/currentthread"
 	"github.com/go-flutter-desktop/go-flutter/internal/priorityqueue"
@@ -31,6 +32,7 @@ type EventLoop struct {
 func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
 	pq := priorityqueue.NewPriorityQueue()
 	heap.Init(pq)
+	fmt.Println("EventLoop Thread id: " + spew.Sdump(currentthread.ID()))
 	return &EventLoop{
 		priorityqueue:  pq,
 		postEmptyEvent: postEmptyEvent,
@@ -52,6 +54,7 @@ func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTas
 // RunOnCurrentThread return true if tasks posted on the
 // calling thread will be run on that same thread.
 func (t *EventLoop) RunOnCurrentThread() bool {
+	fmt.Println("Task Thread id: " + spew.Sdump(currentthread.ID()))
 	return currentthread.ID() == t.mainThreadID
 }
 
