@@ -255,9 +255,9 @@ func (a *Application) Run() error {
 	base, _ := languageTag.Base()
 	region, _ := languageTag.Region()
 	scriptCode, _ := languageTag.Script()
-	result := a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
-	if result != embedder.ResultSuccess {
-		fmt.Printf("go-flutter: engine.UpdateSystemLocale() returned result code %d\n", result)
+	err = a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
+	if err != nil {
+		fmt.Printf("go-flutter: %v\n", err)
 	}
 
 	// Register plugins

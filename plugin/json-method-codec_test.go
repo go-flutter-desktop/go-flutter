@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestJSONMethodCodecEncodeDecodeSuccessEnvelope(t *testing.T) {
@@ -46,10 +46,10 @@ func TestJSONMethodCodecEncodeDecodeSuccessEnvelope(t *testing.T) {
 
 	for _, scenario := range scenarios {
 		message, err := codec.EncodeSuccessEnvelope(scenario.value)
-		Nil(t, err)
+		assert.Nil(t, err)
 		decodedMessage, err := codec.DecodeEnvelope(message)
-		Nil(t, err)
-		Equal(t, scenario.decodedMessage, decodedMessage)
+		assert.Nil(t, err)
+		assert.Equal(t, scenario.decodedMessage, decodedMessage)
 	}
 
 	for i, argument := range scenarios {
@@ -58,11 +58,11 @@ func TestJSONMethodCodecEncodeDecodeSuccessEnvelope(t *testing.T) {
 			Method:    methodName,
 			Arguments: argument.value,
 		})
-		Nil(t, err)
+		assert.Nil(t, err)
 		methodCall, err := codec.DecodeMethodCall(binaryMessage)
-		Nil(t, err)
-		Equal(t, methodName, methodCall.Method)
-		Equal(t, argument.decodedMessage, methodCall.Arguments)
+		assert.Nil(t, err)
+		assert.Equal(t, methodName, methodCall.Method)
+		assert.Equal(t, argument.decodedMessage, methodCall.Arguments)
 	}
 }
 
@@ -82,9 +82,9 @@ func TestJSONMethodCodecEncodeDecodeErrorEnvelope(t *testing.T) {
 	codec := JSONMethodCodec{}
 
 	env, err := codec.EncodeErrorEnvelope(errorCode, errorMessage, errorDetails)
-	Nil(t, err)
-	NotNil(t, env)
+	assert.Nil(t, err)
+	assert.NotNil(t, env)
 	result, err := codec.DecodeEnvelope(env)
-	Nil(t, result)
-	Equal(t, expectedFerr, err)
+	assert.Nil(t, result)
+	assert.Equal(t, expectedFerr, err)
 }

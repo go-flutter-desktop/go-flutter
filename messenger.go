@@ -1,7 +1,6 @@
 package flutter
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 	"sync"
@@ -55,14 +54,9 @@ func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryR
 		Message:        binaryMessage,
 		ResponseHandle: responseHandle,
 	}
-	res := m.engine.SendPlatformMessage(msg)
+	err = m.engine.SendPlatformMessage(msg)
 	if err != nil {
-		if ferr, ok := err.(*plugin.FlutterError); ok {
-			return nil, ferr
-		}
-	}
-	if res != embedder.ResultSuccess {
-		return nil, errors.New("failed to send message")
+		return nil, err
 	}
 
 	// wait for a reply and return
@@ -76,14 +70,9 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
 		Channel: channel,
 		Message: binaryMessage,
 	}
-	res := m.engine.SendPlatformMessage(msg)
+	err = m.engine.SendPlatformMessage(msg)
 	if err != nil {
-		if ferr, ok := err.(*plugin.FlutterError); ok {
-			return ferr
-		}
-	}
-	if res != embedder.ResultSuccess {
-		return errors.New("failed to send message")
+		return err
 	}
 
 	return nil
@@ -141,9 +130,9 @@ func (r responseSender) Send(binaryReply []byte) {
 	// It would be preferable to replace this with channels so sending
 	// doesn't have to wait on the main loop to come around.
 	go r.engineTasker.Do(func() {
-		res := r.engine.SendPlatformMessageResponse(r.message.ResponseHandle, binaryReply)
-		if res != embedder.ResultSuccess {
-			fmt.Println("go-flutter: failed sending response for message on channel " + r.message.Channel)
+		err := r.engine.SendPlatformMessageResponse(r.message.ResponseHandle, binaryReply)
+		if err != nil {
+			fmt.Printf("go-flutter: failed sending response for message on channel '%s': %v", r.message.Channel, err)
 		}
 	})
 }

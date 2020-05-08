@@ -3,7 +3,7 @@ package plugin
 import (
 	"testing"
 
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBinaryEncodeDecode(t *testing.T) {
@@ -25,13 +25,13 @@ func TestBinaryEncodeDecode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, v, v2)
+		assert.Equal(t, v, v2)
 	}
 }
 func TestBinaryEncodeFail(t *testing.T) {
 	codec := BinaryCodec{}
 
 	_, err := codec.EncodeMessage("invalid value")
-	NotNil(t, err)
-	Equal(t, "invalid type provided to message codec: expected message to be of type []byte", err.Error())
+	assert.NotNil(t, err)
+	assert.Equal(t, "invalid type provided to message codec: expected message to be of type []byte", err.Error())
 }
