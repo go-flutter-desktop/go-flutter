@@ -12,13 +12,12 @@ import "C"
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
 import "C"
 import (
-	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 	"unsafe"
+
+	"github.com/pkg/errors"
 )
 
 // Result corresponds to the C.enum retuned by the shared flutter library
@@ -75,36 +74,19 @@ type FlutterEngine struct {
 	// Engine arguments
 	AssetsPath  string
 	IcuDataPath string
+
+	// AOT ELF snopshot path
+	// only required for AOT app.
+	ElfSnapshotPath string
 }
 
-// NewFlutterEngine creates an empty FlutterEngine
-// and assigns it an index for global lookup.
+// NewFlutterEngine creates an empty FlutterEngine.
 func NewFlutterEngine() *FlutterEngine {
 	return &FlutterEngine{}
 }
 
 // Run launches the Flutter Engine in a background thread.
-func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
-
-	for range vmArgs {
-		if vmArgs[0] == "" {
-			vmArgs = vmArgs[1:]
-		}
-	}
-	vmArgs = append([]string{"go-flutter"}, vmArgs...)
-
-	if C.FlutterEngineRunsAOTCompiledDartCode() {
-		path, err := filepath.Abs(filepath.Join(filepath.Dir(os.Args[0]), "libapp.so"))
-		if err != nil {
-			fmt.Printf("Failed to resolve AOT snapshot file: %v\n", err)
-			os.Exit(1)
-		}
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Printf("Failed to find AOT snapshot file in %s: %v", path, err)
-			os.Exit(1)
-		}
-		vmArgs = append(vmArgs, "--aot-shared-library-name="+path)
-	}
+func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) error {
 
 	cVMArgs := C.malloc(C.size_t(len(vmArgs)) * C.size_t(unsafe.Sizeof(uintptr(0))))
 	defer C.free(cVMArgs)
@@ -122,20 +104,49 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 	defer C.free(unsafe.Pointer(icuDataPath))
 
 	args := C.FlutterProjectArgs{
-		assets_path:       assetsPath,
-		icu_data_path:     icuDataPath,
-		command_line_argv: (**C.char)(cVMArgs),
-		command_line_argc: C.int(len(vmArgs)),
+		assets_path:                assetsPath,
+		icu_data_path:              icuDataPath,
+		command_line_argv:          (**C.char)(cVMArgs),
+		command_line_argc:          C.int(len(vmArgs)),
+		shutdown_dart_vm_when_done: false,
+	}
+
+	if C.FlutterEngineRunsAOTCompiledDartCode() {
+		// TODO //
+		// https://github.com/flutter/engine/pull/18146
+		/////////
+
+		// elfSnapshotPath := C.CString(flu.ElfSnapshotPath)
+		// defer C.free(unsafe.Pointer(elfSnapshotPath))
+
+		// dataIn := C.FlutterEngineAOTDataSource{
+		// _type:    C.kFlutterEngineAOTDataSourceTypeElfPath,
+		// elf_path: elfSnapshotPath,
+		// }
+		// var dataOut C.FlutterEngineAOTData
+		// C.FlutterEngineCreateAOTData(&dataIn, &dataOut)
+		// args.aot_data = dataOut
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
 
-	res := C.runFlutter(userData, &flu.Engine, &args)
+	res := (Result)(C.runFlutter(userData, &flu.Engine, &args))
 	if flu.Engine == nil {
-		return ResultInvalidArguments
+		return errors.New(fmt.Sprintf("engine.Run() returned result code %d (invalid arguments)", ResultInvalidArguments))
 	}
 
-	return (Result)(res)
+	switch res {
+	case ResultSuccess:
+		return nil
+	case ResultInvalidLibraryVersion:
+		return errors.Errorf("engine.Run() returned result code %d (invalid library version)", res)
+	case ResultInvalidArguments:
+		return errors.Errorf("engine.Run() returned result code %d (invalid arguments)", res)
+	case ResultInternalInconsistency:
+		return errors.Errorf("engine.Run() returned result code %d (internal inconsistency)", res)
+	default:
+		return errors.Errorf("engine.Run() returned result code %d (unknown result code)", res)
+	}
 }
 
 // Shutdown stops the Flutter engine.

@@ -3,7 +3,6 @@ package flutter
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 	"unsafe"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/debounce"
-	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
@@ -40,7 +38,7 @@ type Application struct {
 // NewApplication creates a new application with provided options.
 func NewApplication(opt ...Option) *Application {
 	app := &Application{
-		config: defaultApplicationConfig,
+		config: newApplicationConfig(),
 	}
 
 	// The platformPlugin, textinputPlugin, etc. are currently hardcoded as we
@@ -175,34 +173,32 @@ func (a *Application) Run() error {
 		)
 	}
 
+	// Create a empty FlutterEngine.
 	a.engine = embedder.NewFlutterEngine()
+
+	// Set configuration values to engine.
+	a.engine.AssetsPath = a.config.flutterAssetsPath
+	a.engine.IcuDataPath = a.config.icuDataPath
+	a.engine.ElfSnapshotPath = a.config.elfSnapshotpath
 
 	// Create a messenger and init plugins
 	messenger := newMessenger(a.engine)
+	// Attach PlatformMessage callback function onto the engine
+	a.engine.PlatfromMessage = messenger.handlePlatformMessage
+
 	// Create a TextureRegistry
 	texturer := newTextureRegistry(a.engine, a.window)
+	// Attach TextureRegistry callback function onto the engine
+	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
 	// Create a new eventloop
 	eventLoop := newEventLoop(
 		glfw.PostEmptyEvent, // Wakeup GLFW
 		a.engine.RunTask,    // Flush tasks
 	)
-
-	execPath, err := execpath.ExecPath()
-	if err != nil {
-		return errors.Wrap(err, "failed to resolve path for executable")
-	}
-	// Set configuration values to engine, with fallbacks to sane defaults.
-	if a.config.flutterAssetsPath != "" {
-		a.engine.AssetsPath = a.config.flutterAssetsPath
-	} else {
-		a.engine.AssetsPath = filepath.Join(filepath.Dir(execPath), "flutter_assets")
-	}
-	if a.config.icuDataPath != "" {
-		a.engine.IcuDataPath = a.config.icuDataPath
-	} else {
-		a.engine.IcuDataPath = filepath.Join(filepath.Dir(execPath), "icudtl.dat")
-	}
+	// Attach TaskRunner callback functions onto the engine
+	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
+	a.engine.TaskRunnerPostTask = eventLoop.PostTask
 
 	// Attach GL callback functions onto the engine
 	a.engine.GLMakeCurrent = func() bool {
@@ -230,14 +226,6 @@ func (a *Application) Run() error {
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
 	}
-	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
-
-	// Attach TaskRunner callback functions onto the engine
-	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
-	a.engine.TaskRunnerPostTask = eventLoop.PostTask
-
-	// Attach PlatformMessage callback functions onto the engine
-	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
 	// Not very nice, but we can only really fix this when there's a pluggable
 	// renderer.
@@ -253,18 +241,9 @@ func (a *Application) Run() error {
 	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
 	// Start the engine
-	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
-	if result != embedder.ResultSuccess {
-		switch result {
-		case embedder.ResultInvalidLibraryVersion:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid library version)\n", result)
-		case embedder.ResultInvalidArguments:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid arguments)\n", result)
-		case embedder.ResultInternalInconsistency:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (internal inconsistency)\n", result)
-		default:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (unknown result code)\n", result)
-		}
+	err = a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
+	if err != nil {
+		fmt.Printf("go-flutter: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -276,7 +255,7 @@ func (a *Application) Run() error {
 	base, _ := languageTag.Base()
 	region, _ := languageTag.Region()
 	scriptCode, _ := languageTag.Script()
-	result = a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
+	result := a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
 	if result != embedder.ResultSuccess {
 		fmt.Printf("go-flutter: engine.UpdateSystemLocale() returned result code %d\n", result)
 	}
