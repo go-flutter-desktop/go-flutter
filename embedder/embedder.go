@@ -122,10 +122,11 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) Result {
 	defer C.free(unsafe.Pointer(icuDataPath))
 
 	args := C.FlutterProjectArgs{
-		assets_path:       assetsPath,
-		icu_data_path:     icuDataPath,
-		command_line_argv: (**C.char)(cVMArgs),
-		command_line_argc: C.int(len(vmArgs)),
+		assets_path:                assetsPath,
+		icu_data_path:              icuDataPath,
+		command_line_argv:          (**C.char)(cVMArgs),
+		command_line_argc:          C.int(len(vmArgs)),
+		shutdown_dart_vm_when_done: true,
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
