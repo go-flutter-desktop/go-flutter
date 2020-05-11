@@ -11,6 +11,7 @@ import (
 type config struct {
 	flutterAssetsPath string
 	icuDataPath       string
+	title             string
 	vmArguments       []string
 
 	windowIconProvider      func() ([]image.Image, error)
@@ -91,6 +92,13 @@ func OptionVMArguments(a []string) Option {
 	return func(c *config) {
 		// First should be argument is argv[0]
 		c.vmArguments = append([]string{""}, a...)
+	}
+}
+
+// WindowTitle specify the title for the window.
+func WindowTitle(title string) Option {
+	return func(c *config) {
+		c.title = title
 	}
 }
 

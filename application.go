@@ -139,7 +139,14 @@ func (a *Application) Run() error {
 		glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI)
 	}
 
-	a.window, err = glfw.CreateWindow(a.config.windowInitialDimensions.width, a.config.windowInitialDimensions.height, "Loading..", monitor, nil)
+	a.window, err = glfw.CreateWindow(
+		a.config.windowInitialDimensions.width,
+		a.config.windowInitialDimensions.height,
+		a.config.title,
+		monitor,
+		nil,
+	)
+
 	if err != nil {
 		return errors.Wrap(err, "creating glfw window")
 	}
