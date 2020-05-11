@@ -10,6 +10,7 @@ import "C"
 //                             FlutterPlatformMessageResponseHandle **reply);
 // const int32_t kFlutterSemanticsNodeIdBatchEnd = -1;
 // const int32_t kFlutterSemanticsCustomActionIdBatchEnd = -1;
+// FlutterEngineAOTDataSource* createAOTDataSource(FlutterEngineAOTDataSource *data_in, const char * elfSnapshotPath);
 import "C"
 import (
 	"fmt"
@@ -78,7 +79,7 @@ type FlutterEngine struct {
 	// AOT ELF snopshot path
 	// only required for AOT app.
 	ElfSnapshotPath string
-	// aotDataSource   C.FlutterEngineAOTData
+	aotDataSource   C.FlutterEngineAOTData
 }
 
 // GoError convert a FlutterEngineResult to a golang readable error
@@ -131,22 +132,16 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) error {
 	}
 
 	if C.FlutterEngineRunsAOTCompiledDartCode() {
-		// TODO //
-		// https://github.com/flutter/engine/pull/18146
-		/////////
+		elfSnapshotPath := C.CString(flu.ElfSnapshotPath)
+		defer C.free(unsafe.Pointer(elfSnapshotPath))
 
-		// elfSnapshotPath := C.CString(flu.ElfSnapshotPath)
-		// defer C.free(unsafe.Pointer(elfSnapshotPath))
-
-		// dataIn := C.FlutterEngineAOTDataSource{
-		// _type:    C.kFlutterEngineAOTDataSourceTypeElfPath,
-		// elf_path: elfSnapshotPath,
-		// }
-		// res := C.FlutterEngineCreateAOTData(&dataIn, &flu.aotDataSource)
-		// if res != ResultSuccess {
-		// return res.GoError("C.FlutterEngineCreateAOTData()")
-		// }
-		// args.aot_data = flu.aotDataSource
+		dataIn := C.FlutterEngineAOTDataSource{}
+		C.createAOTDataSource(&dataIn, elfSnapshotPath)
+		res := (Result)(C.FlutterEngineCreateAOTData(&dataIn, &flu.aotDataSource))
+		if res != ResultSuccess {
+			return res.GoError("C.FlutterEngineCreateAOTData()")
+		}
+		args.aot_data = flu.aotDataSource
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
@@ -164,17 +159,19 @@ func (flu *FlutterEngine) Shutdown() error {
 	flu.sync.Lock()
 	defer flu.sync.Unlock()
 	flu.closed = true
-	defer func() {
-		if C.FlutterEngineRunsAOTCompiledDartCode() {
-			// res := C.FlutterEngineCollectAOTData(flu.aotDataSource)
-			// if res != ResultSuccess {
-			// fmt.Printf("go-flutter: failed to collect AOT Data handle\n")
-			// }
-		}
-	}()
 
-	res := C.FlutterEngineShutdown(flu.Engine)
-	return (Result)(res).GoError("engine.Shutdown()")
+	res := (Result)(C.FlutterEngineShutdown(flu.Engine))
+	if res != ResultSuccess {
+		return res.GoError("engine.Shutdown()")
+	}
+
+	if C.FlutterEngineRunsAOTCompiledDartCode() {
+		res := (Result)(C.FlutterEngineCollectAOTData(flu.aotDataSource))
+		if res != ResultSuccess {
+			return res.GoError("engine.Shutdown()")
+		}
+	}
+	return nil
 }
 
 // PointerPhase corresponds to the C.enum describing phase of the mouse pointer.
