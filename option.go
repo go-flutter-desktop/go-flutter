@@ -53,7 +53,7 @@ type windowDimensionLimits struct {
 func newApplicationConfig() config {
 	execPath, err := execpath.ExecPath()
 	if err != nil {
-		fmt.Printf("go-flutter: failed to resolve path for executable: %v")
+		fmt.Printf("go-flutter: failed to resolve path for executable: %v", err)
 		os.Exit(1)
 	}
 	return config{

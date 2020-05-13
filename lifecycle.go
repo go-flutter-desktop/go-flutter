@@ -18,8 +18,6 @@ type lifecyclePlugin struct {
 // all hardcoded because theres not pluggable renderer system.
 var defaultLifecyclePlugin = &lifecyclePlugin{}
 
-var _ Plugin = &lifecyclePlugin{} // compile-time type check
-
 func (p *lifecyclePlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.channel = plugin.NewBasicMessageChannel(messenger, lifecycleChannelName, plugin.StringCodec{})
 	return nil

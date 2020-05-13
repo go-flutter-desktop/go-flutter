@@ -117,8 +117,6 @@ type responseSender struct {
 	engineTasker *tasker.Tasker
 }
 
-var _ plugin.ResponseSender = responseSender{} // compile-time type check
-
 func (r responseSender) Send(binaryReply []byte) {
 	if !r.message.ExpectsResponse() {
 		return // quick path when no response should be sent

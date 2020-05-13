@@ -33,9 +33,6 @@ var defaultPlatformPlugin = &platformPlugin{
 	popBehavior: PopBehaviorNone,
 }
 
-var _ Plugin = &platformPlugin{}     // compile-time type check
-var _ PluginGLFW = &platformPlugin{} // compile-time type check
-
 func (p *platformPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.messenger = messenger
 	p.glfwTasker = tasker.New()
