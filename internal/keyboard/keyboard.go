@@ -11,11 +11,11 @@ import (
 // Event corresponds to a Flutter (dart) compatible RawKeyEventData keyevent data.
 // Multi-platform keycode translation is handled withing this package.
 //
-// As input, go-flutter gets GLFW event only compatible with RawKeyEventDataLinux.
-// To fully support keyboard shortcut (like Command+C to copy on darwin), the
-// flutter framework expect the sent keyevent data to be in the form of a
-// RawKeyEventDataMacOs keyevent data.
-// This package maps the GLFW key-codes to MacOS ones.
+// As input, go-flutter gets GLFW-keyevent who are only compatible with
+// RawKeyEventDataLinux. To fully support keyboard shortcut (like Command+C to
+// copy on darwin), the flutter framework expect the sent keyevent data to be
+// in the form of a RawKeyEventDataMacOs keyevent data.
+// This package maps the GLFW key-codes to the MacOS ones.
 //
 // On the flutter framework side:
 //    RawKeyEventDataMacOs data is received for darwin
