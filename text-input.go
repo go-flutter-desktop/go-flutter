@@ -8,7 +8,6 @@ import (
 	"unicode"
 	"unicode/utf16"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
@@ -19,35 +18,42 @@ const textinputChannelName = "flutter/textinput"
 // textinputPlugin implements flutter.Plugin and handles method calls to the
 // flutter/textinput channel.
 type textinputPlugin struct {
-	messenger plugin.BinaryMessenger
-	window    *glfw.Window
-	channel   *plugin.MethodChannel
+	channel *plugin.MethodChannel
 
-	clientID        float64
-	clientConf      argSetClientConf
-	word            []uint16
-	selectionBase   int
-	selectionExtent int
+	clientID   float64
+	clientConf argSetClientConf
+	ed         argsEditingState
 
 	virtualKeyboardShow func()
 	virtualKeyboardHide func()
 }
 
+// argSetClientConf is used to define the config of the TextInput. Options used:
+//   The type of information for which to optimize the text input control.
+//   An action the user has requested the text input control to perform.
+//   Configures how the platform keyboard will select an uppercase or lowercase keyboard.
+type argSetClientConf struct {
+	InputType struct {
+		Name string `json:"name"`
+	} `json:"inputType"`
+	InputAction        string `json:"inputAction"`
+	TextCapitalization string `json:"textCapitalization"`
+}
+
+// argsEditingState is used to hold the current TextInput state.
+type argsEditingState struct {
+	Text              string `json:"text"`
+	utf16Text         []uint16
+	SelectionBase     int    `json:"selectionBase"`
+	SelectionExtent   int    `json:"selectionExtent"`
+	SelectionAffinity string `json:"selectionAffinity"`
+}
+
 // all hardcoded because theres not pluggable renderer system.
 var defaultTextinputPlugin = &textinputPlugin{}
 
-var _ Plugin = &textinputPlugin{}     // compile-time type check
-var _ PluginGLFW = &textinputPlugin{} // compile-time type check
-
 func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
-	p.messenger = messenger
-
-	return nil
-}
-
-func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
-	p.window = window
-	p.channel = plugin.NewMethodChannel(p.messenger, textinputChannelName, plugin.JSONMethodCodec{})
+	p.channel = plugin.NewMethodChannel(messenger, textinputChannelName, plugin.JSONMethodCodec{})
 	p.channel.HandleFuncSync("TextInput.setClient", p.handleSetClient)
 	p.channel.HandleFuncSync("TextInput.clearClient", p.handleClearClient)
 	p.channel.HandleFuncSync("TextInput.setEditingState", p.handleSetEditingState)
@@ -67,6 +73,9 @@ func (p *textinputPlugin) InitPluginGLFW(window *glfw.Window) error {
 	p.channel.HandleFuncSync("TextInput.setStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
 	// Ignored: This information is used by the flutter Web Engine
 	p.channel.HandleFuncSync("TextInput.setEditableSizeAndTransform", func(_ interface{}) (interface{}, error) { return nil, nil })
+	// Ignored: This information is used by flutter on Android, iOS and web
+	p.channel.HandleFuncSync("TextInput.requestAutofill", func(_ interface{}) (interface{}, error) { return nil, nil })
+
 	return nil
 }
 
@@ -100,36 +109,24 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 		return nil, errors.New("cannot set editing state when no client is selected")
 	}
 
-	editingState := argsEditingState{}
-	err = json.Unmarshal(arguments.(json.RawMessage), &editingState)
+	err = json.Unmarshal(arguments.(json.RawMessage), &p.ed)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetEditingState")
 	}
 
-	p.word = utf16.Encode([]rune(editingState.Text))
-	wordLen := len(p.word)
+	p.ed.utf16Text = utf16.Encode([]rune(p.ed.Text))
+	utf16TextLen := len(p.ed.utf16Text)
 
-	// Dart currently inaccuracy calculate the RuneLen
-	var errorMsg string
-	if editingState.SelectionBase > wordLen || editingState.SelectionExtent > wordLen {
-		errorMsg = fmt.Sprintf("invalid cursor position, bounds out of range: selectionBase:%v, selectionExtent:%v, len(text): %v. Refer to go-flutter-desktop/go-flutter#332\n",
-			editingState.SelectionBase, editingState.SelectionExtent, len(p.word))
-	}
 	// sometimes flutter sends invalid cursor position
-	if editingState.SelectionBase < 0 || editingState.SelectionExtent < 0 {
-		errorMsg = fmt.Sprintf("invalid text selection: selectionBase:%v, selectionExtent:%v. Refer to go-flutter-desktop/go-flutter#221\n",
-			editingState.SelectionBase, editingState.SelectionExtent)
-	}
-	if errorMsg != "" {
-		p.selectionBase = wordLen
-		p.selectionExtent = wordLen
-		p.updateEditingState()
-		fmt.Printf("go-flutter: recover from wrong editingState: %s", errorMsg)
-		return nil, nil
+	if p.ed.SelectionBase < 0 ||
+		p.ed.SelectionExtent < 0 ||
+		p.ed.SelectionBase > utf16TextLen ||
+		p.ed.SelectionExtent > utf16TextLen {
+		// request a new EditingState
+		err := p.channel.InvokeMethod("TextInputClient.requestExistingInputState", nil)
+		return nil, err
 	}
 
-	p.selectionBase = editingState.SelectionBase
-	p.selectionExtent = editingState.SelectionExtent
 	return nil, nil
 }
 
@@ -144,7 +141,7 @@ func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
 	if p.clientConf.TextCapitalization == "TextCapitalization.characters" {
 		char = unicode.ToUpper(char)
 	}
-	p.addChar([]rune{char})
+	p.addText(char)
 }
 
 func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -166,7 +163,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				p.performAction("TextInputAction.done")
 				return
 			} else if p.clientConf.InputType.Name == "TextInputType.multiline" {
-				p.addChar([]rune{'\n'})
+				p.addText('\n')
 			}
 			// this action is described by argSetClientConf.
 			p.performAction(p.clientConf.InputAction)
@@ -181,12 +178,12 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 			// Word Backspace
 			if (runtime.GOOS == "darwin" && mods == glfw.ModAlt) || (runtime.GOOS != "darwin" && mods == glfw.ModControl) {
 				// Remove whitespace to the left
-				for p.selectionBase != 0 && unicode.IsSpace(utf16.Decode([]uint16{p.word[p.selectionBase-1]})[0]) {
+				for p.ed.SelectionBase != 0 && unicode.IsSpace(utf16.Decode([]uint16{p.ed.utf16Text[p.ed.SelectionBase-1]})[0]) {
 					p.sliceLeftChar()
 				}
 				// Remove non-whitespace to the left
 				for {
-					if p.selectionBase == 0 || unicode.IsSpace(utf16.Decode([]uint16{p.word[p.selectionBase-1]})[0]) {
+					if p.ed.SelectionBase == 0 || unicode.IsSpace(utf16.Decode([]uint16{p.ed.utf16Text[p.ed.SelectionBase-1]})[0]) {
 						break
 					}
 					p.sliceLeftChar()
@@ -214,45 +211,29 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 	}
 }
 
-type argsEditingState struct {
-	Text                   string `json:"text"`
-	SelectionBase          int    `json:"selectionBase"`
-	SelectionExtent        int    `json:"selectionExtent"`
-	SelectionAffinity      string `json:"selectionAffinity"`
-	SelectionIsDirectional bool   `json:"selectionIsDirectional"`
-	ComposingBase          int    `json:"composingBase"`
-	ComposingExtent        int    `json:"composingExtent"`
-}
-
-func (p *textinputPlugin) addChar(char []rune) {
+func (p *textinputPlugin) addText(text rune) {
 	p.removeSelectedText()
-	newWord := make([]uint16, 0, len(char)+len(p.word))
-	newWord = append(newWord, p.word[:p.selectionBase]...)
-	newWord = append(newWord, utf16.Encode(char)...)
-	newWord = append(newWord, p.word[p.selectionBase:]...)
+	utf16text := utf16.Encode([]rune{text})
+	utf16TextLen := len(p.ed.utf16Text) + len(utf16text)
+	newText := make([]uint16, 0, utf16TextLen)
+	newText = append(newText, p.ed.utf16Text[:p.ed.SelectionBase]...)
+	newText = append(newText, utf16text...)
+	newText = append(newText, p.ed.utf16Text[p.ed.SelectionBase:]...)
+	p.ed.utf16Text = newText
 
-	p.word = newWord
-
-	p.selectionBase += len(char)
-	p.selectionExtent = p.selectionBase
+	p.ed.SelectionBase++
+	p.ed.SelectionExtent = p.ed.SelectionBase
 	p.updateEditingState()
 }
 
 // UpupdateEditingState updates the TextInput with the current state by invoking
 // TextInputClient.updateEditingState in the flutter framework
 func (p *textinputPlugin) updateEditingState() {
-	editingState := argsEditingState{
-		Text:                   string(utf16.Decode(p.word)),
-		SelectionAffinity:      "TextAffinity.downstream",
-		SelectionBase:          p.selectionBase,
-		SelectionExtent:        p.selectionExtent,
-		SelectionIsDirectional: false,
-	}
+	p.ed.Text = string(utf16.Decode(p.ed.utf16Text))
 	arguments := []interface{}{
 		p.clientID,
-		editingState,
+		p.ed,
 	}
-	spew.Dump(editingState)
 	p.channel.InvokeMethod("TextInputClient.updateEditingState", arguments)
 }
 
@@ -271,52 +252,38 @@ func (p *textinputPlugin) performTextInputAction() {
 	p.performAction(p.clientConf.InputAction)
 }
 
-// argSetClientConf is used to define the config of the TextInput. Options used:
-//   The type of information for which to optimize the text input control.
-//   An action the user has requested the text input control to perform.
-//   Configures how the platform keyboard will select an uppercase or lowercase keyboard.
-type argSetClientConf struct {
-	InputType struct {
-		Name string `json:"name"`
-	} `json:"inputType"`
-	InputAction        string `json:"inputAction"`
-	TextCapitalization string `json:"textCapitalization"`
-}
-
 // removeSelectedText do nothing if no text is selected return true if the
 // state needs to updated
 func (p *textinputPlugin) removeSelectedText() bool {
 	selectionIndexStart, selectionIndexEnd := p.getSelectedText()
 	if selectionIndexStart != selectionIndexEnd {
-		p.word = append(p.word[:selectionIndexStart], p.word[selectionIndexEnd:]...)
-		p.selectionBase = selectionIndexStart
-		p.selectionExtent = selectionIndexStart
-		p.selectionExtent = p.selectionBase
+		p.ed.utf16Text = append(p.ed.utf16Text[:selectionIndexStart], p.ed.utf16Text[selectionIndexEnd:]...)
+		p.ed.SelectionBase = selectionIndexStart
+		p.ed.SelectionExtent = selectionIndexStart
 		return true
 	}
 	return false
 
 }
 
-// getSelectedText return (left index of the selection, right index of the
+// getSelectedText return a tuple containing: (left index of the selection, right index of the
 // selection, the content of the selection)
 func (p *textinputPlugin) getSelectedText() (int, int) {
-	selectionIndex := []int{p.selectionBase, p.selectionExtent}
+	selectionIndex := []int{p.ed.SelectionBase, p.ed.SelectionExtent}
 	sort.Ints(selectionIndex)
 	return selectionIndex[0],
 		selectionIndex[1]
 }
 
 func (p *textinputPlugin) sliceLeftChar() {
-	if len(p.word) > 0 && p.selectionBase > 0 {
+	if len(p.ed.utf16Text) > 0 && p.ed.SelectionBase > 0 {
 		count := 1
 		// Check if code point appear in a surrogate pair
-		if p.word[p.selectionBase-1] >= 55296 && p.word[p.selectionBase-1] < 57344 {
+		if utf16.IsSurrogate(rune(p.ed.utf16Text[p.ed.SelectionBase-1])) {
 			count = 2
 		}
-		p.word = append(p.word[:p.selectionBase-count], p.word[p.selectionBase:]...)
-		p.selectionBase -= count
-		p.selectionExtent = p.selectionBase
-		spew.Dump(p.word)
+		p.ed.utf16Text = append(p.ed.utf16Text[:p.ed.SelectionBase-count], p.ed.utf16Text[p.ed.SelectionBase:]...)
+		p.ed.SelectionBase -= count
+		p.ed.SelectionExtent = p.ed.SelectionBase
 	}
 }
