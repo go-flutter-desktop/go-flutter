@@ -59,7 +59,7 @@ func Normalize(key glfw.Key, scancode int, mods glfw.ModifierKey, action glfw.Ac
 	defer func() {
 		p := recover()
 		if p != nil {
-			fmt.Printf("recovered from panic while handling %s event: %v\n", typeKey, p)
+			fmt.Printf("go-flutter: recovered from panic while handling %s event: %v\n", typeKey, p)
 			debug.PrintStack()
 		}
 	}()
