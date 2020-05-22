@@ -167,6 +167,8 @@ func (a *Application) Run() error {
 		a.window.SetIcon(images)
 	}
 
+	a.window.SetTitle(ProjectName)
+
 	if a.config.windowDimensionLimits.minWidth != 0 {
 		a.window.SetSizeLimits(
 			a.config.windowDimensionLimits.minWidth,

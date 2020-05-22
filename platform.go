@@ -97,18 +97,6 @@ func (p *platformPlugin) handleClipboardGetData(arguments interface{}) (reply in
 }
 
 func (p *platformPlugin) handleWindowSetTitle(arguments interface{}) (reply interface{}, err error) {
-	appSwitcherDescription := struct {
-		Label        string `json:"label"`
-		PrimaryColor int64  `json:"primaryColor"`
-	}{}
-	err = json.Unmarshal(arguments.(json.RawMessage), &appSwitcherDescription)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode arguments")
-	}
-	p.glfwTasker.Do(func() {
-		p.window.SetTitle(appSwitcherDescription.Label)
-	})
-
 	// triggers flutter framework initialized callbacks
 	for _, f := range p.flutterInitialized {
 		f()
