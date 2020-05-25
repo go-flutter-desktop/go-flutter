@@ -86,6 +86,10 @@ func (p *textinputPlugin) handleSetClient(arguments interface{}) (reply interfac
 		return nil, errors.Wrap(err, "failed to decode json arguments for handleSetClient")
 	}
 
+	if len(args) < 2 {
+		return nil, errors.New("failed to read client args for handleSetClient")
+	}
+
 	err = json.Unmarshal(args[0], &p.clientID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to decode clientID for handleSetClient")

@@ -47,7 +47,8 @@ func (p *keyeventPlugin) sendKeyEvent(window *glfw.Window, key glfw.Key, scancod
 		return
 	}
 
-	if err := p.channel.Send(event); err != nil {
+	err = p.channel.Send(event)
+	if err != nil {
 		fmt.Printf("go-flutter: Failed to send raw_keyboard event %v: %v\n", event, err)
 	}
 
