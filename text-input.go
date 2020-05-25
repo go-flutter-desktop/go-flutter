@@ -3,11 +3,11 @@ package flutter
 import (
 	"encoding/json"
 	"fmt"
-	"runtime"
 	"sort"
 	"unicode"
 	"unicode/utf16"
 
+	"github.com/go-flutter-desktop/go-flutter/internal/keyboard"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
@@ -162,7 +162,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 
 		// Enter
 		if key == glfw.KeyEnter {
-			if (runtime.GOOS == "darwin" && mods == glfw.ModSuper) || (runtime.GOOS != "darwin" && mods == glfw.ModControl) {
+			if keyboard.DetectTextInputDoneMod(mods) {
 				// Indicates that they are done typing in the TextInput
 				p.performAction("TextInputAction.done")
 				return
@@ -180,7 +180,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 				return
 			}
 			// Word Backspace
-			if (runtime.GOOS == "darwin" && mods == glfw.ModAlt) || (runtime.GOOS != "darwin" && mods == glfw.ModControl) {
+			if keyboard.DetectWordMod(mods) {
 				// Remove whitespace to the left
 				for p.ed.SelectionBase != 0 && unicode.IsSpace(utf16.Decode([]uint16{p.ed.utf16Text[p.ed.SelectionBase-1]})[0]) {
 					p.sliceLeftChar()
