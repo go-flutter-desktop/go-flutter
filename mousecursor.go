@@ -1,7 +1,6 @@
 package flutter
 
 import (
-	"errors"
 	"fmt"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -37,24 +36,23 @@ func (p *mousecursorPlugin) handleActivateSystemCursor(arguments interface{}) (r
 		p.window.SetInputMode(glfw.CursorMode, glfw.CursorNormal)
 	}
 	switch kind := args["kind"]; {
-	case kind == "none":
-	case kind == "basic" || kind == "forbidden" || kind == "grab" || kind == "grabbing":
+	case kind == "none" || kind == "basic":
+		// nil cursor resets to standard arrow cursor
+	case kind == "forbidden" || kind == "grab" || kind == "grabbing":
+		// nil cursor resets to standard arrow cursor
 		// go-gl GLFW currently (latest tagged v3.3 version) has no cursors for "forbidden", "grab" and "grabbing"
 		// TODO: Wait for https://github.com/glfw/glfw/commit/7dbdd2e6a5f01d2a4b377a197618948617517b0e to appear in go-gl GLFW and implement the "forbidden" cursor
-		cursor = glfw.CreateStandardCursor(glfw.ArrowCursor)
 	case kind == "click":
 		cursor = glfw.CreateStandardCursor(glfw.HandCursor)
 	case kind == "text":
 		cursor = glfw.CreateStandardCursor(glfw.IBeamCursor)
 	default:
-		return nil, errors.New(fmt.Sprintf("cursor kind %s not implemented", args["kind"]))
+		return nil, fmt.Errorf("cursor kind %s not implemented", args["kind"])
 	}
+	p.window.SetCursor(cursor)
 	if p.lastCursor != nil {
 		p.lastCursor.Destroy()
 	}
-	if cursor != nil {
-		p.window.SetCursor(cursor)
-		p.lastCursor = cursor
-	}
+	p.lastCursor = cursor
 	return nil, nil
 }
