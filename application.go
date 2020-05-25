@@ -119,6 +119,13 @@ func (a *Application) Run() error {
 
 	opengl.GLFWWindowHint()
 
+	{
+		// TODO(drakirus): Delete this when https://github.com/go-gl/glfw/issues/272 is resolved.
+		// Post an empty event from the main thread before it can happen in a non-main thread,
+		// to work around https://github.com/glfw/glfw/issues/1649.
+		glfw.PostEmptyEvent()
+	}
+
 	if a.config.windowInitialLocation.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
 		// using the Visible window hint, set its position and then show it.
