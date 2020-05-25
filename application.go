@@ -16,7 +16,6 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/internal/debounce"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
-	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
 // Run executes a flutter application with the provided options.
@@ -289,9 +288,8 @@ func (a *Application) Run() error {
 	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
 	if initialRoute != "" {
 		defaultPlatformPlugin.addFrameworkReadyCallback(func() {
-			plugin.
-				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
-				InvokeMethod("pushRoute", initialRoute)
+			defaultNavigationPlugin.
+				channel.InvokeMethod("pushRoute", initialRoute)
 		})
 	}
 
@@ -349,7 +347,6 @@ func (a *Application) Run() error {
 
 		// Execute tasks that MUST be run in the engine thread (!blocks rendering!)
 		glfwDebouceTasker.ExecuteTasks()
-		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 		texturer.engineTasker.ExecuteTasks()
 	}
