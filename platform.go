@@ -36,8 +36,9 @@ func (p *platformPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 
 	channel.HandleFuncSync("Clipboard.setData", p.handleClipboardSetData)
 	channel.HandleFuncSync("Clipboard.getData", p.handleClipboardGetData)
+	channel.HandleFuncSync("SystemNavigator.pop", p.handleSystemNavigatorPop)
 	channel.HandleFunc("SystemChrome.setApplicationSwitcherDescription", p.handleWindowSetTitle)
-	channel.HandleFunc("SystemNavigator.pop", p.handleSystemNavigatorPop)
+
 	// Ignored: Desktop's don't have system overlays
 	channel.HandleFuncSync("SystemChrome.setSystemUIOverlayStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
 	// Ignored: Desktop's don't have haptic feedback
