@@ -139,7 +139,7 @@ func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
 		return
 	}
 	// Opinionated: If a flutter dev uses TextCapitalization.characters
-	//              in a TextField, that means he wants only to receive
+	//              in a TextField, that means she/he wants to receive
 	//              uppercase characters.
 	// TODO(Drakirus): Handle language-specific case mappings such as Turkish.
 	if p.clientConf.TextCapitalization == "TextCapitalization.characters" {
