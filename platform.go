@@ -30,6 +30,8 @@ var defaultPlatformPlugin = &platformPlugin{
 	popBehavior: PopBehaviorNone,
 }
 
+var _ PluginGLFW = &platformPlugin{} // compile-time type check
+
 func (p *platformPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.messenger = messenger
 	channel := plugin.NewMethodChannel(p.messenger, "flutter/platform", plugin.JSONMethodCodec{})

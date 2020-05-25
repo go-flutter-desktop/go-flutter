@@ -66,6 +66,8 @@ const (
 //
 type StandardMessageCodec struct{}
 
+var _ MessageCodec = StandardMessageCodec{} // compile-time type check
+
 // EncodeMessage encodes message to bytes using the Flutter standard message encoding.
 // message is expected to be comprised of supported types. See `type StandardMessageCodec`.
 func (s StandardMessageCodec) EncodeMessage(message interface{}) ([]byte, error) {
