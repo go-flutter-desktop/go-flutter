@@ -59,7 +59,6 @@ func newApplicationConfig() config {
 			width:  800,
 			height: 600,
 		},
-		keyboardLayout:    KeyboardQwertyLayout,
 		windowMode:        WindowModeDefault,
 		windowAlwaysOnTop: false,
 		windowTransparent: false,
