@@ -27,8 +27,6 @@ func NewTestingBinaryMessenger() *TestingBinaryMessenger {
 	}
 }
 
-var _ BinaryMessenger = &TestingBinaryMessenger{} // compile-time type check
-
 func (t *TestingBinaryMessenger) Send(channel string, message []byte) (err error) {
 	err = t.Send(channel, message)
 	return err

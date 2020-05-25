@@ -15,8 +15,6 @@ type navigationPlugin struct {
 // all hardcoded because theres not pluggable renderer system.
 var defaultNavigationPlugin = &navigationPlugin{}
 
-var _ Plugin = &navigationPlugin{} // compile-time type check
-
 func (p *navigationPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.channel = plugin.NewMethodChannel(messenger, navigationChannelName, plugin.JSONMethodCodec{})
 	return nil

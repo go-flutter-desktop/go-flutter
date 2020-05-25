@@ -60,6 +60,12 @@ FlutterEngineResult runFlutter(void *user_data, FlutterEngine *engine, FlutterPr
                           engine);
 }
 
+FlutterEngineAOTDataSource* createAOTDataSource(FlutterEngineAOTDataSource *data_in, const char * elfSnapshotPath) {
+  data_in->type = kFlutterEngineAOTDataSourceTypeElfPath;
+  data_in->elf_path = elfSnapshotPath;
+  return data_in;
+}
+
 FlutterEngineResult
 createMessageResponseHandle(FlutterEngine engine, void *user_data,
                             FlutterPlatformMessageResponseHandle **reply) {

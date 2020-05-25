@@ -1,10 +1,7 @@
 package flutter
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/go-flutter-desktop/go-flutter/embedder"
+	"github.com/pkg/errors"
 )
 
 // Texture is an identifier for texture declaration
@@ -16,28 +13,28 @@ type Texture struct {
 // Register registers a textureID with his associated handler
 func (t *Texture) Register(handler ExternalTextureHanlderFunc) error {
 	t.registry.setTextureHandler(t.ID, handler)
-	result := t.registry.engine.RegisterExternalTexture(t.ID)
-	if result != embedder.ResultSuccess {
+	err := t.registry.engine.RegisterExternalTexture(t.ID)
+	if err != nil {
 		t.registry.setTextureHandler(t.ID, nil)
-		return errors.New("'go-flutter' couldn't register texture with id: " + fmt.Sprint(t.ID))
+		return errors.Errorf("'go-flutter' couldn't register texture with id: '%v': %v", t.ID, err)
 	}
 	return nil
 }
 
 // FrameAvailable mark a texture buffer is ready to be draw in the flutter scene
 func (t *Texture) FrameAvailable() error {
-	result := t.registry.engine.MarkExternalTextureFrameAvailable(t.ID)
-	if result != embedder.ResultSuccess {
-		return errors.New("'go-flutter' couldn't mark frame available of texture with id: " + fmt.Sprint(t.ID))
+	err := t.registry.engine.MarkExternalTextureFrameAvailable(t.ID)
+	if err != nil {
+		return errors.Errorf("'go-flutter' couldn't mark frame available of texture with id: '%v': %v", t.ID, err)
 	}
 	return nil
 }
 
 // UnRegister unregisters a textureID with his associated handler
 func (t *Texture) UnRegister() error {
-	result := t.registry.engine.UnregisterExternalTexture(t.ID)
-	if result != embedder.ResultSuccess {
-		return errors.New("'go-flutter' couldn't unregisters texture with id: " + fmt.Sprint(t.ID))
+	err := t.registry.engine.UnregisterExternalTexture(t.ID)
+	if err != nil {
+		return errors.Errorf("'go-flutter' couldn't unregisters texture with id: '%v': %v", t.ID, err)
 	}
 	t.registry.setTextureHandler(t.ID, nil)
 	return nil

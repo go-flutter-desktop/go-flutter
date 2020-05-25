@@ -40,7 +40,6 @@ type keyboardShortcutsGLFW struct {
 // all hardcoded because theres not pluggable renderer system.
 var defaultTextinputPlugin = &textinputPlugin{}
 
-var _ Plugin = &textinputPlugin{}     // compile-time type check
 var _ PluginGLFW = &textinputPlugin{} // compile-time type check
 
 func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {

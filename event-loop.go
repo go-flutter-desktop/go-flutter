@@ -19,7 +19,7 @@ type EventLoop struct {
 	// called when a task has been received, used to Wakeup the rendering event loop
 	postEmptyEvent func()
 
-	onExpiredTask func(*embedder.FlutterTask) embedder.Result
+	onExpiredTask func(*embedder.FlutterTask) error
 
 	// timeout for non-Rendering events that needs to be processed in a polling manner
 	platformMessageRefreshRate time.Duration
@@ -28,7 +28,7 @@ type EventLoop struct {
 	mainThreadID currentthread.ThreadID
 }
 
-func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) embedder.Result) *EventLoop {
+func newEventLoop(postEmptyEvent func(), onExpiredTask func(*embedder.FlutterTask) error) *EventLoop {
 	pq := priorityqueue.NewPriorityQueue()
 	heap.Init(pq)
 	return &EventLoop{
@@ -108,8 +108,8 @@ func (t *EventLoop) WaitForEvents(rendererWaitEvents func(float64)) {
 	// Fire expired tasks.
 	for _, item := range expiredTasks {
 		task := item.Value
-		if t.onExpiredTask(&task) != embedder.ResultSuccess {
-			fmt.Printf("go-flutter: couldn't process task %v\n", task)
+		if err := t.onExpiredTask(&task); err != nil {
+			fmt.Printf("go-flutter: couldn't process task %v: %v\n", task, err)
 		}
 	}
 

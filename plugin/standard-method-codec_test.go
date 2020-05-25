@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStandardMethodEncodeMethodCall(t *testing.T) {
@@ -105,14 +105,14 @@ func TestStandardMethodEncodeMethodCall(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Logf(spew.Sdump(encodedData))
-		Equal(t, s.data, encodedData)
+		assert.Equal(t, s.data, encodedData)
 
 		decodedValue, err := codec.DecodeMethodCall(encodedData)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		Equal(t, s.value, decodedValue)
+		assert.Equal(t, s.value, decodedValue)
 	}
 }
 
@@ -148,6 +148,6 @@ func TestStandardMethodDecodeRealWorldMethodCall(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, s.value, result)
+		assert.Equal(t, s.value, result)
 	}
 }

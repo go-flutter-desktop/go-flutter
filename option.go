@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"image"
 	"os"
+	"path/filepath"
 
+	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type config struct {
 	flutterAssetsPath string
 	icuDataPath       string
+	elfSnapshotpath   string
 	vmArguments       []string
 
 	windowIconProvider      func() ([]image.Image, error)
@@ -45,18 +48,31 @@ type windowDimensionLimits struct {
 	maxHeight int
 }
 
-// defaultApplicationConfig define the default configuration values for a new
+// newApplicationConfig define the default configuration values for a new
 // Application. These values may be changed at any time.
-var defaultApplicationConfig = config{
-	windowInitialDimensions: windowDimensions{
-		width:  800,
-		height: 600,
-	},
-	keyboardLayout:    KeyboardQwertyLayout,
-	windowMode:        WindowModeDefault,
-	windowAlwaysOnTop: false,
-	windowTransparent: false,
-	scrollAmount:      100.0,
+func newApplicationConfig() config {
+	execPath, err := execpath.ExecPath()
+	if err != nil {
+		fmt.Printf("go-flutter: failed to resolve path for executable: %v", err)
+		os.Exit(1)
+	}
+	return config{
+		windowInitialDimensions: windowDimensions{
+			width:  800,
+			height: 600,
+		},
+		keyboardLayout:    KeyboardQwertyLayout,
+		windowMode:        WindowModeDefault,
+		windowAlwaysOnTop: false,
+		windowTransparent: false,
+		scrollAmount:      100.0,
+
+		// Sane configuration values for the engine.
+		flutterAssetsPath: filepath.Join(filepath.Dir(execPath), "flutter_assets"),
+		icuDataPath:       filepath.Join(filepath.Dir(execPath), "icudtl.dat"),
+		// only required for AOT app.
+		elfSnapshotpath: filepath.Join(filepath.Dir(execPath), "libapp.so"),
+	}
 }
 
 // Option for Application
@@ -71,6 +87,19 @@ func ProjectAssetsPath(p string) Option {
 	}
 	return func(c *config) {
 		c.flutterAssetsPath = p
+	}
+}
+
+// ApplicationELFSnapshotPath specify the path to the ELF AOT snapshot.
+// only required by AOT.
+func ApplicationELFSnapshotPath(p string) Option {
+	_, err := os.Stat(p)
+	if err != nil {
+		fmt.Printf("go-flutter: failed to stat ELF snapshot path: %v\n", err)
+		os.Exit(1)
+	}
+	return func(c *config) {
+		c.elfSnapshotpath = p
 	}
 }
 
