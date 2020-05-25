@@ -3,7 +3,7 @@ package plugin
 import (
 	"testing"
 
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStringEncodeDecode(t *testing.T) {
@@ -25,7 +25,7 @@ func TestStringEncodeDecode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, v, v2)
+		assert.Equal(t, v, v2)
 	}
 }
 
@@ -34,11 +34,11 @@ func TestStringEncodeFail(t *testing.T) {
 
 	// invalid type
 	_, err := codec.EncodeMessage(int(42))
-	NotNil(t, err)
+	assert.NotNil(t, err)
 
 	// invalid 2-octet utf-8 sequence
 	_, err = codec.EncodeMessage("\xc3\x28")
-	NotNil(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestStringDecodeFail(t *testing.T) {
@@ -46,5 +46,5 @@ func TestStringDecodeFail(t *testing.T) {
 
 	// invalid 2-octet utf-8 sequence
 	_, err := codec.DecodeMessage([]byte("\xc3\x28"))
-	NotNil(t, err)
+	assert.NotNil(t, err)
 }

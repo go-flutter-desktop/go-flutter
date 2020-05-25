@@ -3,20 +3,19 @@ package flutter
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 	"unsafe"
 
+	"github.com/Xuanwo/go-locale"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/pkg/errors"
+	"golang.org/x/text/language"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/debounce"
-	"github.com/go-flutter-desktop/go-flutter/internal/execpath"
 	"github.com/go-flutter-desktop/go-flutter/internal/opengl"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
-	"github.com/go-flutter-desktop/go-flutter/plugin"
 )
 
 // Run executes a flutter application with the provided options.
@@ -38,7 +37,7 @@ type Application struct {
 // NewApplication creates a new application with provided options.
 func NewApplication(opt ...Option) *Application {
 	app := &Application{
-		config: defaultApplicationConfig,
+		config: newApplicationConfig(),
 	}
 
 	// The platformPlugin, textinputPlugin, etc. are currently hardcoded as we
@@ -52,6 +51,8 @@ func NewApplication(opt ...Option) *Application {
 	opt = append(opt, AddPlugin(defaultLifecyclePlugin))
 	opt = append(opt, AddPlugin(defaultKeyeventsPlugin))
 	opt = append(opt, AddPlugin(defaultAccessibilityPlugin))
+	opt = append(opt, AddPlugin(defaultIsolatePlugin))
+	opt = append(opt, AddPlugin(defaultMousecursorPlugin))
 
 	// apply all configs
 	for _, o := range opt {
@@ -96,6 +97,11 @@ func (a *Application) Run() error {
 	switch a.config.windowMode {
 	case WindowModeDefault:
 		// nothing
+	case WindowModeMaximize:
+		glfw.WindowHint(glfw.Maximized, glfw.True)
+	case WindowModeBorderlessMaximize:
+		glfw.WindowHint(glfw.Maximized, glfw.True)
+		glfw.WindowHint(glfw.Decorated, glfw.False)
 	case WindowModeBorderless:
 		glfw.WindowHint(glfw.Decorated, glfw.False)
 	case WindowModeBorderlessFullscreen:
@@ -113,6 +119,13 @@ func (a *Application) Run() error {
 
 	opengl.GLFWWindowHint()
 
+	{
+		// TODO(drakirus): Delete this when https://github.com/go-gl/glfw/issues/272 is resolved.
+		// Post an empty event from the main thread before it can happen in a non-main thread,
+		// to work around https://github.com/glfw/glfw/issues/1649.
+		glfw.PostEmptyEvent()
+	}
+
 	if a.config.windowInitialLocation.xpos != 0 {
 		// To create the window at a specific position, make it initially invisible
 		// using the Visible window hint, set its position and then show it.
@@ -122,6 +135,9 @@ func (a *Application) Run() error {
 	glfw.WindowHint(glfw.ScaleToMonitor, glfw.True)
 	if a.config.windowAlwaysOnTop {
 		glfw.WindowHint(glfw.Floating, glfw.True)
+	}
+	if a.config.windowTransparent {
+		glfw.WindowHint(glfw.TransparentFramebuffer, glfw.True)
 	}
 
 	if runtime.GOOS == "linux" {
@@ -156,6 +172,8 @@ func (a *Application) Run() error {
 		a.window.SetIcon(images)
 	}
 
+	a.window.SetTitle(ProjectName)
+
 	if a.config.windowDimensionLimits.minWidth != 0 {
 		a.window.SetSizeLimits(
 			a.config.windowDimensionLimits.minWidth,
@@ -165,34 +183,32 @@ func (a *Application) Run() error {
 		)
 	}
 
+	// Create a empty FlutterEngine.
 	a.engine = embedder.NewFlutterEngine()
+
+	// Set configuration values to engine.
+	a.engine.AssetsPath = a.config.flutterAssetsPath
+	a.engine.IcuDataPath = a.config.icuDataPath
+	a.engine.ElfSnapshotPath = a.config.elfSnapshotpath
 
 	// Create a messenger and init plugins
 	messenger := newMessenger(a.engine)
+	// Attach PlatformMessage callback function onto the engine
+	a.engine.PlatfromMessage = messenger.handlePlatformMessage
+
 	// Create a TextureRegistry
 	texturer := newTextureRegistry(a.engine, a.window)
+	// Attach TextureRegistry callback function onto the engine
+	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
 
 	// Create a new eventloop
 	eventLoop := newEventLoop(
 		glfw.PostEmptyEvent, // Wakeup GLFW
 		a.engine.RunTask,    // Flush tasks
 	)
-
-	execPath, err := execpath.ExecPath()
-	if err != nil {
-		return errors.Wrap(err, "failed to resolve path for executable")
-	}
-	// Set configuration values to engine, with fallbacks to sane defaults.
-	if a.config.flutterAssetsPath != "" {
-		a.engine.AssetsPath = a.config.flutterAssetsPath
-	} else {
-		a.engine.AssetsPath = filepath.Join(filepath.Dir(execPath), "flutter_assets")
-	}
-	if a.config.icuDataPath != "" {
-		a.engine.IcuDataPath = a.config.icuDataPath
-	} else {
-		a.engine.IcuDataPath = filepath.Join(filepath.Dir(execPath), "icudtl.dat")
-	}
+	// Attach TaskRunner callback functions onto the engine
+	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
+	a.engine.TaskRunnerPostTask = eventLoop.PostTask
 
 	// Attach GL callback functions onto the engine
 	a.engine.GLMakeCurrent = func() bool {
@@ -220,14 +236,6 @@ func (a *Application) Run() error {
 	a.engine.GLProcResolver = func(procName string) unsafe.Pointer {
 		return glfw.GetProcAddress(procName)
 	}
-	a.engine.GLExternalTextureFrameCallback = texturer.handleExternalTexture
-
-	// Attach TaskRunner callback functions onto the engine
-	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
-	a.engine.TaskRunnerPostTask = eventLoop.PostTask
-
-	// Attach PlatformMessage callback functions onto the engine
-	a.engine.PlatfromMessage = messenger.handlePlatformMessage
 
 	// Set the glfw window user pointer to point to the FlutterEngine so that
 	// callback functions may obtain the FlutterEngine from the glfw window
@@ -239,17 +247,23 @@ func (a *Application) Run() error {
 	a.window.SetUserPointer(unsafe.Pointer(&flutterEnginePointer))
 
 	// Start the engine
-	result := a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
-	if result != embedder.ResultSuccess {
-		switch result {
-		case embedder.ResultInvalidLibraryVersion:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid library version)\n", result)
-		case embedder.ResultInvalidArguments:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (invalid arguments)\n", result)
-		default:
-			fmt.Printf("go-flutter: engine.Run() returned result code %d (unknown result code)\n", result)
-		}
+	err = a.engine.Run(unsafe.Pointer(&flutterEnginePointer), a.config.vmArguments)
+	if err != nil {
+		fmt.Printf("go-flutter: %v\n", err)
 		os.Exit(1)
+	}
+
+	languageTag, err := locale.Detect()
+	if err != nil {
+		fmt.Printf("go-flutter: failed to detect locale code: %v\n", err)
+		languageTag = language.English
+	}
+	base, _ := languageTag.Base()
+	region, _ := languageTag.Region()
+	scriptCode, _ := languageTag.Script()
+	err = a.engine.UpdateSystemLocale(base.String(), region.String(), scriptCode.String())
+	if err != nil {
+		fmt.Printf("go-flutter: %v\n", err)
 	}
 
 	// Register plugins
@@ -280,9 +294,8 @@ func (a *Application) Run() error {
 	initialRoute := os.Getenv("GOFLUTTER_ROUTE")
 	if initialRoute != "" {
 		defaultPlatformPlugin.addFrameworkReadyCallback(func() {
-			plugin.
-				NewMethodChannel(messenger, "flutter/navigation", plugin.JSONMethodCodec{}).
-				InvokeMethod("pushRoute", initialRoute)
+			defaultNavigationPlugin.
+				channel.InvokeMethod("pushRoute", initialRoute)
 		})
 	}
 
@@ -340,7 +353,6 @@ func (a *Application) Run() error {
 
 		// Execute tasks that MUST be run in the engine thread (!blocks rendering!)
 		glfwDebouceTasker.ExecuteTasks()
-		defaultPlatformPlugin.glfwTasker.ExecuteTasks()
 		messenger.engineTasker.ExecuteTasks()
 		texturer.engineTasker.ExecuteTasks()
 	}

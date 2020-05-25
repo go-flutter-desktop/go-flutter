@@ -21,8 +21,6 @@ type keyeventPlugin struct {
 
 var defaultKeyeventsPlugin = &keyeventPlugin{}
 
-var _ Plugin = &keyeventPlugin{} // compile-time type check
-
 func (p *keyeventPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.channel = plugin.NewBasicMessageChannel(messenger, keyEventChannelName, keyEventJSONMessageCodec{})
 	return nil

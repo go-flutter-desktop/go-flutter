@@ -5,7 +5,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestBasicMethodChannelStringCodecSend tests the sending a messagen and
@@ -40,7 +40,7 @@ func TestBasicMethodChannelStringCodecSend(t *testing.T) {
 	if !ok {
 		t.Fatal("reply is invalid type, expected string")
 	}
-	Equal(t, "hello world", replyString)
+	assert.Equal(t, "hello world", replyString)
 }
 
 // TestBasicMethodChannelStringCodecHandle tests the handling a messagen and
@@ -74,7 +74,7 @@ func TestBasicMethodChannelStringCodecHandle(t *testing.T) {
 	if !ok {
 		t.Fatal("reply is invalid type, expected string")
 	}
-	Equal(t, "hello world", replyString)
+	assert.Equal(t, "hello world", replyString)
 }
 
 // TestBasicMethodChannelBinaryCodecSend tests the sending a messagen and
@@ -109,7 +109,7 @@ func TestBasicMethodChannelBinaryCodecSend(t *testing.T) {
 	if !ok {
 		t.Fatal("reply is invalid type, expected []byte")
 	}
-	Equal(t, []byte{0x01, 0x02}, replyString)
+	assert.Equal(t, []byte{0x01, 0x02}, replyString)
 }
 
 // TestBasicMethodChannelBinaryCodecHandle tests the handling a messagen and
@@ -143,7 +143,7 @@ func TestBasicMethodChannelBinaryCodecHandle(t *testing.T) {
 	if !ok {
 		t.Fatal("reply is invalid type, expected []byte")
 	}
-	Equal(t, []byte{0x01, 0x02}, replyString)
+	assert.Equal(t, []byte{0x01, 0x02}, replyString)
 }
 
 func TestBasicMethodChannelNilHandler(t *testing.T) {
@@ -152,8 +152,8 @@ func TestBasicMethodChannelNilHandler(t *testing.T) {
 	channel := NewBasicMessageChannel(messenger, "ch", codec)
 	channel.HandleFunc(nil)
 	reply, err := messenger.MockSend("ch", []byte("abcd"))
-	Nil(t, reply)
-	Nil(t, err)
+	assert.Nil(t, reply)
+	assert.Nil(t, err)
 }
 func TestBasicMethodChannelNilMockHandler(t *testing.T) {
 	codec := StringCodec{}
@@ -161,9 +161,9 @@ func TestBasicMethodChannelNilMockHandler(t *testing.T) {
 	messenger.MockSetChannelHandler("ch", nil)
 	channel := NewBasicMessageChannel(messenger, "ch", codec)
 	reply, err := channel.SendWithReply("hello")
-	Nil(t, reply)
-	NotNil(t, err)
-	Equal(t, "failed to send outgoing message: no handler set", err.Error())
+	assert.Nil(t, reply)
+	assert.NotNil(t, err)
+	assert.Equal(t, "failed to send outgoing message: no handler set", err.Error())
 }
 
 func TestBasicMethodChannelEncodeFail(t *testing.T) {
@@ -171,7 +171,7 @@ func TestBasicMethodChannelEncodeFail(t *testing.T) {
 	messenger := NewTestingBinaryMessenger()
 	channel := NewBasicMessageChannel(messenger, "ch", codec)
 	reply, err := channel.SendWithReply(int(42)) // invalid value
-	Nil(t, reply)
-	NotNil(t, err)
-	Equal(t, "failed to encode outgoing message: invalid type provided to message codec: expected message to be of type string", err.Error())
+	assert.Nil(t, reply)
+	assert.NotNil(t, err)
+	assert.Equal(t, "failed to encode outgoing message: invalid type provided to message codec: expected message to be of type string", err.Error())
 }

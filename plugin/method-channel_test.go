@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMethodChannelJSONInvoke(t *testing.T) {
@@ -13,34 +13,34 @@ func TestMethodChannelJSONInvoke(t *testing.T) {
 	channel := NewMethodChannel(messenger, "ch", codec)
 	messenger.MockSetChannelHandler("ch", func(msg []byte, r ResponseSender) error {
 		methodCall, err := codec.DecodeMethodCall(msg)
-		Nil(t, err)
-		NotNil(t, methodCall)
+		assert.Nil(t, err)
+		assert.NotNil(t, methodCall)
 		if methodCall.Method == "sayHello" {
 			var greeting string
 			err = json.Unmarshal(methodCall.Arguments.(json.RawMessage), &greeting)
-			Nil(t, err)
+			assert.Nil(t, err)
 			binaryReply, err := codec.EncodeSuccessEnvelope(greeting + " world")
-			Nil(t, err)
+			assert.Nil(t, err)
 			r.Send(binaryReply)
 			return nil
 		}
 		binaryReply, err := codec.EncodeErrorEnvelope("unknown", "", nil)
-		Nil(t, err)
+		assert.Nil(t, err)
 		r.Send(binaryReply)
 		return nil
 	})
 	result, err := channel.InvokeMethodWithReply("sayHello", "hello")
-	Nil(t, err)
-	Equal(t, json.RawMessage(`"hello world"`), result)
+	assert.Nil(t, err)
+	assert.Equal(t, json.RawMessage(`"hello world"`), result)
 
 	result, err = channel.InvokeMethodWithReply("invalidMethod", "")
-	Nil(t, result)
+	assert.Nil(t, result)
 	expectedError := FlutterError{
 		Code:    "unknown",
 		Message: "",
 		Details: json.RawMessage(`null`),
 	}
-	Equal(t, expectedError, err)
+	assert.Equal(t, expectedError, err)
 }
 
 //     test('can invoke map method and get result', () async {

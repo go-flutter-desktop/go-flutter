@@ -3,14 +3,14 @@ package plugin
 import (
 	"testing"
 
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMessageTypeError(t *testing.T) {
 	m := MessageTypeError{
 		hint: "unexpected type uintptr",
 	}
-	Equal(t, "invalid type provided to message codec: unexpected type uintptr", m.Error())
+	assert.Equal(t, "invalid type provided to message codec: unexpected type uintptr", m.Error())
 }
 
 func TestFlutterError(t *testing.T) {
@@ -23,5 +23,5 @@ func TestFlutterError(t *testing.T) {
 			"bar",
 		},
 	}
-	Equal(t, "Error error in Flutter: This is totally wrong ([foo 42 bar])", f.Error())
+	assert.Equal(t, "Error error in Flutter: This is totally wrong ([foo 42 bar])", f.Error())
 }

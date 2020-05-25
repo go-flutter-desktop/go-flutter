@@ -40,19 +40,13 @@ func (p *platformPlugin) handleSystemNavigatorPop(arguments interface{}) (reply 
 	case PopBehaviorNone:
 		return nil, nil
 	case PopBehaviorHide:
-		p.glfwTasker.Do(func() {
-			p.window.Hide()
-		})
+		p.window.Hide()
 		return nil, nil
 	case PopBehaviorIconify:
-		p.glfwTasker.Do(func() {
-			p.window.Iconify()
-		})
+		p.window.Iconify()
 		return nil, nil
 	case PopBehaviorClose:
-		p.glfwTasker.Do(func() {
-			p.window.SetShouldClose(true)
-		})
+		p.window.SetShouldClose(true)
 		return nil, nil
 	default:
 		return nil, errors.Errorf("unknown pop behavior %T not implemented by platform handler", p.popBehavior)

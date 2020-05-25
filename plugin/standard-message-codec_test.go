@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	. "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStandardMessageEncodeIntegers(t *testing.T) {
@@ -33,7 +33,7 @@ func TestStandardMessageEncodeIntegers(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, s.data, result)
+		assert.Equal(t, s.data, result)
 	}
 }
 
@@ -55,7 +55,7 @@ func TestStandardMessageEncodeSizes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, s.data, result)
+		assert.Equal(t, s.data, result)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestStandardMessageEncodeSimple(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		Equal(t, v, v2)
+		assert.Equal(t, v, v2)
 	}
 }
 
@@ -194,7 +194,7 @@ func TestStandardMessageEncodeComposite(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		Equal(t, v, v2)
+		assert.Equal(t, v, v2)
 	}
 }
 
@@ -213,6 +213,6 @@ func TestStandardMessageEncodeAlignment(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		Equal(t, s.data, result)
+		assert.Equal(t, s.data, result)
 	}
 }
