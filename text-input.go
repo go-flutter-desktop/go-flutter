@@ -126,9 +126,15 @@ func (p *textinputPlugin) handleSetEditingState(arguments interface{}) (reply in
 		p.ed.SelectionExtent < 0 ||
 		p.ed.SelectionBase > utf16TextLen ||
 		p.ed.SelectionExtent > utf16TextLen {
-		// request a new EditingState
-		err := p.channel.InvokeMethod("TextInputClient.requestExistingInputState", nil)
-		return nil, err
+		// request a new EditingState if text is present in the TextInput
+		if p.ed.Text != "" {
+			err := p.channel.InvokeMethod("TextInputClient.requestExistingInputState", nil)
+			return nil, err
+		}
+		// otherwise, simply set sane default
+		p.ed.SelectionBase = 0
+		p.ed.SelectionExtent = 0
+		return nil, nil
 	}
 
 	return nil, nil

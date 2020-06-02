@@ -9,7 +9,7 @@ import (
 )
 
 // Event corresponds to a Flutter (dart) compatible RawKeyEventData keyevent data.
-// Multi-platform keycode translation is handled withing this package.
+// Multi-platform keycode translation is handled within this package.
 //
 // As input, go-flutter gets GLFW-keyevent who are only compatible with
 // RawKeyEventDataLinux. To fully support keyboard shortcut (like Command+C to

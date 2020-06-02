@@ -9,7 +9,7 @@ var defaultAccessibilityPlugin = &accessibilityPlugin{}
 
 func (p *accessibilityPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	channel := plugin.NewBasicMessageChannel(messenger, "flutter/accessibility", plugin.StandardMessageCodec{})
-	// Ignored: go-flutter dosn't support accessibility events
+	// Ignored: go-flutter doesn't support accessibility events
 	channel.HandleFunc(func(_ interface{}) (interface{}, error) { return nil, nil })
 	return nil
 }
