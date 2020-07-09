@@ -167,7 +167,7 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 	if (action == glfw.Repeat || action == glfw.Press) && p.clientID != 0 {
 
 		// Enter
-		if key == glfw.KeyEnter {
+		if key == glfw.KeyEnter || key == glfw.KeyKPEnter {
 			if keyboard.DetectTextInputDoneMod(mods) {
 				// Indicates that they are done typing in the TextInput
 				p.performAction("TextInputAction.done")
