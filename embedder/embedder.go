@@ -132,17 +132,17 @@ func (flu *FlutterEngine) Run(userData unsafe.Pointer, vmArgs []string) error {
 	}
 
 	if C.FlutterEngineRunsAOTCompiledDartCode() {
-		// elfSnapshotPath := C.CString(flu.ElfSnapshotPath)
-		// defer C.free(unsafe.Pointer(elfSnapshotPath))
+		elfSnapshotPath := C.CString(flu.ElfSnapshotPath)
+		defer C.free(unsafe.Pointer(elfSnapshotPath))
 
-		// dataIn := C.FlutterEngineAOTDataSource{}
+		dataIn := C.FlutterEngineAOTDataSource{}
 
-		// C.createAOTDataSource(&dataIn, elfSnapshotPath)
-		// res := (Result)(C.FlutterEngineCreateAOTData(&dataIn, &flu.aotDataSource))
-		// if res != ResultSuccess {
-		// return res.GoError("C.FlutterEngineCreateAOTData()")
-		// }
-		// args.aot_data = flu.aotDataSource
+		C.createAOTDataSource(&dataIn, elfSnapshotPath)
+		res := (Result)(C.FlutterEngineCreateAOTData(&dataIn, &flu.aotDataSource))
+		if res != ResultSuccess {
+			return res.GoError("C.FlutterEngineCreateAOTData()")
+		}
+		args.aot_data = flu.aotDataSource
 	}
 
 	args.struct_size = C.size_t(unsafe.Sizeof(args))
@@ -167,10 +167,10 @@ func (flu *FlutterEngine) Shutdown() error {
 	}
 
 	if C.FlutterEngineRunsAOTCompiledDartCode() {
-		// res := (Result)(C.FlutterEngineCollectAOTData(flu.aotDataSource))
-		// if res != ResultSuccess {
-		// return res.GoError("engine.Shutdown()")
-		// }
+		res := (Result)(C.FlutterEngineCollectAOTData(flu.aotDataSource))
+		if res != ResultSuccess {
+			return res.GoError("engine.Shutdown()")
+		}
 	}
 	return nil
 }

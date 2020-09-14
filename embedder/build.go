@@ -1,3 +1,5 @@
+// +build !no_engine_tags
+
 package embedder
 
 // #cgo linux LDFLAGS: -lflutter_engine -Wl,-rpath,$ORIGIN
