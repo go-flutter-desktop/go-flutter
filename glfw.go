@@ -278,7 +278,7 @@ func (m *windowManager) getPixelRatioLinux(window *glfw.Window) float64 {
 	dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 	pixelRatio := dpi / dpPerInch
 
-	// If the pixelRatio is lower to 1 use this scale factor to downscale the ContentScale
+	// If the pixelRatio is lower than 1 use this pixelRatio factor to downscale the ContentScale
 	if pixelRatio < 1.0 {
 		pixelRatio *= m.getPixelRatioOther(window)
 	}
