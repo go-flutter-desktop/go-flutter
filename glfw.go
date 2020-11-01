@@ -1,10 +1,8 @@
 package flutter
 
 import (
-	"encoding/json"
 	"fmt"
 	"runtime"
-	"sync"
 	"unsafe"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -29,9 +27,6 @@ type windowManager struct {
 
 	// caching of ppsc to avoid re-calculating every event
 	pixelsPerScreenCoordinate float64
-
-	// sync.Once to limit pixelRatio warning messages.
-	oncePrintPixelRatioLimit sync.Once
 }
 
 func newWindowManager(forcedPixelRatio float64) *windowManager {
@@ -242,7 +237,6 @@ func (m *windowManager) getPixelRatioOther(window *glfw.Window) float64 {
 // Fallback to getPixelRatioOther if error occur.
 func (m *windowManager) getPixelRatioLinux(window *glfw.Window) float64 {
 	widthPx, heightPx := window.GetFramebufferSize()
-	width, _ := window.GetSize()
 
 	var selectedMonitor *glfw.Monitor
 	winX, winY := window.GetPos()
@@ -284,23 +278,9 @@ func (m *windowManager) getPixelRatioLinux(window *glfw.Window) float64 {
 	dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
 	pixelRatio := dpi / dpPerInch
 
-	// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+	// If the pixelRatio is lower to 1 use this scale factor to downscale the ContentScale
 	if pixelRatio < 1.0 {
-		m.oncePrintPixelRatioLimit.Do(func() {
-			metrics := map[string]interface{}{
-				"ppsc":           m.pixelsPerScreenCoordinate,
-				"windowWidthPx":  widthPx,
-				"windowWidthSc":  width,
-				"mscpi":          monitorScreenCoordinatesPerInch,
-				"dpi":            dpi,
-				"pixelRatio":     pixelRatio,
-				"monitorWidthMm": selectedMonitorWidthMM,
-				"monitorWidthSc": selectedMonitorMode.Width,
-			}
-			metricsBytes, _ := json.Marshal(metrics)
-			fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
-		})
-		pixelRatio = 1.0
+		pixelRatio *= m.getPixelRatioOther(window)
 	}
 	return pixelRatio
 }
