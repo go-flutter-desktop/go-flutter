@@ -17,5 +17,7 @@ var defaultNavigationPlugin = &navigationPlugin{}
 
 func (p *navigationPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	p.channel = plugin.NewMethodChannel(messenger, navigationChannelName, plugin.JSONMethodCodec{})
+	// Ignored: This information isn't properly formated to set the window.SetTitle
+	p.channel.HandleFuncSync("routeUpdated", func(_ interface{}) (interface{}, error) { return nil, nil })
 	return nil
 }
