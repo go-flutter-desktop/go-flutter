@@ -55,7 +55,15 @@ func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryR
 		Message:        binaryMessage,
 		ResponseHandle: responseHandle,
 	}
-	err = m.engine.SendPlatformMessage(msg)
+
+	replyErr := make(chan error)
+	defer close(replyErr)
+
+	glfw.PostEmptyEvent()
+	go m.engineTasker.Do(func() {
+		replyErr <- m.engine.SendPlatformMessage(msg)
+	})
+	err = <-replyErr
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +79,14 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
 		Channel: channel,
 		Message: binaryMessage,
 	}
-	err = m.engine.SendPlatformMessage(msg)
+	replyErr := make(chan error)
+	defer close(replyErr)
+
+	glfw.PostEmptyEvent()
+	go m.engineTasker.Do(func() {
+		replyErr <- m.engine.SendPlatformMessage(msg)
+	})
+	err = <-replyErr
 	if err != nil {
 		return err
 	}
