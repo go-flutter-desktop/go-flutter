@@ -1,7 +1,10 @@
 package flutter
 
 import (
+	"encoding/json"
 	"fmt"
+	"runtime"
+	"sync"
 	"unsafe"
 
 	"github.com/go-flutter-desktop/go-flutter/embedder"
@@ -26,6 +29,9 @@ type windowManager struct {
 
 	// caching of ppsc to avoid re-calculating every event
 	pixelsPerScreenCoordinate float64
+
+	// sync.Once to limit pixelRatio warning messages.
+	oncePrintPixelRatioLimit sync.Once
 }
 
 func newWindowManager(forcedPixelRatio float64) *windowManager {
@@ -202,8 +208,11 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	if m.forcedPixelRatio != 0 {
 		pixelRatio = m.forcedPixelRatio
 	} else {
-		xscale, _ := window.GetContentScale()
-		pixelRatio = float64(xscale)
+		if runtime.GOOS == "linux" {
+			pixelRatio = m.getPixelRatioLinux(window)
+		} else {
+			pixelRatio = m.getPixelRatioOther(window)
+		}
 	}
 
 	event := embedder.WindowMetricsEvent{
@@ -216,4 +225,82 @@ func (m *windowManager) glfwRefreshCallback(window *glfw.Window) {
 	flutterEngine := (*embedder.FlutterEngine)(unsafe.Pointer(flutterEnginePointer))
 
 	flutterEngine.SendWindowMetricsEvent(event)
+}
+
+// getPixelRatioOther, getPixelRatioLinux isn't well working on other platform.
+// GLFW window.GetContentScale() works better:
+// https://github.com/go-flutter-desktop/go-flutter/pull/458
+func (m *windowManager) getPixelRatioOther(window *glfw.Window) float64 {
+	xscale, _ := window.GetContentScale()
+	return float64(xscale)
+}
+
+// getPixelRatioLinux returns the Flutter pixel_ratio is defined as DPI/dp
+// given framebuffer size and the current window information.
+// Same as defined in the official LINUX embedder:
+// https://github.com/flutter/engine/blob/master/shell/platform/glfw/flutter_glfw.cc
+// Fallback to getPixelRatioOther if error occur.
+func (m *windowManager) getPixelRatioLinux(window *glfw.Window) float64 {
+	widthPx, heightPx := window.GetFramebufferSize()
+	width, _ := window.GetSize()
+
+	var selectedMonitor *glfw.Monitor
+	winX, winY := window.GetPos()
+	winCenterX, winCenterY := winX+widthPx/2, winY+heightPx/2
+
+	monitors := glfw.GetMonitors()
+	for _, monitor := range monitors {
+		monX1, monY1 := monitor.GetPos()
+		monMode := monitor.GetVideoMode()
+		if monMode == nil {
+			continue
+		}
+		monX2, monY2 := monX1+monMode.Width, monY1+monMode.Height
+		if (monX1 <= winCenterX && winCenterX <= monX2) &&
+			(monY1 <= winCenterY && winCenterY <= monY2) {
+			selectedMonitor = monitor
+			break
+		}
+	}
+
+	if selectedMonitor == nil {
+		// when no monitor was selected, try fallback to primary monitor
+		// TODO: ? perhaps select monitor that is "closest" to the window ?
+		selectedMonitor = glfw.GetPrimaryMonitor()
+	}
+	if selectedMonitor == nil {
+		return m.getPixelRatioOther(window)
+	}
+	selectedMonitorMode := selectedMonitor.GetVideoMode()
+	if selectedMonitorMode == nil {
+		return m.getPixelRatioOther(window)
+	}
+	selectedMonitorWidthMM, _ := selectedMonitor.GetPhysicalSize()
+	if selectedMonitorWidthMM == 0 {
+		return m.getPixelRatioOther(window)
+	}
+	monitorScreenCoordinatesPerInch := float64(selectedMonitorMode.Width) / (float64(selectedMonitorWidthMM) / 25.4)
+
+	dpi := m.pixelsPerScreenCoordinate * monitorScreenCoordinatesPerInch
+	pixelRatio := dpi / dpPerInch
+
+	// Limit the ratio to 1 to avoid rendering a smaller UI in standard resolution monitors.
+	if pixelRatio < 1.0 {
+		m.oncePrintPixelRatioLimit.Do(func() {
+			metrics := map[string]interface{}{
+				"ppsc":           m.pixelsPerScreenCoordinate,
+				"windowWidthPx":  widthPx,
+				"windowWidthSc":  width,
+				"mscpi":          monitorScreenCoordinatesPerInch,
+				"dpi":            dpi,
+				"pixelRatio":     pixelRatio,
+				"monitorWidthMm": selectedMonitorWidthMM,
+				"monitorWidthSc": selectedMonitorMode.Width,
+			}
+			metricsBytes, _ := json.Marshal(metrics)
+			fmt.Println("go-flutter: calculated pixelRatio limited to a minimum of 1.0. metrics: " + string(metricsBytes))
+		})
+		pixelRatio = 1.0
+	}
+	return pixelRatio
 }
