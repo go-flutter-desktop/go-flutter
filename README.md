@@ -79,6 +79,12 @@ Flutter itself is a relatively young project. Its framework and engine are updat
 
 Updating Go is simple and Go [seldomly has backwards-incompatible changes](https://golang.org/doc/go1compat). This project remains compatible with the [latest Go stable release](https://golang.org/dl/).
 
+### Cases
+
+Companies using `Go Flutter`:
+
+- [Nubank](https://nubank.com.br/en/)
+
 ### GLFW version
 
 This project uses go-gl/glfw for GLFW v3.3.
