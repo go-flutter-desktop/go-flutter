@@ -56,16 +56,17 @@ func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryR
 		ResponseHandle: responseHandle,
 	}
 
-	replyErr := make(chan error)
-	defer close(replyErr)
+	if m.engine.TaskRunnerRunOnCurrentThread() {
+		err = m.engine.SendPlatformMessage(msg)
+	} else {
+		replyErr := make(chan error)
+		defer close(replyErr)
 
-	glfw.PostEmptyEvent()
-	go m.engineTasker.Do(func() {
-		replyErr <- m.engine.SendPlatformMessage(msg)
-	})
-	err = <-replyErr
-	if err != nil {
-		return nil, err
+		glfw.PostEmptyEvent()
+		go m.engineTasker.Do(func() {
+			replyErr <- m.engine.SendPlatformMessage(msg)
+		})
+		err = <-replyErr
 	}
 
 	// wait for a reply and return
@@ -79,14 +80,19 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
 		Channel: channel,
 		Message: binaryMessage,
 	}
-	replyErr := make(chan error)
-	defer close(replyErr)
 
-	glfw.PostEmptyEvent()
-	go m.engineTasker.Do(func() {
-		replyErr <- m.engine.SendPlatformMessage(msg)
-	})
-	err = <-replyErr
+	if m.engine.TaskRunnerRunOnCurrentThread() {
+		err = m.engine.SendPlatformMessage(msg)
+	} else {
+		replyErr := make(chan error)
+		defer close(replyErr)
+
+		glfw.PostEmptyEvent()
+		go m.engineTasker.Do(func() {
+			replyErr <- m.engine.SendPlatformMessage(msg)
+		})
+		err = <-replyErr
+	}
 	if err != nil {
 		return err
 	}

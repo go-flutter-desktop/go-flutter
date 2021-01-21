@@ -2,12 +2,6 @@ package keyboard
 
 import "github.com/go-gl/glfw/v3.3/glfw"
 
-// DetectWordMod returns true if the modifiers pressed
-// correspond to the word movement modifier
-func DetectWordMod(mods glfw.ModifierKey) bool {
-	return mods&glfw.ModAlt != 0
-}
-
 // DetectTextInputDoneMod returns true if the modifiers pressed
 // indicate the typed text can be committed
 func DetectTextInputDoneMod(mods glfw.ModifierKey) bool {

@@ -71,8 +71,10 @@ func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	})
 	// Ignored: This information is used by the flutter Web Engine
 	p.channel.HandleFuncSync("TextInput.setStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
-	// Ignored: This information is used by the flutter Web Engine
+	// Ignored: GLFW dosn't support setting the input method of the current cursor location #426
 	p.channel.HandleFuncSync("TextInput.setEditableSizeAndTransform", func(_ interface{}) (interface{}, error) { return nil, nil })
+	// Ignored: GLFW dosn't support setting the input method of the current cursor location #426
+	p.channel.HandleFuncSync("TextInput.setMarkedTextRect", func(_ interface{}) (interface{}, error) { return nil, nil })
 	// Ignored: This information is used by flutter on Android, iOS and web
 	p.channel.HandleFuncSync("TextInput.requestAutofill", func(_ interface{}) (interface{}, error) { return nil, nil })
 
@@ -178,33 +180,6 @@ func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, sca
 			// this action is described by argSetClientConf.
 			p.performAction(p.clientConf.InputAction)
 		}
-		// Backspace
-		if key == glfw.KeyBackspace {
-			// Selection Backspace
-			if p.removeSelectedText() {
-				p.updateEditingState()
-				return
-			}
-			// Word Backspace
-			if keyboard.DetectWordMod(mods) {
-				// Remove whitespace to the left
-				for p.ed.SelectionBase != 0 && unicode.IsSpace(utf16.Decode([]uint16{p.ed.utf16Text[p.ed.SelectionBase-1]})[0]) {
-					p.sliceLeftChar()
-				}
-				// Remove non-whitespace to the left
-				for {
-					if p.ed.SelectionBase == 0 || unicode.IsSpace(utf16.Decode([]uint16{p.ed.utf16Text[p.ed.SelectionBase-1]})[0]) {
-						break
-					}
-					p.sliceLeftChar()
-				}
-				p.updateEditingState()
-				return
-			}
-			// single char Backspace
-			p.sliceLeftChar()
-			p.updateEditingState()
-		}
 		// Mapping to some text navigation shortcut that are already implemented in
 		// the flutter framework.
 		// Home
@@ -283,17 +258,4 @@ func (p *textinputPlugin) getSelectedText() (int, int) {
 	sort.Ints(selectionIndex)
 	return selectionIndex[0],
 		selectionIndex[1]
-}
-
-func (p *textinputPlugin) sliceLeftChar() {
-	if len(p.ed.utf16Text) > 0 && p.ed.SelectionBase > 0 {
-		count := 1
-		// Check if code point appear in a surrogate pair
-		if utf16.IsSurrogate(rune(p.ed.utf16Text[p.ed.SelectionBase-1])) {
-			count = 2
-		}
-		p.ed.utf16Text = append(p.ed.utf16Text[:p.ed.SelectionBase-count], p.ed.utf16Text[p.ed.SelectionBase:]...)
-		p.ed.SelectionBase -= count
-		p.ed.SelectionExtent = p.ed.SelectionBase
-	}
 }
