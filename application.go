@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"time"
 	"unsafe"
 
@@ -60,6 +61,17 @@ func NewApplication(opt ...Option) *Application {
 	}
 
 	return app
+}
+
+func postEmptyEvent() {
+	defer func() {
+		p := recover()
+		if p != nil {
+			fmt.Printf("go-flutter: recovered from panic 'glfw.PostEmptyEvent()': %v\n", p)
+			debug.PrintStack()
+		}
+	}()
+	glfw.PostEmptyEvent()
 }
 
 // createResourceWindow creates an invisible GLFW window that shares the 'view'
@@ -123,7 +135,7 @@ func (a *Application) Run() error {
 		// TODO(drakirus): Delete this when https://github.com/go-gl/glfw/issues/272 is resolved.
 		// Post an empty event from the main thread before it can happen in a non-main thread,
 		// to work around https://github.com/glfw/glfw/issues/1649.
-		glfw.PostEmptyEvent()
+		postEmptyEvent()
 	}
 
 	if a.config.windowInitialLocation.xpos != 0 {
@@ -203,8 +215,8 @@ func (a *Application) Run() error {
 
 	// Create a new eventloop
 	eventLoop := newEventLoop(
-		glfw.PostEmptyEvent, // Wakeup GLFW
-		a.engine.RunTask,    // Flush tasks
+		postEmptyEvent,   // Wakeup GLFW
+		a.engine.RunTask, // Flush tasks
 	)
 	// Attach TaskRunner callback functions onto the engine
 	a.engine.TaskRunnerRunOnCurrentThread = eventLoop.RunOnCurrentThread
