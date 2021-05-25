@@ -13,7 +13,7 @@
 
 This [unofficial](https://github.com/go-flutter-desktop/go-flutter/issues/191#issuecomment-511384007) project brings Flutter to the desktop through the power of [Go](http://golang.org/) and [GLFW](https://github.com/go-gl/glfw).
 
-The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. This project implements the [Flutter's Embedding API](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders) using a single code base that runs on Windows, macOS, and Linux. For rendering, [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform. 
+The flutter engine itself doesn't know how to deal with desktop platforms _(eg handling mouse/keyboard input)_. Instead, it exposes an abstraction layer for whatever platform to implement. This project implements the [Flutter's Embedding API](https://github.com/flutter/flutter/wiki/Custom-Flutter-Engine-Embedders) using a single code base that runs on Windows, macOS, and Linux. For rendering, [**GLFW**](https://github.com/go-gl/glfw) fits the job because it provides the right abstractions over the OpenGL's Buffer/Mouse/Keyboard for each platform.
 
 The choice of [Golang](https://github.com/golang/go) comes from the fact that it has the same tooling on every platform. Plus Golang is a great language because it keeps everything simple and readable, which makes it easy to build cross-platform plugins.
 
@@ -39,7 +39,7 @@ If you want more in-depth information about go-flutter, read the [wiki](https://
   - BinaryMessageCodec, BinaryMessageChannel
   - StandardMessageCodec, JSONMessageCodec
   - StandardMethodCodec, **MethodChannel**
-- Plugin detection for [suppoted plugins](https://github.com/go-flutter-desktop/go-flutter/wiki/Create-a-hover-compatible-plugin)
+- Plugin detection for [supported plugins](https://github.com/go-flutter-desktop/go-flutter/wiki/Create-a-hover-compatible-plugin)
 - Importable as Go library into custom projects
 - UTF-8 Text input
 - Clipboard copy & paste
@@ -65,7 +65,7 @@ A separate repository contains example Flutter apps that also run on the desktop
 ## Plugins
 
 Some popular plugins are already implemented over at [github.com/go-flutter-desktop/plugins](https://github.com/go-flutter-desktop/plugins).
-If you have implemented a plugin that you would like to share, feel free to open a PR on the plugins repository!  
+If you have implemented a plugin that you would like to share, feel free to open a PR on the plugins repository!
 
 For a detailed tutorial on how to create a plugin, read the [wiki](https://github.com/go-flutter-desktop/go-flutter/wiki/Implement-a-plugin).
 
