@@ -3,7 +3,7 @@ module github.com/go-flutter-desktop/go-flutter
 go 1.12
 
 require (
-	github.com/Xuanwo/go-locale v1.0.0
+	github.com/Xuanwo/go-locale v1.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-gl/gl v0.0.0-20210905235341-f7a045908259
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20210727001814-0db043d8d5be
