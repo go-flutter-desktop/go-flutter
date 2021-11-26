@@ -24,6 +24,8 @@ type textinputPlugin struct {
 	clientConf argSetClientConf
 	ed         argsEditingState
 
+	backOnEscape bool
+
 	virtualKeyboardShow func()
 	virtualKeyboardHide func()
 }
@@ -157,8 +159,7 @@ func (p *textinputPlugin) glfwCharCallback(w *glfw.Window, char rune) {
 }
 
 func (p *textinputPlugin) glfwKeyCallback(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-
-	if key == glfw.KeyEscape && action == glfw.Press {
+	if p.backOnEscape && key == glfw.KeyEscape && action == glfw.Press {
 		err := defaultNavigationPlugin.channel.InvokeMethod("popRoute", nil)
 		if err != nil {
 			fmt.Printf("go-flutter: failed to pop route after escape key press: %v\n", err)
