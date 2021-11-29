@@ -23,6 +23,8 @@ type config struct {
 	windowAlwaysOnTop       bool
 	windowTransparent       bool
 
+	backOnEscape bool
+
 	forcePixelRatio float64
 	scrollAmount    float64
 
@@ -63,6 +65,8 @@ func newApplicationConfig() config {
 		windowAlwaysOnTop: false,
 		windowTransparent: false,
 		scrollAmount:      100.0,
+
+		backOnEscape: true,
 
 		// Sane configuration values for the engine.
 		flutterAssetsPath: filepath.Join(filepath.Dir(execPath), "flutter_assets"),
@@ -181,6 +185,16 @@ func WindowDimensionLimits(minWidth, minHeight, maxWidth, maxHeight int) Option 
 		c.windowDimensionLimits.minHeight = minHeight
 		c.windowDimensionLimits.maxWidth = maxWidth
 		c.windowDimensionLimits.maxHeight = maxHeight
+	}
+}
+
+// BackOnEscape controls the mapping of the escape key.
+//
+// If true, pops the current route when escape is pressed.
+// If false, escape is delivered to the application.
+func BackOnEscape(backOnEscape bool) Option {
+	return func(c *config) {
+		c.backOnEscape = backOnEscape
 	}
 }
 

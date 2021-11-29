@@ -322,6 +322,7 @@ func (a *Application) Run() error {
 	})
 
 	// Attach glfw window callbacks for text input
+	defaultTextinputPlugin.backOnEscape = a.config.backOnEscape
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
