@@ -321,6 +321,9 @@ func (a *Application) Run() error {
 			})
 		})
 	})
+	a.window.SetContentScaleCallback(func(window *glfw.Window, x float32, y float32) {
+		windowManager.glfwRefreshCallback(window)
+	})
 
 	// Attach glfw window callbacks for text input
 	defaultTextinputPlugin.backOnEscape = a.config.backOnEscape
