@@ -69,6 +69,7 @@ func NewApplication(opt ...Option) *Application {
 // Though optional, it is recommended that all embedders set this callback as
 // it will lead to better performance in texture handling.
 func createResourceWindow(window *glfw.Window) (*glfw.Window, error) {
+	opengl.GLFWWindowHint()
 	glfw.WindowHint(glfw.Decorated, glfw.False)
 	glfw.WindowHint(glfw.Visible, glfw.False)
 	if runtime.GOOS == "linux" {
@@ -325,6 +326,7 @@ func (a *Application) Run() error {
 	})
 
 	// Attach glfw window callbacks for text input
+	defaultTextinputPlugin.backOnEscape = a.config.backOnEscape
 	a.window.SetKeyCallback(
 		func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 			defaultTextinputPlugin.glfwKeyCallback(window, key, scancode, action, mods)
