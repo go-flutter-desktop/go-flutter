@@ -8,7 +8,6 @@ import (
 	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/internal/tasker"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
-	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type messenger struct {
@@ -62,7 +61,7 @@ func (m *messenger) SendWithReply(channel string, binaryMessage []byte) (binaryR
 		replyErr := make(chan error)
 		defer close(replyErr)
 
-		glfw.PostEmptyEvent()
+		postEmptyEvent()
 		go m.engineTasker.Do(func() {
 			replyErr <- m.engine.SendPlatformMessage(msg)
 		})
@@ -87,7 +86,7 @@ func (m *messenger) Send(channel string, binaryMessage []byte) (err error) {
 		replyErr := make(chan error)
 		defer close(replyErr)
 
-		glfw.PostEmptyEvent()
+		postEmptyEvent()
 		go m.engineTasker.Do(func() {
 			replyErr <- m.engine.SendPlatformMessage(msg)
 		})
@@ -147,7 +146,7 @@ func (r responseSender) Send(binaryReply []byte) {
 	// TODO: detect multiple responses on the same message and spam the log
 	// about it.
 
-	glfw.PostEmptyEvent()
+	postEmptyEvent()
 	go r.engineTasker.Do(func() {
 		err := r.engine.SendPlatformMessageResponse(r.message.ResponseHandle, binaryReply)
 		if err != nil {
