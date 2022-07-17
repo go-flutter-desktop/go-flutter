@@ -282,5 +282,9 @@ func (m *windowManager) getPixelRatioLinux(window *glfw.Window) float64 {
 	if pixelRatio < 1.0 {
 		pixelRatio *= m.getPixelRatioOther(window)
 	}
+	// If it is still lower than 1, fallback to a pixelRatio of 1.0
+	if pixelRatio < 1.0 {
+		pixelRatio = 1.0
+	}
 	return pixelRatio
 }
