@@ -1,6 +1,6 @@
 module github.com/go-flutter-desktop/go-flutter
 
-go 1.12
+go 1.18
 
 require (
 	github.com/Xuanwo/go-locale v1.1.0
