@@ -38,6 +38,8 @@ func (p *platformPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 
 	channel.HandleFuncSync("Clipboard.setData", p.handleClipboardSetData)
 	channel.HandleFuncSync("Clipboard.getData", p.handleClipboardGetData)
+	channel.HandleFuncSync("Clipboard.hasStrings", p.handleClipboardHasString)
+
 	channel.HandleFuncSync("SystemNavigator.pop", p.handleSystemNavigatorPop)
 	channel.HandleFunc("SystemChrome.setApplicationSwitcherDescription", p.handleWindowSetTitle)
 
@@ -85,6 +87,18 @@ func (p *platformPlugin) handleClipboardGetData(arguments interface{}) (reply in
 		Text string `json:"text"`
 	}{
 		Text: clipText,
+	}
+	return reply, nil
+}
+
+func (p *platformPlugin) handleClipboardHasString(arguments interface{}) (reply interface{}, err error) {
+	var clipText string
+	clipText = p.window.GetClipboardString()
+
+	reply = struct {
+		Value bool `json:"value"`
+	}{
+		Value: len(clipText) > 0,
 	}
 	return reply, nil
 }

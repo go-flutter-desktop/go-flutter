@@ -73,6 +73,8 @@ func (p *textinputPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	})
 	// Ignored: This information is used by the flutter Web Engine
 	p.channel.HandleFuncSync("TextInput.setStyle", func(_ interface{}) (interface{}, error) { return nil, nil })
+	// Ignored: Used on MacOS to position accent selection menu
+	p.channel.HandleFuncSync("TextInput.setCaretRect", func(_ interface{}) (interface{}, error) { return nil, nil })
 	// Ignored: GLFW dosn't support setting the input method of the current cursor location #426
 	p.channel.HandleFuncSync("TextInput.setEditableSizeAndTransform", func(_ interface{}) (interface{}, error) { return nil, nil })
 	// Ignored: GLFW dosn't support setting the input method of the current cursor location #426
