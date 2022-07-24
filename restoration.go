@@ -11,10 +11,9 @@ var defaultRestorationPlugin = &restorationPlugin{}
 
 var _ Plugin = &restorationPlugin{} // compile-time type check
 
-// InitPlugin implements PluginGLFW
 func (p *restorationPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	channel := plugin.NewMethodChannel(messenger, "flutter/restoration", plugin.StandardMethodCodec{})
-	// Currently not supported. Used only to avoid warnings.
+	// Ignored: desktop doesn't need application "restoration"
 	channel.HandleFunc("get", func(_ interface{}) (interface{}, error) { return nil, nil })
 	return nil
 }
