@@ -54,6 +54,7 @@ func NewApplication(opt ...Option) *Application {
 	opt = append(opt, AddPlugin(defaultAccessibilityPlugin))
 	opt = append(opt, AddPlugin(defaultIsolatePlugin))
 	opt = append(opt, AddPlugin(defaultMousecursorPlugin))
+	opt = append(opt, AddPlugin(defaultRestorationPlugin))
 
 	// apply all configs
 	for _, o := range opt {
